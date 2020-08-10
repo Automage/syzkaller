@@ -305,12 +305,14 @@ func (pg *Builder) Append(c *Call) error {
 	return nil
 }
 
-func (pg *Builder) Allocate(size, alignment uint64) uint64 {
-	return pg.ma.alloc(nil, size, alignment)
+func (pg *Builder) Allocate(size uint64) uint64 {
+	return pg.ma.alloc(nil, size)
 }
 
 func (pg *Builder) AllocateVMA(npages uint64) uint64 {
-	return pg.ma.alloc(nil, npages*pg.target.PageSize, pg.target.PageSize)
+	psize := pg.target.PageSize
+	addr := pg.ma.alloc(nil, (npages+1)*psize)
+	return (addr + psize - 1) & ^(psize - 1)
 }
 
 func (pg *Builder) Finalize() (*Prog, error) {

@@ -27,7 +27,6 @@ const (
 	FeatureKCSAN
 	FeatureDevlinkPCI
 	FeatureUSBEmulation
-	FeatureVhciInjection
 	numFeatures
 )
 
@@ -66,9 +65,8 @@ func Check(target *prog.Target) (*Features, error) {
 		FeatureKCSAN:            {Name: "concurrency sanitizer", Reason: unsupported},
 		FeatureDevlinkPCI:       {Name: "devlink PCI setup", Reason: unsupported},
 		FeatureUSBEmulation:     {Name: "USB emulation", Reason: unsupported},
-		FeatureVhciInjection:    {Name: "hci packet injection", Reason: unsupported},
 	}
-	if noHostChecks(target) {
+	if targets.Get(target.OS, target.Arch).HostFuzzer {
 		return res, nil
 	}
 	for n, check := range checkFeature {
@@ -88,7 +86,7 @@ func Check(target *prog.Target) (*Features, error) {
 // Setup enables and does any one-time setup for the requested features on the host.
 // Note: this can be called multiple times and must be idempotent.
 func Setup(target *prog.Target, features *Features, featureFlags csource.Features, executor string) error {
-	if noHostChecks(target) {
+	if targets.Get(target.OS, target.Arch).HostFuzzer {
 		return nil
 	}
 	args := strings.Split(executor, " ")
@@ -111,10 +109,4 @@ func Setup(target *prog.Target, features *Features, featureFlags csource.Feature
 	}
 	_, err := osutil.RunCmd(5*time.Minute, "", executor, args...)
 	return err
-}
-
-func noHostChecks(target *prog.Target) bool {
-	// HostFuzzer targets can't run Go binaries on the targets,
-	// so we actually run on the host on another OS. The same for "test" OS.
-	return targets.Get(target.OS, target.Arch).HostFuzzer || target.OS == "test"
 }

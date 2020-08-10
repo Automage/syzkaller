@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"net/mail"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -15,7 +16,6 @@ import (
 
 	"github.com/google/syzkaller/pkg/osutil"
 	"github.com/google/syzkaller/pkg/symbolizer"
-	"github.com/google/syzkaller/pkg/vcs"
 )
 
 type linux struct {
@@ -351,7 +351,7 @@ func (ctx *linux) Symbolize(rep *Report) error {
 		if err != nil {
 			return err
 		}
-		rep.Recipients = maintainers
+		rep.Maintainers = maintainers
 	}
 	return nil
 }
@@ -466,14 +466,14 @@ nextFile:
 	return ""
 }
 
-func (ctx *linux) getMaintainers(file string) (vcs.Recipients, error) {
+func (ctx *linux) getMaintainers(file string) ([]string, error) {
 	if ctx.kernelSrc == "" {
 		return nil, nil
 	}
 	return GetLinuxMaintainers(ctx.kernelSrc, file)
 }
 
-func GetLinuxMaintainers(kernelSrc, file string) (vcs.Recipients, error) {
+func GetLinuxMaintainers(kernelSrc, file string) ([]string, error) {
 	mtrs, err := getMaintainersImpl(kernelSrc, file, false)
 	if err != nil {
 		return nil, err
@@ -487,9 +487,9 @@ func GetLinuxMaintainers(kernelSrc, file string) (vcs.Recipients, error) {
 	return mtrs, nil
 }
 
-func getMaintainersImpl(kernelSrc, file string, blame bool) (vcs.Recipients, error) {
+func getMaintainersImpl(kernelSrc, file string, blame bool) ([]string, error) {
 	// See #1441 re --git-min-percent.
-	args := []string{"--git-min-percent=15"}
+	args := []string{"--no-n", "--no-rolestats", "--git-min-percent=15"}
 	if blame {
 		args = append(args, "--git-blame")
 	}
@@ -499,7 +499,16 @@ func getMaintainersImpl(kernelSrc, file string, blame bool) (vcs.Recipients, err
 	if err != nil {
 		return nil, err
 	}
-	return vcs.ParseMaintainersLinux(output), nil
+	lines := strings.Split(string(output), "\n")
+	var mtrs []string
+	for _, line := range lines {
+		addr, err := mail.ParseAddress(line)
+		if err != nil {
+			continue
+		}
+		mtrs = append(mtrs, addr.Address)
+	}
+	return mtrs, nil
 }
 
 func (ctx *linux) extractFiles(report []byte) []string {
@@ -1374,17 +1383,6 @@ var linuxOopses = append([]*oops{
 						parseStackTrace,
 					},
 					extractor: linuxHangTaskFrameExtractor,
-				},
-			},
-			{
-				title: compile("INFO: task .* can't die for more than .* seconds"),
-				fmt:   "INFO: task can't die in %[1]v",
-				stack: &stackFmt{
-					parts: []*regexp.Regexp{
-						compile("Call Trace:"),
-						parseStackTrace,
-					},
-					skip: []string{"schedule"},
 				},
 			},
 			{

@@ -82,14 +82,5 @@ func TestNeutralize(t *testing.T) {
 			// RLIMIT_CPU
 			In: `setrlimit(0x0, &(0x7f0000cc0ff0)={0x1, 0x1})`,
 		},
-		{
-			// CTL_KERN, KERN_MAXCLUSTERS
-			In:  `sysctl$kern(&(0x7f0000cc0ff0)={0x1, 0x43}, 0x0, 0x0, 0x0, &(0x7f0000000180), 0x0)`,
-			Out: `sysctl$kern(&(0x7f0000cc0ff0)={0x0}, 0x0, 0x0, 0x0, &(0x7f0000000180), 0x0)`,
-		},
-		{
-			In:  `clock_settime(0x0, &(0x7f0000cc0ff0)={0x0, 0x0})`,
-			Out: `clock_settime(0xffffffffffffffff, &(0x7f0000cc0ff0))`,
-		},
 	})
 }

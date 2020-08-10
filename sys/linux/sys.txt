@@ -50,6 +50,7 @@ include <uapi/linux/kcov.h>
 include <uapi/linux/membarrier.h>
 include <uapi/linux/capability.h>
 include <uapi/linux/seccomp.h>
+include <uapi/linux/suspend_ioctls.h>
 include <kernel/sched/sched.h>
 include <uapi/linux/fsinfo.h>
 include <uapi/linux/close_range.h>
@@ -88,18 +89,12 @@ close(fd fd)
 read(fd fd, buf buffer[out], count len[buf])
 pread64(fd fd, buf buffer[out], count len[buf], pos fileoff)
 readv(fd fd, vec ptr[in, array[iovec_out]], vlen len[vec])
-preadv(fd fd, vec ptr[in, array[iovec_out]], vlen len[vec], off_low int32, off_high int32)
-preadv2(fd fd, vec ptr[in, array[iovec_out]], vlen len[vec], off_low int32, off_high int32, flags flags[rwf_flags])
+preadv(fd fd, vec ptr[in, array[iovec_out]], vlen len[vec], off fileoff)
 write(fd fd, buf buffer[in], count len[buf])
 pwrite64(fd fd, buf buffer[in], count len[buf], pos fileoff)
 writev(fd fd, vec ptr[in, array[iovec_in]], vlen len[vec])
-pwritev(fd fd, vec ptr[in, array[iovec_in]], vlen len[vec], off_low int32, off_high int32)
-pwritev2(fd fd, vec ptr[in, array[iovec_in]], vlen len[vec], off_low int32, off_high int32, flags flags[rwf_flags])
+pwritev(fd fd, vec ptr[in, array[iovec_in]], vlen len[vec], off fileoff)
 lseek(fd fd, offset fileoff, whence flags[seek_whence])
-copy_file_range(fd_in fd, off_in ptr[inout, fileoff[int64], opt], fd_out fd, off_out ptr[inout, fileoff[int64], opt], len intptr, flags flags[copy_file_range_flags])
-
-rwf_flags = RWF_DSYNC, RWF_HIPRI, RWF_SYNC, RWF_NOWAIT, RWF_APPEND
-copy_file_range_flags = 0
 
 dup(oldfd fd) fd
 dup2(oldfd fd, newfd fd) fd
@@ -138,9 +133,10 @@ epoll_ctl$EPOLL_CTL_DEL(epfd fd_epoll, op const[EPOLL_CTL_DEL], fd fd)
 epoll_wait(epfd fd_epoll, events ptr[out, array[epoll_event]], maxevents len[events], timeout int32)
 epoll_pwait(epfd fd_epoll, events ptr[out, array[epoll_event]], maxevents len[events], timeout int32, sigmask ptr[in, sigset_t], size len[sigmask])
 
+resource fd_signal[fd]
 resource fd_timer[fd]
-signalfd(fd fd, mask ptr[in, sigset_t], size len[mask]) fd
-signalfd4(fd fd, mask ptr[in, sigset_t], size len[mask], flags flags[signalfd_flags]) fd
+signalfd(fd fd, mask ptr[in, sigset_t], size len[mask]) fd_signal
+signalfd4(fd fd, mask ptr[in, sigset_t], size len[mask], flags flags[signalfd_flags]) fd_signal
 timerfd_create(clockid flags[clock_type], flags flags[timerfd_create_flags]) fd_timer
 timerfd_settime(fd fd_timer, flags flags[timerfd_settime_flags], new ptr[in, itimerspec], old ptr[out, itimerspec])
 timerfd_gettime(fd fd_timer, cur ptr[out, itimerspec])
@@ -547,6 +543,7 @@ openat$vcsu(fd const[AT_FDCWD], file ptr[in, string["/dev/vcsu"]], flags flags[o
 syz_open_dev$vcsu(dev ptr[in, string["/dev/vcsu#"]], id intptr, flags flags[open_flags]) fd
 syz_open_dev$ircomm(dev ptr[in, string["/dev/ircomm#"]], id intptr, flags flags[open_flags]) fd
 syz_open_dev$audion(dev ptr[in, string["/dev/audio#"]], id intptr, flags flags[open_flags]) fd
+syz_open_dev$sndhw(dev ptr[in, string["/dev/snd/hwC#D#"]], id intptr, flags flags[open_flags]) fd
 syz_open_dev$media(dev ptr[in, string["/dev/media#"]], id intptr, flags flags[open_flags]) fd_media
 
 openat$null(fd const[AT_FDCWD], file ptr[in, string["/dev/null"]], flags flags[open_flags], mode const[0]) fd
@@ -563,6 +560,8 @@ openat$zygote(fd const[AT_FDCWD], file ptr[in, string["/dev/socket/zygote"]], fl
 openat$sw_sync(fd const[AT_FDCWD], file ptr[in, string["/dev/sw_sync"]], flags flags[open_flags], mode const[0]) fd
 openat$pktcdvd(fd const[AT_FDCWD], file ptr[in, string["/dev/pktcdvd/control"]], flags flags[open_flags], mode const[0]) fd
 openat$lightnvm(fd const[AT_FDCWD], file ptr[in, string["/dev/lightnvm/control"]], flags flags[open_flags], mode const[0]) fd
+openat$sequencer(fd const[AT_FDCWD], file ptr[in, string["/dev/sequencer"]], flags flags[open_flags], mode const[0]) fd
+openat$sequencer2(fd const[AT_FDCWD], file ptr[in, string["/dev/sequencer2"]], flags flags[open_flags], mode const[0]) fd
 openat$xenevtchn(fd const[AT_FDCWD], file ptr[in, string["/dev/xen/evtchn"]], flags flags[open_flags], mode const[0]) fd
 openat$dlm_control(fd const[AT_FDCWD], file ptr[in, string["/dev/dlm-control"]], flags flags[open_flags], mode const[0]) fd
 openat$dlm_monitor(fd const[AT_FDCWD], file ptr[in, string["/dev/dlm-monitor"]], flags flags[open_flags], mode const[0]) fd
@@ -576,6 +575,11 @@ openat$nvram(fd const[AT_FDCWD], file ptr[in, string["/dev/nvram"]], flags flags
 openat$ocfs2_control(fd const[AT_FDCWD], file ptr[in, string["/dev/ocfs2_control"]], flags flags[open_flags], mode const[0]) fd
 openat$nvme_fabrics(fd const[AT_FDCWD], file ptr[in, string["/dev/nvme-fabrics"]], flags flags[open_flags], mode const[0]) fd
 openat$bsg(fd const[AT_FDCWD], file ptr[in, string["/dev/bsg"]], flags flags[open_flags], mode const[0]) fd
+
+openat$snapshot(fd const[AT_FDCWD], file ptr[in, string["/dev/snapshot"]], flags flags[open_flags], mode const[0]) fd
+
+# SNAPSHOT_FREEZE is disabled because it can easily kill the machine.
+ioctl$SNAPSHOT_FREEZE(fd fd, cmd const[SNAPSHOT_FREEZE]) (disabled)
 
 pipefd {
 	rfd	fd

@@ -329,8 +329,5 @@ func createConfig(target *prog.Target,
 	if featuresFlags["devlink_pci"].Enabled && features[host.FeatureDevlinkPCI].Enabled {
 		config.Flags |= ipc.FlagEnableDevlinkPCI
 	}
-	if featuresFlags["vhci"].Enabled && features[host.FeatureVhciInjection].Enabled {
-		config.Flags |= ipc.FlagEnableVhciInjection
-	}
 	return config, execOpts
 }

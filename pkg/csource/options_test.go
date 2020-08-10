@@ -235,7 +235,6 @@ func TestParseFeaturesFlags(t *testing.T) {
 			"close_fds":   true,
 			"devlink_pci": true,
 			"usb":         true,
-			"vhci":        true,
 		}},
 		{"none", "none", false, map[string]bool{
 			"tun":         false,
@@ -246,7 +245,6 @@ func TestParseFeaturesFlags(t *testing.T) {
 			"close_fds":   false,
 			"devlink_pci": false,
 			"usb":         false,
-			"vhci":        false,
 		}},
 		{"all", "none", true, map[string]bool{
 			"tun":         true,
@@ -257,7 +255,6 @@ func TestParseFeaturesFlags(t *testing.T) {
 			"close_fds":   true,
 			"devlink_pci": true,
 			"usb":         true,
-			"vhci":        true,
 		}},
 		{"", "none", true, map[string]bool{
 			"tun":         false,
@@ -268,7 +265,6 @@ func TestParseFeaturesFlags(t *testing.T) {
 			"close_fds":   false,
 			"devlink_pci": false,
 			"usb":         false,
-			"vhci":        false,
 		}},
 		{"none", "all", true, map[string]bool{
 			"tun":         false,
@@ -279,7 +275,6 @@ func TestParseFeaturesFlags(t *testing.T) {
 			"close_fds":   false,
 			"devlink_pci": false,
 			"usb":         false,
-			"vhci":        false,
 		}},
 		{"none", "", true, map[string]bool{
 			"tun":         true,
@@ -290,7 +285,6 @@ func TestParseFeaturesFlags(t *testing.T) {
 			"close_fds":   true,
 			"devlink_pci": true,
 			"usb":         true,
-			"vhci":        true,
 		}},
 		{"tun,net_dev", "none", true, map[string]bool{
 			"tun":         true,
@@ -301,7 +295,6 @@ func TestParseFeaturesFlags(t *testing.T) {
 			"close_fds":   false,
 			"devlink_pci": false,
 			"usb":         false,
-			"vhci":        false,
 		}},
 		{"none", "cgroups,net_dev", true, map[string]bool{
 			"tun":         true,
@@ -312,7 +305,6 @@ func TestParseFeaturesFlags(t *testing.T) {
 			"close_fds":   true,
 			"devlink_pci": true,
 			"usb":         true,
-			"vhci":        true,
 		}},
 		{"close_fds", "none", true, map[string]bool{
 			"tun":         false,
@@ -323,7 +315,6 @@ func TestParseFeaturesFlags(t *testing.T) {
 			"close_fds":   true,
 			"devlink_pci": false,
 			"usb":         false,
-			"vhci":        false,
 		}},
 	}
 	for i, test := range tests {

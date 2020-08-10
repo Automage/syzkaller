@@ -15,7 +15,6 @@ import (
 	"github.com/google/syzkaller/pkg/mgrconfig"
 	"github.com/google/syzkaller/pkg/osutil"
 	"github.com/google/syzkaller/pkg/report"
-	"github.com/google/syzkaller/pkg/vcs"
 )
 
 var (
@@ -70,8 +69,7 @@ func main() {
 		}
 		fmt.Printf("TITLE: %v\n", rep.Title)
 		fmt.Printf("CORRUPTED: %v (%v)\n", rep.Corrupted, rep.CorruptedReason)
-		fmt.Printf("MAINTAINERS (TO): %v\n", rep.Recipients.GetEmails(vcs.To))
-		fmt.Printf("MAINTAINERS (CC): %v\n", rep.Recipients.GetEmails(vcs.Cc))
+		fmt.Printf("MAINTAINERS: %v\n", rep.Maintainers)
 		fmt.Printf("\n")
 		os.Stdout.Write(rep.Report)
 		fmt.Printf("\n\n")

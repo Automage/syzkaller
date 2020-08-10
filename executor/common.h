@@ -9,7 +9,7 @@
 // - NORETURN/PRINTF/debug are removed
 // - exitf/fail are replaced with exit
 // - uintN types are replaced with uintN_t
-// - /*{{{FOO}}}*/ placeholders are replaced by actual values
+// - /*FOO*/ placeholders are replaced by actual values
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -78,19 +78,7 @@ static void segv_handler(int sig, siginfo_t* info, void* ctx)
 	uintptr_t addr = (uintptr_t)info->si_addr;
 	const uintptr_t prog_start = 1 << 20;
 	const uintptr_t prog_end = 100 << 20;
-	int skip = __atomic_load_n(&skip_segv, __ATOMIC_RELAXED) != 0;
-	int valid = addr < prog_start || addr > prog_end;
-#if GOOS_freebsd || (GOOS_test && HOSTGOOS_freebsd)
-	// FreeBSD delivers SIGBUS in response to any fault that isn't a page
-	// fault.  In this case it tries to be helpful and sets si_addr to the
-	// address of the faulting instruction rather than zero as other
-	// operating systems seem to do.  However, such faults should always be
-	// ignored.
-	if (sig == SIGBUS) {
-		valid = 1;
-	}
-#endif
-	if (skip && valid) {
+	if (__atomic_load_n(&skip_segv, __ATOMIC_RELAXED) && (addr < prog_start || addr > prog_end)) {
 		debug("SIGSEGV on %p, skipping\n", (void*)addr);
 #if GOOS_akaros
 		struct user_context* uctx = (struct user_context*)ctx;
@@ -428,7 +416,7 @@ static long syz_execute_func(volatile long text)
 	asm volatile("" ::"r"(0l), "r"(1l), "r"(2l), "r"(3l), "r"(4l), "r"(5l), "r"(6l),
 		     "r"(7l), "r"(8l), "r"(9l), "r"(10l), "r"(11l), "r"(12l), "r"(13l));
 #endif
-	((void (*)(void))(text))();
+	NONFAILING(((void (*)(void))(text))());
 	return 0;
 }
 #endif
@@ -474,7 +462,7 @@ static void loop(void)
 	int collide = 0;
 again:
 #endif
-	for (call = 0; call < /*{{{NUM_CALLS}}}*/; call++) {
+	for (call = 0; call < /*NUM_CALLS*/; call++) {
 		for (thread = 0; thread < (int)(sizeof(threads) / sizeof(threads[0])); thread++) {
 			struct thread_t* th = &threads[thread];
 			if (!th->created) {
@@ -494,7 +482,7 @@ again:
 			if (collide && (call % 2) == 0)
 				break;
 #endif
-			event_timedwait(&th->done, /*{{{CALL_TIMEOUT}}}*/);
+			event_timedwait(&th->done, /*CALL_TIMEOUT*/);
 			break;
 		}
 	}
@@ -547,7 +535,7 @@ static void loop(void)
 #endif
 	int iter;
 #if SYZ_REPEAT_TIMES
-	for (iter = 0; iter < /*{{{REPEAT_TIMES}}}*/; iter++) {
+	for (iter = 0; iter < /*REPEAT_TIMES*/; iter++) {
 #else
 	for (iter = 0;; iter++) {
 #endif
@@ -671,9 +659,9 @@ static void loop(void)
 #endif
 
 #if !SYZ_EXECUTOR
-/*{{{SYSCALL_DEFINES}}}*/
+/*SYSCALL_DEFINES*/
 
-/*{{{RESULTS}}}*/
+/*RESULTS*/
 
 #if SYZ_THREADED || SYZ_REPEAT || SYZ_SANDBOX_NONE || SYZ_SANDBOX_SETUID || SYZ_SANDBOX_NAMESPACE || SYZ_SANDBOX_ANDROID
 #if SYZ_THREADED
@@ -684,7 +672,7 @@ void execute_one(void)
 void loop(void)
 #endif
 {
-	/*{{{SYSCALLS}}}*/
+	/*SYSCALLS*/
 #if SYZ_HAVE_CLOSE_FDS && !SYZ_THREADED && !SYZ_REPEAT
 	close_fds();
 #endif
@@ -697,7 +685,7 @@ void loop(void)
 
 int main(int argc, char** argv)
 {
-	/*{{{MMAP_DATA}}}*/
+	/*MMAP_DATA*/
 
 	program_name = argv[0];
 	if (argc == 2 && strcmp(argv[1], "child") == 0)
@@ -705,7 +693,7 @@ int main(int argc, char** argv)
 #else
 int main(void)
 {
-	/*{{{MMAP_DATA}}}*/
+	/*MMAP_DATA*/
 #endif
 
 #if SYZ_BINFMT_MISC
@@ -728,13 +716,13 @@ int main(void)
 	install_segv_handler();
 #endif
 #if SYZ_MULTI_PROC
-	for (procid = 0; procid < /*{{{PROCS}}}*/; procid++) {
+	for (procid = 0; procid < /*PROCS*/; procid++) {
 		if (fork() == 0) {
 #endif
 #if SYZ_USE_TMP_DIR || SYZ_SANDBOX_ANDROID
 			use_temporary_dir();
 #endif
-			/*{{{SANDBOX_FUNC}}}*/
+			/*SANDBOX_FUNC*/
 #if SYZ_HAVE_CLOSE_FDS && !SYZ_THREADED && !SYZ_REPEAT && !SYZ_SANDBOX_NONE && \
     !SYZ_SANDBOX_SETUID && !SYZ_SANDBOX_NAMESPACE && !SYZ_SANDBOX_ANDROID
 			close_fds();

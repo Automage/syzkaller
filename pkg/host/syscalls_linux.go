@@ -24,7 +24,7 @@ import (
 func isSupported(c *prog.Syscall, target *prog.Target, sandbox string) (bool, string) {
 	log.Logf(2, "checking support for %v", c.Name)
 	if strings.HasPrefix(c.CallName, "syz_") {
-		return isSupportedSyzkall(c, target, sandbox)
+		return isSupportedSyzkall(sandbox, c)
 	}
 	if reason := isSupportedLSM(c); reason != "" {
 		return false, reason
@@ -43,10 +43,6 @@ func isSupported(c *prog.Syscall, target *prog.Target, sandbox string) (bool, st
 		// Don't shutdown root filesystem.
 		return false, "unsafe with sandbox=none"
 	}
-	return isSupportedSyscall(c, target)
-}
-
-func isSupportedSyscall(c *prog.Syscall, target *prog.Target) (bool, string) {
 	// There are 3 possible strategies for detecting supported syscalls:
 	// 1. Executes all syscalls with presumably invalid arguments and check for ENOprog.
 	//    But not all syscalls are safe to execute. For example, pause will hang,
@@ -167,120 +163,65 @@ var (
 	lsmDisabled     map[string]bool
 )
 
-func isSyzUsbSupported(c *prog.Syscall, target *prog.Target, sandbox string) (bool, string) {
-	reason := checkUSBEmulation()
-	return reason == "", reason
-}
-
-func alwaysSupported(c *prog.Syscall, target *prog.Target, sandbox string) (bool, string) {
-	return true, ""
-}
-
-func isNetInjectionSupported(c *prog.Syscall, target *prog.Target, sandbox string) (bool, string) {
-	reason := checkNetInjection()
-	return reason == "", reason
-}
-
-func isVhciInjectionSupported(c *prog.Syscall, target *prog.Target, sandbox string) (bool, string) {
-	reason := checkVhciInjection()
-	return reason == "", reason
-}
-
-func isSyzKvmSetupCPUSupported(c *prog.Syscall, target *prog.Target, sandbox string) (bool, string) {
-	switch c.Name {
-	case "syz_kvm_setup_cpu$x86":
-		if runtime.GOARCH == "amd64" || runtime.GOARCH == "386" {
-			return true, ""
+// The function is lengthy as it handles all pseudo-syscalls,
+// but it does not seem to cause comprehension problems as there is no shared state.
+// Splitting this per-syscall will only increase code size.
+func isSupportedSyzkall(sandbox string, c *prog.Syscall) (bool, string) {
+	switch c.CallName {
+	case "syz_open_dev":
+		return isSupportedSyzOpenDev(sandbox, c)
+	case "syz_open_procfs":
+		return true, ""
+	case "syz_open_pts":
+		return true, ""
+	case "syz_emit_ethernet", "syz_extract_tcp_res":
+		reason := checkNetInjection()
+		return reason == "", reason
+	case "syz_usb_connect", "syz_usb_connect_ath9k", "syz_usb_disconnect",
+		"syz_usb_control_io", "syz_usb_ep_write", "syz_usb_ep_read":
+		reason := checkUSBEmulation()
+		return reason == "", reason
+	case "syz_kvm_setup_cpu":
+		switch c.Name {
+		case "syz_kvm_setup_cpu$x86":
+			if runtime.GOARCH == "amd64" || runtime.GOARCH == "386" {
+				return true, ""
+			}
+		case "syz_kvm_setup_cpu$arm64":
+			if runtime.GOARCH == "arm64" {
+				return true, ""
+			}
 		}
-	case "syz_kvm_setup_cpu$arm64":
-		if runtime.GOARCH == "arm64" {
-			return true, ""
+		return false, "unsupported arch"
+	case "syz_init_net_socket":
+		// Unfortunately this only works with sandbox none at the moment.
+		// The problem is that setns of a network namespace requires CAP_SYS_ADMIN
+		// in the target namespace, and we've lost all privs in the init namespace
+		// during creation of a user namespace.
+		if ok, reason := onlySandboxNone(sandbox); !ok {
+			return false, reason
 		}
-	}
-	return false, "unsupported arch"
-}
-
-func isSyzOpenDevSupported(c *prog.Syscall, target *prog.Target, sandbox string) (bool, string) {
-	return isSupportedSyzOpenDev(sandbox, c)
-}
-
-func isSyzInitNetSocketSupported(c *prog.Syscall, target *prog.Target, sandbox string) (bool, string) {
-	if ok, reason := onlySandboxNone(sandbox); !ok {
-		return false, reason
-	}
-	return isSupportedSocket(c)
-}
-
-func isSyzGenetlinkGetFamilyIDSupported(c *prog.Syscall, target *prog.Target, sandbox string) (bool, string) {
-	fd, err := syscall.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_GENERIC)
-	if fd == -1 {
-		return false, fmt.Sprintf("socket(AF_NETLINK, SOCK_RAW, NETLINK_GENERIC) failed: %v", err)
-	}
-	syscall.Close(fd)
-	return true, ""
-}
-func isSyzMountImageSupported(c *prog.Syscall, target *prog.Target, sandbox string) (bool, string) {
-	if ok, reason := onlySandboxNone(sandbox); !ok {
-		return ok, reason
-	}
-	fstype, ok := extractStringConst(c.Args[0].Type)
-	if !ok {
-		panic("syz_mount_image arg is not string")
-	}
-	return isSupportedFilesystem(fstype)
-}
-
-func isSyzReadPartTableSupported(c *prog.Syscall, target *prog.Target, sandbox string) (bool, string) {
-	return onlySandboxNone(sandbox)
-}
-
-func isSyzIoUringSupported(c *prog.Syscall, target *prog.Target, sandbox string) (bool, string) {
-	ioUringSyscallName := "io_uring_setup"
-	ioUringSyscall := target.SyscallMap[ioUringSyscallName]
-	if ioUringSyscall == nil {
-		return false, fmt.Sprintf("sys_%v is not present in the target", ioUringSyscallName)
-	}
-	return isSupportedSyscall(ioUringSyscall, target)
-}
-
-func isBtfVmlinuxSupported(c *prog.Syscall, target *prog.Target, sandbox string) (bool, string) {
-	if err := osutil.IsAccessible("/sys/kernel/btf/vmlinux"); err != nil {
-		return false, err.Error()
-	}
-	return onlySandboxNone(sandbox)
-}
-
-var syzkallSupport = map[string]func(*prog.Syscall, *prog.Target, string) (bool, string){
-	"syz_open_dev":                isSyzOpenDevSupported,
-	"syz_open_procfs":             alwaysSupported,
-	"syz_open_pts":                alwaysSupported,
-	"syz_execute_func":            alwaysSupported,
-	"syz_emit_ethernet":           isNetInjectionSupported,
-	"syz_extract_tcp_res":         isNetInjectionSupported,
-	"syz_usb_connect":             isSyzUsbSupported,
-	"syz_usb_connect_ath9k":       isSyzUsbSupported,
-	"syz_usb_disconnect":          isSyzUsbSupported,
-	"syz_usb_control_io":          isSyzUsbSupported,
-	"syz_usb_ep_write":            isSyzUsbSupported,
-	"syz_usb_ep_read":             isSyzUsbSupported,
-	"syz_kvm_setup_cpu":           isSyzKvmSetupCPUSupported,
-	"syz_emit_vhci":               isVhciInjectionSupported,
-	"syz_init_net_socket":         isSyzInitNetSocketSupported,
-	"syz_genetlink_get_family_id": isSyzGenetlinkGetFamilyIDSupported,
-	"syz_mount_image":             isSyzMountImageSupported,
-	"syz_read_part_table":         isSyzReadPartTableSupported,
-	"syz_io_uring_submit":         isSyzIoUringSupported,
-	"syz_io_uring_complete":       isSyzIoUringSupported,
-	"syz_io_uring_setup":          isSyzIoUringSupported,
-	// syz_memcpy_off is only used for io_uring descriptions, thus, enable it
-	// only if io_uring syscalls are enabled.
-	"syz_memcpy_off":     isSyzIoUringSupported,
-	"syz_btf_id_by_name": isBtfVmlinuxSupported,
-}
-
-func isSupportedSyzkall(c *prog.Syscall, target *prog.Target, sandbox string) (bool, string) {
-	if isSupported, ok := syzkallSupport[c.CallName]; ok {
-		return isSupported(c, target, sandbox)
+		return isSupportedSocket(c)
+	case "syz_genetlink_get_family_id":
+		fd, err := syscall.Socket(syscall.AF_NETLINK, syscall.SOCK_RAW, syscall.NETLINK_GENERIC)
+		if fd == -1 {
+			return false, fmt.Sprintf("socket(AF_NETLINK, SOCK_RAW, NETLINK_GENERIC) failed: %v", err)
+		}
+		syscall.Close(fd)
+		return true, ""
+	case "syz_mount_image":
+		if ok, reason := onlySandboxNone(sandbox); !ok {
+			return ok, reason
+		}
+		fstype, ok := extractStringConst(c.Args[0].Type)
+		if !ok {
+			panic("syz_mount_image arg is not string")
+		}
+		return isSupportedFilesystem(fstype)
+	case "syz_read_part_table":
+		return onlySandboxNone(sandbox)
+	case "syz_execute_func":
+		return true, ""
 	}
 	panic("unknown syzkall: " + c.Name)
 }
@@ -293,10 +234,6 @@ func isSupportedSyzOpenDev(sandbox string, c *prog.Syscall) (bool, string) {
 	fname, ok := extractStringConst(c.Args[0].Type)
 	if !ok {
 		panic("first open arg is not a pointer to string const")
-	}
-	if strings.Contains(fname, "/dev/raw/raw#") {
-		// For syz_open_dev$char_raw, these files don't exist initially.
-		return true, ""
 	}
 	if !strings.Contains(fname, "#") {
 		panic(fmt.Sprintf("%v does not contain # in the file name (should be openat)", c.Name))

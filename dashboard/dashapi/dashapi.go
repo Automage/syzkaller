@@ -13,7 +13,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"net/mail"
 	"net/url"
 	"reflect"
 	"strings"
@@ -78,8 +77,7 @@ type Commit struct {
 	Title      string
 	Author     string
 	AuthorName string
-	CC         []string // deprecated in favor of Recipients
-	Recipients Recipients
+	CC         []string
 	BugIDs     []string // ID's extracted from Reported-by tags
 	Date       time.Time
 }
@@ -236,9 +234,8 @@ func (dash *Dashboard) UploadCommits(commits []Commit) error {
 type Crash struct {
 	BuildID     string // refers to Build.ID
 	Title       string
-	Corrupted   bool     // report is corrupted (corrupted title, no stacks, etc)
-	Maintainers []string // deprecated in favor of Recipients
-	Recipients  Recipients
+	Corrupted   bool // report is corrupted (corrupted title, no stacks, etc)
+	Maintainers []string
 	Log         []byte
 	Report      []byte
 	// The following is optional and is filled only after repro.
@@ -307,11 +304,10 @@ type BugReport struct {
 	Moderation        bool
 	NoRepro           bool // We don't expect repro (e.g. for build/boot errors).
 	Title             string
-	Link              string   // link to the bug on dashboard
-	CreditEmail       string   // email for the Reported-by tag
-	Maintainers       []string // deprecated in favor of Recipients
-	CC                []string // deprecated in favor of Recipients
-	Recipients        Recipients
+	Link              string // link to the bug on dashboard
+	CreditEmail       string // email for the Reported-by tag
+	Maintainers       []string
+	CC                []string // additional CC emails
 	OS                string
 	Arch              string
 	VMArch            string
@@ -395,9 +391,8 @@ type BugNotification struct {
 	ExtID       string // arbitrary reporting ID forwarded from BugUpdate.ExtID
 	Title       string
 	Text        string   // meaning depends on Type
-	CC          []string // deprecated in favor of Recipients
-	Maintainers []string // deprecated in favor of Recipients
-	Recipients  Recipients
+	CC          []string // additional CC emails
+	Maintainers []string
 	// Public is what we want all involved people to see (e.g. if we notify about a wrong commit title,
 	// people need to see it and provide the right title). Not public is what we want to send only
 	// to a minimal set of recipients (our mailing list) (e.g. notification about an obsoleted bug
@@ -628,25 +623,3 @@ func (dash *Dashboard) queryImpl(method string, req, reply interface{}) error {
 	}
 	return nil
 }
-
-type RecipientType int
-
-const (
-	To RecipientType = iota
-	Cc
-)
-
-func (t RecipientType) String() string {
-	return [...]string{"To", "Cc"}[t]
-}
-
-type RecipientInfo struct {
-	Address mail.Address
-	Type    RecipientType
-}
-
-type Recipients []RecipientInfo
-
-func (r Recipients) Len() int           { return len(r) }
-func (r Recipients) Less(i, j int) bool { return r[i].Address.Address < r[j].Address.Address }
-func (r Recipients) Swap(i, j int)      { r[i], r[j] = r[j], r[i] }

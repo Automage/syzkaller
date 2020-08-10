@@ -60,8 +60,8 @@ static int inject_fault(int nth)
 		fail("failed to open /dev/fault");
 
 	en.scope = FAULT_SCOPE_LWP;
-	en.mode = 0; // FAULT_MODE_NTH_ONESHOT
-	en.nth = nth + 2; // FAULT_NTH_MIN
+	en.mode = 0 /* FAULT_MODE_NTH_ONESHOT */;
+	en.nth = nth + 2 /* FAULT_NTH_MIN */;
 	if (ioctl(fd, FAULT_IOC_ENABLE, &en) != 0)
 		fail("FAULT_IOC_ENABLE failed with nth=%d", nth);
 
@@ -379,8 +379,8 @@ static long syz_extract_tcp_res(volatile long a0, volatile long a1, volatile lon
 	}
 
 	struct tcp_resources* res = (struct tcp_resources*)a0;
-	res->seq = htonl(ntohl(tcphdr->th_seq) + (uint32)a1);
-	res->ack = htonl(ntohl(tcphdr->th_ack) + (uint32)a2);
+	NONFAILING(res->seq = htonl((ntohl(tcphdr->th_seq) + (uint32)a1)));
+	NONFAILING(res->ack = htonl((ntohl(tcphdr->th_ack) + (uint32)a2)));
 
 	debug("extracted seq: %08x\n", res->seq);
 	debug("extracted ack: %08x\n", res->ack);

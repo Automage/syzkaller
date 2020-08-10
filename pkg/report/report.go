@@ -13,7 +13,6 @@ import (
 	"strings"
 
 	"github.com/google/syzkaller/pkg/mgrconfig"
-	"github.com/google/syzkaller/pkg/vcs"
 	"github.com/google/syzkaller/sys/targets"
 )
 
@@ -51,8 +50,8 @@ type Report struct {
 	Corrupted bool
 	// CorruptedReason contains reason why the report is marked as corrupted.
 	CorruptedReason string
-	// Recipients is a list of RecipientInfo with Email, Display Name, and type.
-	Recipients vcs.Recipients
+	// Maintainers is list of maintainer emails (filled in by Symbolize).
+	Maintainers []string
 	// guiltyFile is the source file that we think is to blame for the crash  (filled in by Symbolize).
 	guiltyFile string
 	// reportPrefixLen is length of additional prefix lines that we added before actual crash report.
@@ -214,8 +213,7 @@ func extractReportType(rep *Report) Type {
 	}
 	if strings.HasPrefix(rep.Title, "INFO: rcu detected stall") ||
 		strings.HasPrefix(rep.Title, "INFO: task hung") ||
-		strings.HasPrefix(rep.Title, "BUG: soft lockup") ||
-		strings.HasPrefix(rep.Title, "INFO: task can't die") {
+		strings.HasPrefix(rep.Title, "BUG: soft lockup") {
 		return Hang
 	}
 	return Unknown

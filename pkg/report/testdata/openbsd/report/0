@@ -1,5 +1,4 @@
-TITLE: uvm_fault
-CORRUPTED: Y
+TITLE: uvm_fault: vn_writechk
 
 login: uvm_fault(0xffffff0018def850, 0x50, 0, 1) -> e
 kernel: page fault trap, code=0

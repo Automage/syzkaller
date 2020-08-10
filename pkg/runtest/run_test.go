@@ -4,7 +4,6 @@
 package runtest
 
 import (
-	"flag"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -16,11 +15,6 @@ import (
 	"github.com/google/syzkaller/sys/targets"
 	_ "github.com/google/syzkaller/sys/test/gen" // pull in the test target
 )
-
-// Can be used as:
-// go test -v -run=Test/64_fork ./pkg/runtest -filter=nonfailing
-// to select a subset of tests to run.
-var flagFilter = flag.String("filter", "", "prefix to match test file names")
 
 func Test(t *testing.T) {
 	switch runtime.GOOS {
@@ -34,11 +28,6 @@ func Test(t *testing.T) {
 			continue
 		}
 		sysTarget1 := targets.Get(sysTarget.OS, sysTarget.Arch)
-		if runtime.GOOS == "freebsd" && sysTarget1.PtrSize == 4 {
-			// The default DataOffset collides with a runtime mapping
-			// on FreeBSD.
-			continue
-		}
 		t.Run(sysTarget1.Arch, func(t *testing.T) {
 			t.Parallel()
 			test(t, sysTarget1)
@@ -85,7 +74,6 @@ func test(t *testing.T, sysTarget *targets.Target) {
 	ctx := &Context{
 		Dir:          filepath.Join("..", "..", "sys", target.OS, "test"),
 		Target:       target,
-		Tests:        *flagFilter,
 		Features:     features,
 		EnabledCalls: enabledCalls,
 		Requests:     requests,

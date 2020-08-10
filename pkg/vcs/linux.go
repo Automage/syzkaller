@@ -12,12 +12,12 @@ import (
 	"net/mail"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/google/syzkaller/pkg/email"
 	"github.com/google/syzkaller/pkg/osutil"
 	"github.com/google/syzkaller/prog"
 )
@@ -214,22 +214,21 @@ func (ctx *linux) Bisect(bad, good string, trace io.Writer, pred func() (BisectR
 }
 
 func (ctx *linux) addMaintainers(com *Commit) {
-	if len(com.Recipients) > 2 {
+	if len(com.CC) > 2 {
 		return
 	}
-	mtrs := ctx.getMaintainers(com.Hash, false)
-	if len(mtrs) < 3 {
-		mtrs = ctx.getMaintainers(com.Hash, true)
+	list := ctx.getMaintainers(com.Hash, false)
+	if len(list) < 3 {
+		list = ctx.getMaintainers(com.Hash, true)
 	}
-	com.Recipients = append(com.Recipients, mtrs...)
-	sort.Sort(com.Recipients)
+	com.CC = email.MergeEmailLists(com.CC, list)
 }
 
-func (ctx *linux) getMaintainers(hash string, blame bool) Recipients {
+func (ctx *linux) getMaintainers(hash string, blame bool) []string {
 	// See #1441 re --git-min-percent.
 	args := "git show " + hash + " | " +
 		filepath.FromSlash("scripts/get_maintainer.pl") +
-		" --git-min-percent=20"
+		" --no-n --no-rolestats --git-min-percent=20"
 	if blame {
 		args += " --git-blame"
 	}
@@ -237,42 +236,15 @@ func (ctx *linux) getMaintainers(hash string, blame bool) Recipients {
 	if err != nil {
 		return nil
 	}
-	return ParseMaintainersLinux(output)
-}
-
-func ParseMaintainersLinux(text []byte) Recipients {
-	lines := strings.Split(string(text), "\n")
-	reRole := regexp.MustCompile(` \([^)]+\)$`)
-	var mtrs Recipients
-	// LMKL is To by default, but it changes to Cc if there's also a subsystem list.
-	lkmlType := To
-	foundLkml := false
-	for _, line := range lines {
-		role := reRole.FindString(line)
-		address := strings.Replace(line, role, "", 1)
-		addr, err := mail.ParseAddress(address)
+	var list []string
+	for _, line := range strings.Split(string(output), "\n") {
+		addr, err := mail.ParseAddress(line)
 		if err != nil {
 			continue
 		}
-		var roleType RecipientType
-		if addr.Address == "linux-kernel@vger.kernel.org" {
-			foundLkml = true
-			continue
-		} else if strings.Contains(role, "list") {
-			lkmlType = Cc
-			roleType = To
-		} else if strings.Contains(role, "maintainer") || strings.Contains(role, "supporter") {
-			roleType = To
-		} else {
-			roleType = Cc // Reviewer or other role; default to Cc.
-		}
-		mtrs = append(mtrs, RecipientInfo{*addr, roleType})
+		list = append(list, strings.ToLower(addr.Address))
 	}
-	if foundLkml {
-		mtrs = append(mtrs, RecipientInfo{mail.Address{Address: "linux-kernel@vger.kernel.org"}, lkmlType})
-	}
-	sort.Sort(mtrs)
-	return mtrs
+	return list
 }
 
 const configBisectTag = "# Minimized by syzkaller"

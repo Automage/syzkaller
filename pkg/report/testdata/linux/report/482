@@ -1,6 +1,4 @@
-TITLE: INFO: task can't die in corrupted
-TYPE: HANG
-CORRUPTED: Y
+TITLE: INFO: task syz-executor can't die for more than 143 seconds.
 
 [  440.207852][ T1045] INFO: task syz-executor.1:12632 can't die for more than 143 seconds. 
 [  440.216128][ T1045] syz-executor.1  R  running task    29600 12632   8638 0x00004006 

@@ -13,17 +13,11 @@ import (
 
 func InitTarget(target *prog.Target) {
 	arch := &arch{
-		unix:             targets.MakeUnixNeutralizer(target),
-		CLOCK_REALTIME:   target.GetConst("CLOCK_REALTIME"),
-		CTL_KERN:         target.GetConst("CTL_KERN"),
-		DIOCCLRSTATES:    target.GetConst("DIOCCLRSTATES"),
-		DIOCKILLSTATES:   target.GetConst("DIOCKILLSTATES"),
-		KERN_MAXCLUSTERS: target.GetConst("KERN_MAXCLUSTERS"),
-		S_IFCHR:          target.GetConst("S_IFCHR"),
-		S_IFMT:           target.GetConst("S_IFMT"),
-		MCL_FUTURE:       target.GetConst("MCL_FUTURE"),
-		RLIMIT_DATA:      target.GetConst("RLIMIT_DATA"),
-		RLIMIT_STACK:     target.GetConst("RLIMIT_STACK"),
+		unix:           targets.MakeUnixNeutralizer(target),
+		DIOCKILLSTATES: target.GetConst("DIOCKILLSTATES"),
+		DIOCCLRSTATES:  target.GetConst("DIOCCLRSTATES"),
+		S_IFMT:         target.GetConst("S_IFMT"),
+		S_IFCHR:        target.GetConst("S_IFCHR"),
 	}
 
 	target.MakeDataMmap = targets.MakePosixMmap(target, false, false)
@@ -32,17 +26,11 @@ func InitTarget(target *prog.Target) {
 }
 
 type arch struct {
-	unix             *targets.UnixNeutralizer
-	CLOCK_REALTIME   uint64
-	CTL_KERN         uint64
-	DIOCCLRSTATES    uint64
-	DIOCKILLSTATES   uint64
-	KERN_MAXCLUSTERS uint64
-	S_IFCHR          uint64
-	S_IFMT           uint64
-	MCL_FUTURE       uint64
-	RLIMIT_DATA      uint64
-	RLIMIT_STACK     uint64
+	unix           *targets.UnixNeutralizer
+	DIOCCLRSTATES  uint64
+	DIOCKILLSTATES uint64
+	S_IFMT         uint64
+	S_IFCHR        uint64
 }
 
 const (
@@ -58,6 +46,13 @@ const (
 	// kOutPipeFd in executor/executor.cc
 	kcovFdMinorMax = 248
 
+	// MCL_FUTURE from openbsd:src/sys/sys/mman.h
+	mclFuture uint64 = 0x2
+
+	// RLIMIT_DATA from openbsd:src/sys/sys/resource.h
+	rlimitData = 2
+	// RLIMIT_STACK from openbsd:src/sys/sys/resource.h
+	rlimitStack = 3
 	// Mask covering all valid rlimit resources.
 	rlimitMask = 0xf
 )
@@ -100,8 +95,6 @@ func (arch *arch) neutralize(c *prog.Call) {
 		for _, f := range badflags {
 			flags.Val &= ^f
 		}
-	case "clock_settime":
-		arch.neutralizeClockSettime(c)
 	case "ioctl":
 		// Performing the following ioctl commands on a /dev/pf file
 		// descriptor causes the ssh VM connection to die. For now, just
@@ -139,85 +132,46 @@ func (arch *arch) neutralize(c *prog.Call) {
 		}
 	case "mlockall":
 		flags := c.Args[0].(*prog.ConstArg)
-		flags.Val &= ^arch.MCL_FUTURE
+		flags.Val &= ^mclFuture
 	case "setrlimit":
-		arch.neutralizeRlimit(c)
-	case "sysctl":
-		arch.neutralizeSysctl(c)
+		rlimitMin := uint64(0)
+		rlimitMax := uint64(math.MaxUint64)
+		resource := c.Args[0].(*prog.ConstArg).Val & rlimitMask
+		if resource == rlimitData {
+			// OpenBSD performs a strict validation of the
+			// RLIMIT_DATA soft limit during memory allocation.
+			// Lowering the same limit could cause syz-executor to
+			// run out of memory quickly. Therefore make sure to not
+			// go lower than the default soft limit for the staff
+			// group.
+			rlimitMin = 1536 * 1024 * 1024
+		} else if resource == rlimitStack {
+			// Do not allow the stack to grow beyond the initial
+			// soft limit chosen by syz-executor. Otherwise,
+			// syz-executor will most likely not be able to perform
+			// any more heap allocations since they majority of
+			// memory is reserved for the stack.
+			rlimitMax = 1 * 1024 * 1024
+		} else {
+			break
+		}
+		ptr := c.Args[1].(*prog.PointerArg)
+		if ptr.Res != nil {
+			args := ptr.Res.(*prog.GroupArg).Inner
+			for _, arg := range args {
+				switch v := arg.(type) {
+				case *prog.ConstArg:
+					if v.Val < rlimitMin {
+						v.Val = rlimitMin
+					}
+					if v.Val > rlimitMax {
+						v.Val = rlimitMax
+					}
+				}
+			}
+		}
 	default:
 		arch.unix.Neutralize(c)
-	}
-}
-
-func (arch *arch) neutralizeClockSettime(c *prog.Call) {
-	switch v := c.Args[0].(type) {
-	case *prog.ConstArg:
-		// Do not fiddle with the wall clock, one of the causes of "no
-		// output from test machine" reports.
-		if v.Val == arch.CLOCK_REALTIME {
-			v.Val = ^uint64(0)
-		}
-	}
-}
-
-func (arch *arch) neutralizeRlimit(c *prog.Call) {
-	rlimitMin := uint64(0)
-	rlimitMax := uint64(math.MaxUint64)
-	resource := c.Args[0].(*prog.ConstArg).Val & rlimitMask
-	if resource == arch.RLIMIT_DATA {
-		// OpenBSD performs a strict validation of the RLIMIT_DATA soft
-		// limit during memory allocation. Lowering the same limit could
-		// cause syz-executor to run out of memory quickly. Therefore
-		// make sure to not go lower than the default soft limit for the
-		// staff group.
-		rlimitMin = 1536 * 1024 * 1024
-	} else if resource == arch.RLIMIT_STACK {
-		// Do not allow the stack to grow beyond the initial soft limit
-		// chosen by syz-executor. Otherwise, syz-executor will most
-		// likely not be able to perform any more heap allocations since
-		// they majority of memory is reserved for the stack.
-		rlimitMax = 1 * 1024 * 1024
-	} else {
-		return
-	}
-
-	ptr := c.Args[1].(*prog.PointerArg)
-	if ptr.Res == nil {
-		return
-	}
-
-	args := ptr.Res.(*prog.GroupArg).Inner
-	for _, arg := range args {
-		switch v := arg.(type) {
-		case *prog.ConstArg:
-			if v.Val < rlimitMin {
-				v.Val = rlimitMin
-			}
-			if v.Val > rlimitMax {
-				v.Val = rlimitMax
-			}
-		}
-	}
-}
-
-func (arch *arch) neutralizeSysctl(c *prog.Call) {
-	ptr := c.Args[0].(*prog.PointerArg)
-	if ptr.Res == nil {
-		return
-	}
-
-	mib := ptr.Res.(*prog.GroupArg).Inner
-	if len(mib) < 2 {
-		return
-	}
-
-	n1 := mib[0].(*prog.ConstArg)
-	n2 := mib[1].(*prog.ConstArg)
-	// Do not fiddle with root only knob kern.maxclusters, one of the causes
-	// of "no output from test machine" reports.
-	if n1.Val == arch.CTL_KERN && n2.Val == arch.KERN_MAXCLUSTERS {
-		n1.Val = 0
-		n2.Val = 0
 	}
 }
 

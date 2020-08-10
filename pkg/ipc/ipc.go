@@ -28,19 +28,18 @@ type EnvFlags uint64
 
 // Note: New / changed flags should be added to parse_env_flags in executor.cc.
 const (
-	FlagDebug               EnvFlags = 1 << iota // debug output from executor
-	FlagSignal                                   // collect feedback signals (coverage)
-	FlagSandboxSetuid                            // impersonate nobody user
-	FlagSandboxNamespace                         // use namespaces for sandboxing
-	FlagSandboxAndroid                           // use Android sandboxing for the untrusted_app domain
-	FlagExtraCover                               // collect extra coverage
-	FlagEnableTun                                // setup and use /dev/tun for packet injection
-	FlagEnableNetDev                             // setup more network devices for testing
-	FlagEnableNetReset                           // reset network namespace between programs
-	FlagEnableCgroups                            // setup cgroups for testing
-	FlagEnableCloseFds                           // close fds after each program
-	FlagEnableDevlinkPCI                         // setup devlink PCI device
-	FlagEnableVhciInjection                      // setup and use /dev/vhci for hci packet injection
+	FlagDebug            EnvFlags = 1 << iota // debug output from executor
+	FlagSignal                                // collect feedback signals (coverage)
+	FlagSandboxSetuid                         // impersonate nobody user
+	FlagSandboxNamespace                      // use namespaces for sandboxing
+	FlagSandboxAndroid                        // use Android sandboxing for the untrusted_app domain
+	FlagExtraCover                            // collect extra coverage
+	FlagEnableTun                             // setup and use /dev/tun for packet injection
+	FlagEnableNetDev                          // setup more network devices for testing
+	FlagEnableNetReset                        // reset network namespace between programs
+	FlagEnableCgroups                         // setup cgroups for testing
+	FlagEnableCloseFds                        // close fds after each program
+	FlagEnableDevlinkPCI                      // setup devlink PCI device
 )
 
 // Per-exec flags for ExecOpts.Flags.
@@ -587,8 +586,6 @@ func makeCommand(pid int, bin []string, config *Config, inFile, outFile *os.File
 		cmd.ExtraFiles = []*os.File{inFile, outFile}
 	}
 	cmd.Dir = dir
-	// Tell ASAN to not mess with our NONFAILING.
-	cmd.Env = append(append([]string{}, os.Environ()...), "ASAN_OPTIONS=handle_segv=0 allow_user_segv_handler=1")
 	cmd.Stdin = outrp
 	cmd.Stdout = inwp
 	if config.Flags&FlagDebug != 0 {

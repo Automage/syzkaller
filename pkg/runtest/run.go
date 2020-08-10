@@ -394,9 +394,6 @@ func (ctx *Context) createSyzTest(p *prog.Prog, sandbox string, threaded, cov bo
 	if ctx.Features[host.FeatureDevlinkPCI].Enabled {
 		cfg.Flags |= ipc.FlagEnableDevlinkPCI
 	}
-	if ctx.Features[host.FeatureVhciInjection].Enabled {
-		cfg.Flags |= ipc.FlagEnableVhciInjection
-	}
 	if ctx.Debug {
 		cfg.Flags |= ipc.FlagDebug
 	}
@@ -428,9 +425,6 @@ func (ctx *Context) createCTest(p *prog.Prog, sandbox string, threaded bool, tim
 		}
 		if ctx.Features[host.FeatureNetDevices].Enabled {
 			opts.NetDevices = true
-		}
-		if ctx.Features[host.FeatureVhciInjection].Enabled {
-			opts.VhciInjection = true
 		}
 	}
 	src, err := csource.Write(p, opts)
@@ -503,9 +497,7 @@ func checkResult(req *RunRequest) error {
 				if len(inf.Signal) < 2 && !calls[callName] && len(info.Extra.Signal) == 0 {
 					return fmt.Errorf("run %v: call %v: no signal", run, i)
 				}
-				// syz_btf_id_by_name is a pseudo-syscall that might not provide
-				// any coverage when invoked.
-				if len(inf.Cover) == 0 && callName != "syz_btf_id_by_name" {
+				if len(inf.Cover) == 0 {
 					return fmt.Errorf("run %v: call %v: no cover", run, i)
 				}
 				calls[callName] = true
@@ -559,7 +551,19 @@ func parseBinOutput(req *RunRequest) ([]*ipc.ProgInfo, error) {
 
 func RunTest(req *RunRequest, executor string) {
 	if req.Bin != "" {
-		runTestC(req)
+		tmpDir, err := ioutil.TempDir("", "syz-runtest")
+		if err != nil {
+			req.Err = fmt.Errorf("failed to create temp dir: %v", err)
+			return
+		}
+		defer os.RemoveAll(tmpDir)
+		req.Output, req.Err = osutil.RunCmd(20*time.Second, tmpDir, req.Bin)
+		if verr, ok := req.Err.(*osutil.VerboseError); ok {
+			// The process can legitimately do something like exit_group(1).
+			// So we ignore the error and rely on the rest of the checks (e.g. syscall return values).
+			req.Err = nil
+			req.Output = verr.Output
+		}
 		return
 	}
 	req.Cfg.Executor = executor
@@ -601,25 +605,5 @@ func RunTest(req *RunRequest, executor string) {
 		info.Extra.Signal = append([]uint32{}, info.Extra.Signal...)
 		info.Extra.Cover = append([]uint32{}, info.Extra.Cover...)
 		req.Info = append(req.Info, info)
-	}
-}
-
-func runTestC(req *RunRequest) {
-	tmpDir, err := ioutil.TempDir("", "syz-runtest")
-	if err != nil {
-		req.Err = fmt.Errorf("failed to create temp dir: %v", err)
-		return
-	}
-	defer os.RemoveAll(tmpDir)
-	cmd := osutil.Command(req.Bin)
-	cmd.Dir = tmpDir
-	// Tell ASAN to not mess with our NONFAILING.
-	cmd.Env = append(append([]string{}, os.Environ()...), "ASAN_OPTIONS=handle_segv=0 allow_user_segv_handler=1")
-	req.Output, req.Err = osutil.Run(20*time.Second, cmd)
-	if verr, ok := req.Err.(*osutil.VerboseError); ok {
-		// The process can legitimately do something like exit_group(1).
-		// So we ignore the error and rely on the rest of the checks (e.g. syscall return values).
-		req.Err = nil
-		req.Output = verr.Output
 	}
 }

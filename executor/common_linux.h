@@ -184,10 +184,10 @@ static int netlink_send_ext(struct nlmsg* nlmsg, int sock,
 	if (n != hdr->nlmsg_len)
 		fail("short netlink write: %d/%d", n, hdr->nlmsg_len);
 	n = recv(sock, nlmsg->buf, sizeof(nlmsg->buf), 0);
-	if (reply_len)
+	if (hdr->nlmsg_type == NLMSG_DONE) {
 		*reply_len = 0;
-	if (hdr->nlmsg_type == NLMSG_DONE)
 		return 0;
+	}
 	if (n < sizeof(struct nlmsghdr))
 		fail("short netlink read: %d", n);
 	if (reply_len && hdr->nlmsg_type == reply_type) {
@@ -557,7 +557,7 @@ static void initialize_tun(void)
 }
 #endif
 
-#if SYZ_EXECUTOR || __NR_syz_init_net_socket || SYZ_DEVLINK_PCI || SYZ_VHCI_INJECTION
+#if SYZ_EXECUTOR || __NR_syz_init_net_socket || SYZ_DEVLINK_PCI
 const int kInitNetNsFd = 239; // see kMaxFd
 #endif
 
@@ -606,7 +606,7 @@ static int netlink_devlink_id_get(struct nlmsg* nlmsg, int sock)
 		debug("netlink: failed to parse message for devlink family id\n");
 		return -1;
 	}
-	recv(sock, nlmsg->buf, sizeof(nlmsg->buf), 0); // recv ack
+	recv(sock, nlmsg->buf, sizeof(nlmsg->buf), 0); /* recv ack */
 
 	return id;
 }
@@ -820,7 +820,7 @@ static int netlink_wireguard_id_get(struct nlmsg* nlmsg, int sock)
 		debug("netlink: failed to parse message for wireguard family id\n");
 		return -1;
 	}
-	recv(sock, nlmsg->buf, sizeof(nlmsg->buf), 0); // recv ack
+	recv(sock, nlmsg->buf, sizeof(nlmsg->buf), 0); /* recv ack */
 
 	return id;
 }
@@ -841,11 +841,11 @@ static void netlink_wireguard_setup(void)
 	const uint16 listen_c = 20003;
 	const uint16 af_inet = AF_INET;
 	const uint16 af_inet6 = AF_INET6;
-	// Unused, but useful in case we change this:
-	// const struct sockaddr_in endpoint_a_v4 = {
-	//     .sin_family = AF_INET,
-	//     .sin_port = htons(listen_a),
-	//     .sin_addr = {htonl(INADDR_LOOPBACK)}};
+	/* Unused, but useful in case we change this:
+	const struct sockaddr_in endpoint_a_v4 = {
+	    .sin_family = AF_INET,
+	    .sin_port = htons(listen_a),
+	    .sin_addr = {htonl(INADDR_LOOPBACK)}};*/
 	const struct sockaddr_in endpoint_b_v4 = {
 	    .sin_family = AF_INET,
 	    .sin_port = htons(listen_b),
@@ -858,11 +858,11 @@ static void netlink_wireguard_setup(void)
 	    .sin6_family = AF_INET6,
 	    .sin6_port = htons(listen_a)};
 	endpoint_a_v6.sin6_addr = in6addr_loopback;
-	// Unused, but useful in case we change this:
-	// const struct sockaddr_in6 endpoint_b_v6 = {
-	//     .sin6_family = AF_INET6,
-	//     .sin6_port = htons(listen_b)};
-	// endpoint_b_v6.sin6_addr = in6addr_loopback;
+	/* Unused, but useful in case we change this:
+	const struct sockaddr_in6 endpoint_b_v6 = {
+	    .sin6_family = AF_INET6,
+	    .sin6_port = htons(listen_b)};
+	endpoint_b_v6.sin6_addr = in6addr_loopback; */
 	struct sockaddr_in6 endpoint_c_v6 = {
 	    .sin6_family = AF_INET6,
 	    .sin6_port = htons(listen_c)};
@@ -1327,13 +1327,15 @@ static long syz_emit_ethernet(volatile long a0, volatile long a1, volatile long 
 		vecs[nfrags].iov_len = length;
 		nfrags++;
 	} else {
-		bool full = frags->full;
-		uint32 count = frags->count;
+		bool full = true;
+		uint32 i, count = 0;
+		NONFAILING(full = frags->full);
+		NONFAILING(count = frags->count);
 		if (count > MAX_FRAGS)
 			count = MAX_FRAGS;
-		uint32 i;
 		for (i = 0; i < count && length != 0; i++) {
-			uint32 size = frags->frags[i];
+			uint32 size = 0;
+			NONFAILING(size = frags->frags[i]);
 			if (size > length)
 				size = length;
 			vecs[nfrags].iov_base = data;
@@ -1352,419 +1354,6 @@ static long syz_emit_ethernet(volatile long a0, volatile long a1, volatile long 
 #else
 	return write(tunfd, data, length);
 #endif
-}
-#endif
-
-#if SYZ_EXECUTOR || __NR_syz_io_uring_submit || __NR_syz_io_uring_complete || __NR_syz_io_uring_setup
-
-#define SIZEOF_IO_URING_SQE 64
-#define SIZEOF_IO_URING_CQE 16
-
-// Once a io_uring is set up by calling io_uring_setup, the offsets to the member fields
-// to be used on the mmap'ed area are set in structs io_sqring_offsets and io_cqring_offsets.
-// Except io_sqring_offsets.array, the offsets are static while all depend on how struct io_rings
-// is organized in code. The offsets can be marked as resources in syzkaller descriptions but
-// this makes it difficult to generate correct programs by the fuzzer. Thus, the offsets are
-// hard-coded here (and in the descriptions), and array offset is later computed once the number
-// of entries is available. Another way to obtain the offsets is to setup another io_uring here
-// and use what it returns. It is slower but might be more maintainable.
-#define SQ_HEAD_OFFSET 0
-#define SQ_TAIL_OFFSET 64
-#define SQ_RING_MASK_OFFSET 256
-#define SQ_RING_ENTRIES_OFFSET 264
-#define SQ_FLAGS_OFFSET 276
-#define SQ_DROPPED_OFFSET 272
-#define CQ_HEAD_OFFSET 128
-#define CQ_TAIL_OFFSET 192
-#define CQ_RING_MASK_OFFSET 260
-#define CQ_RING_ENTRIES_OFFSET 268
-#define CQ_RING_OVERFLOW_OFFSET 284
-#define CQ_FLAGS_OFFSET 280
-#define CQ_CQES_OFFSET 320
-
-#if SYZ_EXECUTOR || __NR_syz_io_uring_complete
-
-// From linux/io_uring.h
-struct io_uring_cqe {
-	uint64 user_data;
-	uint32 res;
-	uint32 flags;
-};
-
-static long syz_io_uring_complete(volatile long a0)
-{
-	// syzlang: syz_io_uring_complete(ring_ptr ring_ptr)
-	// C:       syz_io_uring_complete(char* ring_ptr)
-
-	// It is not checked if the ring is empty
-
-	// Cast to original
-	char* ring_ptr = (char*)a0;
-
-	// Compute the head index and the next head value
-	uint32 cq_ring_mask = *(uint32*)(ring_ptr + CQ_RING_MASK_OFFSET);
-	uint32* cq_head_ptr = (uint32*)(ring_ptr + CQ_HEAD_OFFSET);
-	uint32 cq_head = *cq_head_ptr & cq_ring_mask;
-	uint32 cq_head_next = *cq_head_ptr + 1;
-
-	// Compute the ptr to the src cq entry on the ring
-	char* cqe_src = ring_ptr + CQ_CQES_OFFSET + cq_head * SIZEOF_IO_URING_CQE;
-
-	// Get the cq entry from the ring
-	struct io_uring_cqe cqe;
-	memcpy(&cqe, cqe_src, sizeof(cqe));
-
-	// Advance the head. Head is a free-flowing integer and relies on natural wrapping.
-	// Ensure that the kernel will never see a head update without the preceeding CQE
-	// stores being done.
-	__atomic_store_n(cq_head_ptr, cq_head_next, __ATOMIC_RELEASE);
-
-	// In the descriptions (sys/linux/io_uring.txt), openat and openat2 are passed
-	// with a unique range of sqe.user_data (0x12345 and 0x23456) to identify the operations
-	// which produces an fd instance. Check cqe.user_data, which should be the same
-	// as sqe.user_data for that operation. If it falls in that unique range, return
-	// cqe.res as fd. Otherwise, just return an invalid fd.
-	return (cqe.user_data == 0x12345 || cqe.user_data == 0x23456) ? (long)cqe.res : (long)-1;
-}
-
-#endif
-
-#if SYZ_EXECUTOR || __NR_syz_io_uring_setup
-
-struct io_sqring_offsets {
-	uint32 head;
-	uint32 tail;
-	uint32 ring_mask;
-	uint32 ring_entries;
-	uint32 flags;
-	uint32 dropped;
-	uint32 array;
-	uint32 resv1;
-	uint64 resv2;
-};
-
-struct io_cqring_offsets {
-	uint32 head;
-	uint32 tail;
-	uint32 ring_mask;
-	uint32 ring_entries;
-	uint32 overflow;
-	uint32 cqes;
-	uint64 resv[2];
-};
-
-struct io_uring_params {
-	uint32 sq_entries;
-	uint32 cq_entries;
-	uint32 flags;
-	uint32 sq_thread_cpu;
-	uint32 sq_thread_idle;
-	uint32 features;
-	uint32 resv[4];
-	struct io_sqring_offsets sq_off;
-	struct io_cqring_offsets cq_off;
-};
-
-#define IORING_OFF_SQ_RING 0
-#define IORING_OFF_SQES 0x10000000ULL
-
-#include <sys/mman.h>
-#include <unistd.h>
-
-#ifndef __NR_io_uring_setup
-#ifdef __alpha__
-#define __NR_io_uring_setup 535
-#else // !__alpha__
-#define __NR_io_uring_setup 425
-#endif
-#endif // __NR_io_uring_setup
-
-// Wrapper for io_uring_setup and the subsequent mmap calls that map the ring and the sqes
-static long syz_io_uring_setup(volatile long a0, volatile long a1, volatile long a2, volatile long a3, volatile long a4, volatile long a5)
-{
-	// syzlang: syz_io_uring_setup(entries int32[1:IORING_MAX_ENTRIES], params ptr[inout, io_uring_params], addr_ring vma, addr_sqes vma, ring_ptr ptr[out, ring_ptr], sqes_ptr ptr[out, sqes_ptr]) fd_io_uring
-	// C:       syz_io_uring_setup(uint32 entries, struct io_uring_params* params, void* mmap_addr_ring, void* mmap_addr_sqes, void** ring_ptr_out, void** sqes_ptr_out) // returns uint32 fd_io_uring
-
-	// Cast to original
-	uint32 entries = (uint32)a0;
-	struct io_uring_params* setup_params = (struct io_uring_params*)a1;
-	void* vma1 = (void*)a2;
-	void* vma2 = (void*)a3;
-	void** ring_ptr_out = (void**)a4;
-	void** sqes_ptr_out = (void**)a5;
-
-	uint32 fd_io_uring = syscall(__NR_io_uring_setup, entries, setup_params);
-
-	// Compute the ring sizes
-	uint32 sq_ring_sz = setup_params->sq_off.array + setup_params->sq_entries * sizeof(uint32);
-	uint32 cq_ring_sz = setup_params->cq_off.cqes + setup_params->cq_entries * SIZEOF_IO_URING_CQE;
-
-	// Asssumed IORING_FEAT_SINGLE_MMAP, which is always the case with the current implementation
-	// The implication is that the sq_ring_ptr and the cq_ring_ptr are the same but the
-	// difference is in the offsets to access the fields of these rings.
-	uint32 ring_sz = sq_ring_sz > cq_ring_sz ? sq_ring_sz : cq_ring_sz;
-	*ring_ptr_out = mmap(vma1, ring_sz, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE | MAP_FIXED, fd_io_uring, IORING_OFF_SQ_RING);
-
-	uint32 sqes_sz = setup_params->sq_entries * SIZEOF_IO_URING_SQE;
-	*sqes_ptr_out = mmap(vma2, sqes_sz, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE | MAP_FIXED, fd_io_uring, IORING_OFF_SQES);
-
-	return fd_io_uring;
-}
-
-#endif
-
-#if SYZ_EXECUTOR || __NR_syz_io_uring_submit
-
-static long syz_io_uring_submit(volatile long a0, volatile long a1, volatile long a2, volatile long a3)
-{
-	// syzlang: syz_io_uring_submit(ring_ptr ring_ptr, sqes_ptr sqes_ptr, 		sqe ptr[in, io_uring_sqe],   sqes_index int32)
-	// C:       syz_io_uring_submit(char* ring_ptr,       io_uring_sqe* sqes_ptr,    io_uring_sqe* sqe,           uint32 sqes_index)
-
-	// It is not checked if the ring is full
-
-	// Cast to original
-	char* ring_ptr = (char*)a0; // This will be exposed to offsets in bytes
-	char* sqes_ptr = (char*)a1;
-	char* sqe = (char*)a2;
-	uint32 sqes_index = (uint32)a3;
-
-	uint32 sq_ring_entries = *(uint32*)(ring_ptr + SQ_RING_ENTRIES_OFFSET);
-	uint32 cq_ring_entries = *(uint32*)(ring_ptr + CQ_RING_ENTRIES_OFFSET);
-
-	// Compute the sq_array offset
-	uint32 sq_array_off = (CQ_CQES_OFFSET + cq_ring_entries * SIZEOF_IO_URING_CQE + 63) & ~63;
-
-	// Get the ptr to the destination for the sqe
-	if (sq_ring_entries)
-		sqes_index %= sq_ring_entries;
-	char* sqe_dest = sqes_ptr + sqes_index * SIZEOF_IO_URING_SQE;
-
-	// Write the sqe entry to its destination in sqes
-	memcpy(sqe_dest, sqe, SIZEOF_IO_URING_SQE);
-
-	// Write the index to the sqe array
-	uint32 sq_ring_mask = *(uint32*)(ring_ptr + SQ_RING_MASK_OFFSET);
-	uint32* sq_tail_ptr = (uint32*)(ring_ptr + SQ_TAIL_OFFSET);
-	uint32 sq_tail = *sq_tail_ptr & sq_ring_mask;
-	uint32 sq_tail_next = *sq_tail_ptr + 1;
-	uint32* sq_array = (uint32*)(ring_ptr + sq_array_off);
-	*(sq_array + sq_tail) = sqes_index;
-
-	// Advance the tail. Tail is a free-flowing integer and relies on natural wrapping.
-	// Ensure that the kernel will never see a tail update without the preceeding SQE
-	// stores being done.
-	__atomic_store_n(sq_tail_ptr, sq_tail_next, __ATOMIC_RELEASE);
-
-	// Now the application is free to call io_uring_enter() to submit the sqe
-	return 0;
-}
-
-#endif
-
-#endif
-
-#if SYZ_EXECUTOR || __NR_syz_btf_id_by_name
-
-#include <errno.h>
-#include <fcntl.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-// Some items in linux/btf.h are relatively new, so we copy them here for
-// backward compatibility.
-#define BTF_MAGIC 0xeB9F
-
-struct btf_header {
-	__u16 magic;
-	__u8 version;
-	__u8 flags;
-	__u32 hdr_len;
-	__u32 type_off;
-	__u32 type_len;
-	__u32 str_off;
-	__u32 str_len;
-};
-
-#define BTF_INFO_KIND(info) (((info) >> 24) & 0x0f)
-#define BTF_INFO_VLEN(info) ((info)&0xffff)
-
-#define BTF_KIND_INT 1
-#define BTF_KIND_ARRAY 3
-#define BTF_KIND_STRUCT 4
-#define BTF_KIND_UNION 5
-#define BTF_KIND_ENUM 6
-#define BTF_KIND_FUNC_PROTO 13
-#define BTF_KIND_VAR 14
-#define BTF_KIND_DATASEC 15
-
-struct btf_type {
-	__u32 name_off;
-	__u32 info;
-	union {
-		__u32 size;
-		__u32 type;
-	};
-};
-
-struct btf_enum {
-	__u32 name_off;
-	__s32 val;
-};
-
-struct btf_array {
-	__u32 type;
-	__u32 index_type;
-	__u32 nelems;
-};
-
-struct btf_member {
-	__u32 name_off;
-	__u32 type;
-	__u32 offset;
-};
-
-struct btf_param {
-	__u32 name_off;
-	__u32 type;
-};
-
-struct btf_var {
-	__u32 linkage;
-};
-
-struct btf_var_secinfo {
-	__u32 type;
-	__u32 offset;
-	__u32 size;
-};
-
-// Set the limit on the maximum size of btf/vmlinux to be 10 MiB.
-#define VMLINUX_MAX_SUPPORT_SIZE (10 * 1024 * 1024)
-
-// Read out all the content of /sys/kernel/btf/vmlinux to the fixed address
-// buffer and return it. Return NULL if failed.
-static char* read_btf_vmlinux()
-{
-	static bool is_read = false;
-	static char buf[VMLINUX_MAX_SUPPORT_SIZE];
-
-	// There could be a race condition here, but it should not be harmful.
-	if (is_read)
-		return buf;
-
-	int fd = open("/sys/kernel/btf/vmlinux", O_RDONLY);
-	if (fd < 0)
-		return NULL;
-
-	unsigned long bytes_read = 0;
-	for (;;) {
-		ssize_t ret = read(fd, buf + bytes_read,
-				   VMLINUX_MAX_SUPPORT_SIZE - bytes_read);
-
-		if (ret < 0 || bytes_read + ret == VMLINUX_MAX_SUPPORT_SIZE)
-			return NULL;
-
-		if (ret == 0)
-			break;
-
-		bytes_read += ret;
-	}
-
-	is_read = true;
-	return buf;
-}
-
-// Given a pointer to a C-string as the only argument a0, return the
-// corresponding btf ID for this name. Return -1 if there is an error when
-// opening the vmlinux file or the name is not found in vmlinux.
-static long syz_btf_id_by_name(volatile long a0)
-{
-	// syzlang: syz_btf_id_by_name(name ptr[in, string]) btf_id
-	// C:		syz_btf_id_by_name(char* name)
-	char* target = (char*)a0;
-
-	char* vmlinux = read_btf_vmlinux();
-	if (vmlinux == NULL)
-		return -1;
-
-	struct btf_header* btf_header = (struct btf_header*)vmlinux;
-	if (btf_header->magic != BTF_MAGIC)
-		return -1;
-	// These offsets are bytes relative to the end of the header.
-	char* btf_type_sec = vmlinux + btf_header->hdr_len + btf_header->type_off;
-	char* btf_str_sec = vmlinux + btf_header->hdr_len + btf_header->str_off;
-	// Scan through the btf type section, and find a type description that
-	// matches the provided name.
-	unsigned int bytes_parsed = 0;
-	// BTF index starts at 1.
-	long idx = 1;
-	while (bytes_parsed < btf_header->type_len) {
-		struct btf_type* btf_type = (struct btf_type*)(btf_type_sec + bytes_parsed);
-		uint32 kind = BTF_INFO_KIND(btf_type->info);
-		uint32 vlen = BTF_INFO_VLEN(btf_type->info);
-		char* name = btf_str_sec + btf_type->name_off;
-
-		if (strcmp(name, target) == 0)
-			return idx;
-
-		// From /include/uapi/linux/btf.h, some kinds of types are
-		// followed by extra data.
-		size_t skip;
-		switch (kind) {
-		case BTF_KIND_INT:
-			skip = sizeof(uint32);
-			break;
-		case BTF_KIND_ENUM:
-			skip = sizeof(struct btf_enum) * vlen;
-			break;
-		case BTF_KIND_ARRAY:
-			skip = sizeof(struct btf_array);
-			break;
-		case BTF_KIND_STRUCT:
-		case BTF_KIND_UNION:
-			skip = sizeof(struct btf_member) * vlen;
-			break;
-		case BTF_KIND_FUNC_PROTO:
-			skip = sizeof(struct btf_param) * vlen;
-			break;
-		case BTF_KIND_VAR:
-			skip = sizeof(struct btf_var);
-			break;
-		case BTF_KIND_DATASEC:
-			skip = sizeof(struct btf_var_secinfo) * vlen;
-			break;
-		default:
-			skip = 0;
-		}
-
-		bytes_parsed += sizeof(struct btf_type) + skip;
-		idx++;
-	}
-
-	return -1;
-}
-
-#endif // SYZ_EXECUTOR || __NR_syz_btf_id_by_name
-
-// Same as memcpy except that it accepts offset to dest and src.
-#if SYZ_EXECUTOR || __NR_syz_memcpy_off
-static long syz_memcpy_off(volatile long a0, volatile long a1, volatile long a2, volatile long a3, volatile long a4)
-{
-	// C:       syz_memcpy_off(void* dest, uint32 dest_off, void* src, uint32 src_off, size_t n)
-
-	// Cast to original
-	char* dest = (char*)a0;
-	uint32 dest_off = (uint32)a1;
-	char* src = (char*)a2;
-	uint32 src_off = (uint32)a3;
-	size_t n = (size_t)a4;
-
-	return (long)memcpy(dest + dest_off, src + src_off, n);
 }
 #endif
 
@@ -1848,8 +1437,8 @@ static long syz_extract_tcp_res(volatile long a0, volatile long a1, volatile lon
 	}
 
 	struct tcp_resources* res = (struct tcp_resources*)a0;
-	res->seq = htonl((ntohl(tcphdr->seq) + (uint32)a1));
-	res->ack = htonl((ntohl(tcphdr->ack_seq) + (uint32)a2));
+	NONFAILING(res->seq = htonl((ntohl(tcphdr->seq) + (uint32)a1)));
+	NONFAILING(res->ack = htonl((ntohl(tcphdr->ack_seq) + (uint32)a2)));
 
 	debug("extracted seq: %08x\n", res->seq);
 	debug("extracted ack: %08x\n", res->ack);
@@ -1895,7 +1484,7 @@ static long syz_open_dev(volatile long a0, volatile long a1, volatile long a2)
 		// syz_open_dev(dev strconst, id intptr, flags flags[open_flags]) fd
 		char buf[1024];
 		char* hash;
-		strncpy(buf, (char*)a0, sizeof(buf) - 1);
+		NONFAILING(strncpy(buf, (char*)a0, sizeof(buf) - 1));
 		buf[sizeof(buf) - 1] = 0;
 		while ((hash = strchr(buf, '#'))) {
 			*hash = '0' + (char)(a1 % 10); // 10 devices should be enough for everyone.
@@ -1919,11 +1508,11 @@ static long syz_open_procfs(volatile long a0, volatile long a1)
 	char buf[128];
 	memset(buf, 0, sizeof(buf));
 	if (a0 == 0) {
-		snprintf(buf, sizeof(buf), "/proc/self/%s", (char*)a1);
+		NONFAILING(snprintf(buf, sizeof(buf), "/proc/self/%s", (char*)a1));
 	} else if (a0 == -1) {
-		snprintf(buf, sizeof(buf), "/proc/thread-self/%s", (char*)a1);
+		NONFAILING(snprintf(buf, sizeof(buf), "/proc/thread-self/%s", (char*)a1));
 	} else {
-		snprintf(buf, sizeof(buf), "/proc/self/task/%d/%s", (int)a0, (char*)a1);
+		NONFAILING(snprintf(buf, sizeof(buf), "/proc/self/task/%d/%s", (int)a0, (char*)a1));
 	}
 	int fd = open(buf, O_RDWR);
 	if (fd == -1)
@@ -1950,7 +1539,7 @@ static long syz_open_pts(volatile long a0, volatile long a1)
 }
 #endif
 
-#if SYZ_EXECUTOR || __NR_syz_init_net_socket || SYZ_VHCI_INJECTION
+#if SYZ_EXECUTOR || __NR_syz_init_net_socket
 #if SYZ_EXECUTOR || SYZ_SANDBOX_NONE || SYZ_SANDBOX_SETUID || SYZ_SANDBOX_NAMESPACE || SYZ_SANDBOX_ANDROID
 #include <fcntl.h>
 #include <sched.h>
@@ -1983,327 +1572,6 @@ static long syz_init_net_socket(volatile long domain, volatile long type, volati
 #endif
 #endif
 
-#if SYZ_EXECUTOR || SYZ_VHCI_INJECTION
-#include <errno.h>
-#include <fcntl.h>
-#include <pthread.h>
-#include <sys/epoll.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/uio.h>
-
-#define BTPROTO_HCI 1
-#define ACL_LINK 1
-#define SCAN_PAGE 2
-
-typedef struct {
-	uint8 b[6];
-} __attribute__((packed)) bdaddr_t;
-
-#define HCI_COMMAND_PKT 1
-#define HCI_EVENT_PKT 4
-#define HCI_VENDOR_PKT 0xff
-
-struct hci_command_hdr {
-	uint16 opcode;
-	uint8 plen;
-} __attribute__((packed));
-
-struct hci_event_hdr {
-	uint8 evt;
-	uint8 plen;
-} __attribute__((packed));
-
-#define HCI_EV_CONN_COMPLETE 0x03
-struct hci_ev_conn_complete {
-	uint8 status;
-	uint16 handle;
-	bdaddr_t bdaddr;
-	uint8 link_type;
-	uint8 encr_mode;
-} __attribute__((packed));
-
-#define HCI_EV_CONN_REQUEST 0x04
-struct hci_ev_conn_request {
-	bdaddr_t bdaddr;
-	uint8 dev_class[3];
-	uint8 link_type;
-} __attribute__((packed));
-
-#define HCI_EV_REMOTE_FEATURES 0x0b
-struct hci_ev_remote_features {
-	uint8 status;
-	uint16 handle;
-	uint8 features[8];
-} __attribute__((packed));
-
-#define HCI_EV_CMD_COMPLETE 0x0e
-struct hci_ev_cmd_complete {
-	uint8 ncmd;
-	uint16 opcode;
-} __attribute__((packed));
-
-#define HCI_OP_WRITE_SCAN_ENABLE 0x0c1a
-
-#define HCI_OP_READ_BUFFER_SIZE 0x1005
-struct hci_rp_read_buffer_size {
-	uint8 status;
-	uint16 acl_mtu;
-	uint8 sco_mtu;
-	uint16 acl_max_pkt;
-	uint16 sco_max_pkt;
-} __attribute__((packed));
-
-#define HCI_OP_READ_BD_ADDR 0x1009
-struct hci_rp_read_bd_addr {
-	uint8 status;
-	bdaddr_t bdaddr;
-} __attribute__((packed));
-
-#define HCI_EV_LE_META 0x3e
-struct hci_ev_le_meta {
-	uint8 subevent;
-} __attribute__((packed));
-
-#define HCI_EV_LE_CONN_COMPLETE 0x01
-struct hci_ev_le_conn_complete {
-	uint8 status;
-	uint16 handle;
-	uint8 role;
-	uint8 bdaddr_type;
-	bdaddr_t bdaddr;
-	uint16 interval;
-	uint16 latency;
-	uint16 supervision_timeout;
-	uint8 clk_accurancy;
-} __attribute__((packed));
-
-struct hci_dev_req {
-	uint16 dev_id;
-	uint32 dev_opt;
-};
-
-struct vhci_vendor_pkt {
-	uint8 type;
-	uint8 opcode;
-	uint16 id;
-};
-
-#define HCIDEVUP _IOW('H', 201, int)
-#define HCISETSCAN _IOW('H', 221, int)
-
-static int vhci_fd = -1;
-
-static void hci_send_event_packet(int fd, uint8 evt, void* data, size_t data_len)
-{
-	struct iovec iv[3];
-
-	struct hci_event_hdr hdr;
-	hdr.evt = evt;
-	hdr.plen = data_len;
-
-	uint8 type = HCI_EVENT_PKT;
-
-	iv[0].iov_base = &type;
-	iv[0].iov_len = sizeof(type);
-	iv[1].iov_base = &hdr;
-	iv[1].iov_len = sizeof(hdr);
-	iv[2].iov_base = data;
-	iv[2].iov_len = data_len;
-
-	if (writev(fd, iv, sizeof(iv) / sizeof(struct iovec)) < 0)
-		fail("writev failed");
-}
-
-static void hci_send_event_cmd_complete(int fd, uint16 opcode, void* data, size_t data_len)
-{
-	struct iovec iv[4];
-
-	struct hci_event_hdr hdr;
-	hdr.evt = HCI_EV_CMD_COMPLETE;
-	hdr.plen = sizeof(struct hci_ev_cmd_complete) + data_len;
-
-	struct hci_ev_cmd_complete evt_hdr;
-	evt_hdr.ncmd = 1;
-	evt_hdr.opcode = opcode;
-
-	uint8 type = HCI_EVENT_PKT;
-
-	iv[0].iov_base = &type;
-	iv[0].iov_len = sizeof(type);
-	iv[1].iov_base = &hdr;
-	iv[1].iov_len = sizeof(hdr);
-	iv[2].iov_base = &evt_hdr;
-	iv[2].iov_len = sizeof(evt_hdr);
-	iv[3].iov_base = data;
-	iv[3].iov_len = data_len;
-
-	if (writev(fd, iv, sizeof(iv) / sizeof(struct iovec)) < 0)
-		fail("writev failed");
-}
-
-static bool process_command_pkt(int fd, char* buf, ssize_t buf_size)
-{
-	struct hci_command_hdr* hdr = (struct hci_command_hdr*)buf;
-	if (buf_size < (ssize_t)sizeof(struct hci_command_hdr) ||
-	    hdr->plen != buf_size - sizeof(struct hci_command_hdr)) {
-		fail("invalid size: %zx\n", buf_size);
-	}
-
-	switch (hdr->opcode) {
-	case HCI_OP_WRITE_SCAN_ENABLE: {
-		uint8 status = 0;
-		hci_send_event_cmd_complete(fd, hdr->opcode, &status, sizeof(status));
-		return true;
-	}
-	case HCI_OP_READ_BD_ADDR: {
-		struct hci_rp_read_bd_addr rp = {0};
-		rp.status = 0;
-		memset(&rp.bdaddr, 0xaa, 6);
-		hci_send_event_cmd_complete(fd, hdr->opcode, &rp, sizeof(rp));
-		return false;
-	}
-	case HCI_OP_READ_BUFFER_SIZE: {
-		struct hci_rp_read_buffer_size rp = {0};
-		rp.status = 0;
-		rp.acl_mtu = 1021;
-		rp.sco_mtu = 96;
-		rp.acl_max_pkt = 4;
-		rp.sco_max_pkt = 6;
-		hci_send_event_cmd_complete(fd, hdr->opcode, &rp, sizeof(rp));
-		return false;
-	}
-	}
-
-	char dummy[0xf9] = {0};
-	hci_send_event_cmd_complete(fd, hdr->opcode, dummy, sizeof(dummy));
-	return false;
-}
-
-static void* event_thread(void* arg)
-{
-	while (1) {
-		char buf[1024] = {0};
-		ssize_t buf_size = read(vhci_fd, buf, sizeof(buf));
-		if (buf_size < 0)
-			fail("read failed");
-		debug_dump_data(buf, buf_size);
-		if (buf_size > 0 && buf[0] == HCI_COMMAND_PKT) {
-			if (process_command_pkt(vhci_fd, buf + 1, buf_size - 1))
-				break;
-		}
-	}
-	return NULL;
-}
-
-// Matches hci_handles in sys/linux/dev_vhci.txt.
-#define HCI_HANDLE_1 200
-#define HCI_HANDLE_2 201
-
-static void initialize_vhci()
-{
-#if SYZ_EXECUTOR
-	if (!flag_vhci_injection)
-		return;
-#endif
-
-	int hci_sock = syz_init_net_socket(AF_BLUETOOTH, SOCK_RAW, BTPROTO_HCI);
-	if (hci_sock < 0)
-		fail("syz_init_net_socket failed");
-
-	vhci_fd = open("/dev/vhci", O_RDWR);
-	if (vhci_fd == -1)
-		fail("open /dev/vhci failed");
-
-	// Remap vhci onto higher fd number to hide it from fuzzer and to keep
-	// fd numbers stable regardless of whether vhci is opened or not (also see kMaxFd).
-	const int kVhciFd = 241;
-	if (dup2(vhci_fd, kVhciFd) < 0)
-		fail("dup2(vhci_fd, kVhciFd) failed");
-	close(vhci_fd);
-	vhci_fd = kVhciFd;
-
-	struct vhci_vendor_pkt vendor_pkt;
-	if (read(vhci_fd, &vendor_pkt, sizeof(vendor_pkt)) != sizeof(vendor_pkt))
-		fail("read failed");
-
-	if (vendor_pkt.type != HCI_VENDOR_PKT)
-		fail("wrong response packet");
-
-	debug("hci dev id: %x\n", vendor_pkt.id);
-
-	pthread_t th;
-	if (pthread_create(&th, NULL, event_thread, NULL))
-		fail("pthread_create failed");
-
-	// Bring hci device up
-	if (ioctl(hci_sock, HCIDEVUP, vendor_pkt.id) && errno != EALREADY)
-		fail("ioctl(HCIDEVUP) failed");
-
-	// Activate page scanning mode which is required to fake a connection.
-	struct hci_dev_req dr = {0};
-	dr.dev_id = vendor_pkt.id;
-	dr.dev_opt = SCAN_PAGE;
-	if (ioctl(hci_sock, HCISETSCAN, &dr))
-		fail("ioctl(HCISETSCAN) failed");
-
-	// Fake a connection with bd address 10:aa:aa:aa:aa:aa.
-	// This is a fixed address used in sys/linux/socket_bluetooth.txt.
-	struct hci_ev_conn_request request;
-	memset(&request, 0, sizeof(request));
-	memset(&request.bdaddr, 0xaa, 6);
-	*(uint8*)&request.bdaddr.b[5] = 0x10;
-	request.link_type = ACL_LINK;
-	hci_send_event_packet(vhci_fd, HCI_EV_CONN_REQUEST, &request, sizeof(request));
-
-	struct hci_ev_conn_complete complete;
-	memset(&complete, 0, sizeof(complete));
-	complete.status = 0;
-	complete.handle = HCI_HANDLE_1;
-	memset(&complete.bdaddr, 0xaa, 6);
-	*(uint8*)&complete.bdaddr.b[5] = 0x10;
-	complete.link_type = ACL_LINK;
-	complete.encr_mode = 0;
-	hci_send_event_packet(vhci_fd, HCI_EV_CONN_COMPLETE, &complete, sizeof(complete));
-
-	struct hci_ev_remote_features features;
-	memset(&features, 0, sizeof(features));
-	features.status = 0;
-	features.handle = HCI_HANDLE_1;
-	hci_send_event_packet(vhci_fd, HCI_EV_REMOTE_FEATURES, &features, sizeof(features));
-
-	// Fake a low-energy connection with bd address 11:aa:aa:aa:aa:aa.
-	// This is a fixed address used in sys/linux/socket_bluetooth.txt.
-	struct {
-		struct hci_ev_le_meta le_meta;
-		struct hci_ev_le_conn_complete le_conn;
-	} le_conn;
-	memset(&le_conn, 0, sizeof(le_conn));
-	le_conn.le_meta.subevent = HCI_EV_LE_CONN_COMPLETE;
-	memset(&le_conn.le_conn.bdaddr, 0xaa, 6);
-	*(uint8*)&le_conn.le_conn.bdaddr.b[5] = 0x11;
-	le_conn.le_conn.role = 1;
-	le_conn.le_conn.handle = HCI_HANDLE_2;
-	hci_send_event_packet(vhci_fd, HCI_EV_LE_META, &le_conn, sizeof(le_conn));
-
-	pthread_join(th, NULL);
-	close(hci_sock);
-}
-#endif
-
-#if SYZ_EXECUTOR || __NR_syz_emit_vhci && SYZ_VHCI_INJECTION
-static long syz_emit_vhci(volatile long a0, volatile long a1)
-{
-	if (vhci_fd < 0)
-		return (uintptr_t)-1;
-
-	char* data = (char*)a0;
-	uint32 length = a1;
-
-	return write(vhci_fd, data, length);
-}
-#endif
-
 #if SYZ_EXECUTOR || __NR_syz_genetlink_get_family_id
 #include <errno.h>
 #include <linux/genetlink.h>
@@ -2323,7 +1591,7 @@ static long syz_genetlink_get_family_id(volatile long name)
 	genlhdr->cmd = CTRL_CMD_GETFAMILY;
 	attr->nla_type = CTRL_ATTR_FAMILY_NAME;
 	attr->nla_len = sizeof(*attr) + GENL_NAMSIZ;
-	strncpy((char*)(attr + 1), (char*)name, GENL_NAMSIZ);
+	NONFAILING(strncpy((char*)(attr + 1), (char*)name, GENL_NAMSIZ));
 	struct iovec iov = {hdr, hdr->nlmsg_len};
 	struct sockaddr_nl addr = {0};
 	addr.nl_family = AF_NETLINK;
@@ -2426,7 +1694,7 @@ static long syz_read_part_table(volatile unsigned long size, volatile unsigned l
 	char loopname[64], linkname[64];
 	int loopfd, err = 0, res = -1;
 	unsigned long i, j;
-	size = fs_image_segment_check(size, nsegs, segments);
+	NONFAILING(size = fs_image_segment_check(size, nsegs, segments));
 	int memfd = syscall(sys_memfd_create, "syz_read_part_table", 0);
 	if (memfd == -1) {
 		err = errno;
@@ -2438,7 +1706,9 @@ static long syz_read_part_table(volatile unsigned long size, volatile unsigned l
 	}
 	for (i = 0; i < nsegs; i++) {
 		struct fs_image_segment* segs = (struct fs_image_segment*)segments;
-		if (pwrite(memfd, segs[i].data, segs[i].size, segs[i].offset) < 0) {
+		int res1 = 0;
+		NONFAILING(res1 = pwrite(memfd, segs[i].data, segs[i].size, segs[i].offset));
+		if (res1 < 0) {
 			debug("syz_read_part_table: pwrite[%u] failed: %d\n", (int)i, errno);
 		}
 	}
@@ -2501,19 +1771,19 @@ error:
 #include <string.h>
 #include <sys/mount.h>
 
-// syz_mount_image(fs ptr[in, string[disk_filesystems]], dir ptr[in, filename], size intptr, nsegs len[segments], segments ptr[in, array[fs_image_segment]], flags flags[mount_flags], opts ptr[in, fs_options[vfat_options]])
-// fs_image_segment {
+//syz_mount_image(fs ptr[in, string[disk_filesystems]], dir ptr[in, filename], size intptr, nsegs len[segments], segments ptr[in, array[fs_image_segment]], flags flags[mount_flags], opts ptr[in, fs_options[vfat_options]])
+//fs_image_segment {
 //	data	ptr[in, array[int8]]
 //	size	len[data, intptr]
 //	offset	intptr
-// }
+//}
 static long syz_mount_image(volatile long fsarg, volatile long dir, volatile unsigned long size, volatile unsigned long nsegs, volatile long segments, volatile long flags, volatile long optsarg)
 {
 	char loopname[64], fs[32], opts[256];
 	int loopfd, err = 0, res = -1;
 	unsigned long i;
 
-	size = fs_image_segment_check(size, nsegs, segments);
+	NONFAILING(size = fs_image_segment_check(size, nsegs, segments));
 	int memfd = syscall(sys_memfd_create, "syz_mount_image", 0);
 	if (memfd == -1) {
 		err = errno;
@@ -2525,7 +1795,9 @@ static long syz_mount_image(volatile long fsarg, volatile long dir, volatile uns
 	}
 	for (i = 0; i < nsegs; i++) {
 		struct fs_image_segment* segs = (struct fs_image_segment*)segments;
-		if (pwrite(memfd, segs[i].data, segs[i].size, segs[i].offset) < 0) {
+		int res1 = 0;
+		NONFAILING(res1 = pwrite(memfd, segs[i].data, segs[i].size, segs[i].offset));
+		if (res1 < 0) {
 			debug("syz_mount_image: pwrite[%u] failed: %d\n", (int)i, errno);
 		}
 	}
@@ -2549,10 +1821,10 @@ static long syz_mount_image(volatile long fsarg, volatile long dir, volatile uns
 	}
 	mkdir((char*)dir, 0777);
 	memset(fs, 0, sizeof(fs));
-	strncpy(fs, (char*)fsarg, sizeof(fs) - 1);
+	NONFAILING(strncpy(fs, (char*)fsarg, sizeof(fs) - 1));
 	memset(opts, 0, sizeof(opts));
 	// Leave some space for the additional options we append below.
-	strncpy(opts, (char*)optsarg, sizeof(opts) - 32);
+	NONFAILING(strncpy(opts, (char*)optsarg, sizeof(opts) - 32));
 	if (strcmp(fs, "iso9660") == 0) {
 		flags |= MS_RDONLY;
 	} else if (strncmp(fs, "ext", 3) == 0) {
@@ -3281,7 +2553,7 @@ static void sandbox_common()
 	setpgrp();
 	setsid();
 
-#if SYZ_EXECUTOR || __NR_syz_init_net_socket || SYZ_DEVLINK_PCI || SYZ_VHCI_INJECTION
+#if SYZ_EXECUTOR || __NR_syz_init_net_socket || SYZ_DEVLINK_PCI
 	int netns = open("/proc/self/ns/net", O_RDONLY);
 	if (netns == -1)
 		fail("open(/proc/self/ns/net) failed");
@@ -3430,9 +2702,6 @@ static int do_sandbox_none(void)
 #if SYZ_EXECUTOR || SYZ_NET_DEVICES
 	initialize_netdevices();
 #endif
-#if SYZ_EXECUTOR || SYZ_VHCI_INJECTION
-	initialize_vhci();
-#endif
 	loop();
 	doexit(1);
 }
@@ -3469,9 +2738,6 @@ static int do_sandbox_setuid(void)
 #endif
 #if SYZ_EXECUTOR || SYZ_NET_DEVICES
 	initialize_netdevices();
-#endif
-#if SYZ_EXECUTOR || SYZ_VHCI_INJECTION
-	initialize_vhci();
 #endif
 
 	const int nobody = 65534;
@@ -3532,11 +2798,6 @@ static int namespace_sandbox_proc(void* arg)
 #endif
 #if SYZ_EXECUTOR || SYZ_NET_DEVICES
 	initialize_netdevices();
-#endif
-#if SYZ_EXECUTOR || SYZ_VHCI_INJECTION
-	// This will fail and we only have it here to avoid complains about the
-	// function being unused.
-	initialize_vhci();
 #endif
 
 	if (mkdir("./syz-tmp", 0777))
@@ -3634,8 +2895,8 @@ static int do_sandbox_namespace(void)
 #define AID_EVERYBODY 9997
 #define AID_APP 10000
 
-#define UNTRUSTED_APP_UID (AID_APP + 999)
-#define UNTRUSTED_APP_GID (AID_APP + 999)
+#define UNTRUSTED_APP_UID AID_APP + 999
+#define UNTRUSTED_APP_GID AID_APP + 999
 
 const char* const SELINUX_CONTEXT_UNTRUSTED_APP = "u:r:untrusted_app:s0:c512,c768";
 const char* const SELINUX_LABEL_APP_DATA_FILE = "u:object_r:app_data_file:s0:c512,c768";
@@ -3753,11 +3014,6 @@ static int do_sandbox_android(void)
 	// It will lead to some mess, all test process will use the same devices
 	// and try to reinitialize them as other test processes use them.
 	initialize_netdevices();
-#endif
-#if SYZ_EXECUTOR || SYZ_VHCI_INJECTION
-	// This will fail and we only have it here to avoid complains about the
-	// function being unused.
-	initialize_vhci();
 #endif
 
 	if (chown(".", UNTRUSTED_APP_UID, UNTRUSTED_APP_UID) != 0)

@@ -11,7 +11,11 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
-// Redefinitions to match the linux types used in common_usb.h.
+/* -------------------------------------------------------------------------- */
+
+/*
+ * Redefinitions to match the linux types used in common_usb.h.
+ */
 
 struct usb_endpoint_descriptor {
 	uint8 bLength;
@@ -151,6 +155,8 @@ struct usb_qualifier_descriptor {
 
 #include "common_usb.h"
 
+/* -------------------------------------------------------------------------- */
+
 static int vhci_open(void)
 {
 	char path[1024];
@@ -205,6 +211,8 @@ static int vhci_usb_send(int fd, void* buf, size_t size)
 	}
 }
 
+/* -------------------------------------------------------------------------- */
+
 static volatile long syz_usb_connect_impl(uint64 speed, uint64 dev_len,
 					  const char* dev, const struct vusb_connect_descriptors* descs,
 					  lookup_connect_out_response_t lookup_connect_response_out)
@@ -235,7 +243,7 @@ static volatile long syz_usb_connect_impl(uint64 speed, uint64 dev_len,
 	debug("syz_usb_connect: add_usb_index success\n");
 
 #if USB_DEBUG
-	analyze_usb_device(index);
+	NONFAILING(analyze_usb_device(index));
 #endif
 
 	rv = vhci_setport(fd, 1);
@@ -277,7 +285,9 @@ static volatile long syz_usb_connect_impl(uint64 speed, uint64 dev_len,
 		char data[4096];
 
 		if (req.u.ctrl.bmRequestType & UE_DIR_IN) {
-			if (!lookup_connect_response_in(fd, descs, (const struct usb_ctrlrequest*)&req.u.ctrl, &response_data, &response_length)) {
+			bool response_found = false;
+			NONFAILING(response_found = lookup_connect_response_in(fd, descs, (const struct usb_ctrlrequest*)&req.u.ctrl, &response_data, &response_length));
+			if (!response_found) {
 				debug("syz_usb_connect: unknown control IN request\n");
 				goto err;
 			}
@@ -292,7 +302,7 @@ static volatile long syz_usb_connect_impl(uint64 speed, uint64 dev_len,
 
 		if ((req.u.ctrl.bmRequestType & USB_TYPE_MASK) == USB_TYPE_STANDARD &&
 		    req.u.ctrl.bRequest == USB_REQ_SET_CONFIGURATION) {
-			// TODO: possibly revisit.
+			/* TODO: possibly revisit */
 		}
 
 		if (response_length > sizeof(data))
