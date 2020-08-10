@@ -37,6 +37,12 @@ typedef kcov_remote_arg<uint64_aligned64, 0> kcov_remote_arg64;
 typedef char kcov_remote_arg32_size[sizeof(kcov_remote_arg32) == 20 ? 1 : -1];
 typedef char kcov_remote_arg64_size[sizeof(kcov_remote_arg64) == 24 ? 1 : -1];
 
+// KMCOV Defines
+#define KMCOV_SETUP     _IOR('t', 1, unsigned long)
+#define KMCOV_ENABLE    _IO('t', 2)
+#define KMCOV_DISABLE   _IO('t', 3)
+#define KMCOV_COVER_SIZE 10000
+
 #define KCOV_INIT_TRACE32 _IOR('c', 1, uint32)
 #define KCOV_INIT_TRACE64 _IOR('c', 1, uint64)
 #define KCOV_ENABLE _IO('c', 100)
@@ -89,6 +95,42 @@ static intptr_t execute_syscall(const call_t* c, intptr_t a[kMaxArgs])
 	if (!flag_coverage && res == -1 && !strcmp(c->name, "prctl"))
 		errno = EINVAL;
 	return res;
+}
+
+// KMCOV functions
+// Handles both open and setup. Returns fd.
+static int kmcov_open() {
+	int fd = open("/sys/kernel/debug/kmcov", O_RDWR);
+	if (fd == -1)
+		fail("open of /sys/kernel/debug/kmcov failed");
+
+	if (ioctl(fd, KMCOV_SETUP, KMCOV_COVER_SIZE))
+		fail("kmcov setup failed (buffer alloc)");
+
+	return fd;
+}
+
+// Deallocates kmcov buffer
+static void kmcov_close(int fd) {
+	if (close(fd))
+		fail("kmcov close file failed");
+}
+
+// Enable tracing
+static void kmcov_enable() {
+	if (ioctl(fd, KMCOV_ENABLE, 0))
+		fail("kmcov enable failed");
+}
+
+// Disable tracing
+static void kmcov_disable() {
+	if (ioctl(fd, KMCOV_DISABLE, 0))
+		fail("kmcov disable failed");
+}
+
+// Read from kmcov buffer
+static void kmcov_read() {
+	return;
 }
 
 static void cover_open(cover_t* cov, bool extra)
