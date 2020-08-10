@@ -117,13 +117,13 @@ static void kmcov_close(int fd) {
 }
 
 // Enable tracing
-static void kmcov_enable() {
+static void kmcov_enable(int fd) {
 	if (ioctl(fd, KMCOV_ENABLE, 0))
 		fail("kmcov enable failed");
 }
 
 // Disable tracing
-static void kmcov_disable() {
+static void kmcov_disable(int fd) {
 	if (ioctl(fd, KMCOV_DISABLE, 0))
 		fail("kmcov disable failed");
 }
