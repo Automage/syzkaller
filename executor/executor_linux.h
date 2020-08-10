@@ -100,32 +100,44 @@ static intptr_t execute_syscall(const call_t* c, intptr_t a[kMaxArgs])
 // KMCOV functions
 // Handles both open and setup. Returns fd.
 static void kmcov_open(int *kmcov_fd) {
+	debug("====== Opening kmcov...\n");
 	int fd = open("/sys/kernel/debug/kmcov", O_RDWR);
 	if (fd == -1)
 		fail("open of /sys/kernel/debug/kmcov failed");
 
+	debug("====== Setting up kmcov...\n");
 	if (ioctl(fd, KMCOV_SETUP, KMCOV_COVER_SIZE))
 		fail("kmcov setup failed (buffer alloc)");
 
 	*kmcov_fd = fd;
+	debug("====== Set up kmcov!\n");
 }
 
 // Deallocates kmcov buffer
 static void kmcov_close(int fd) {
+	debug("====== Closing kmcov...\n");
 	if (close(fd))
 		fail("kmcov close file failed");
+
+	debug("====== Closed kmcov!\n");
 }
 
 // Enable tracing
 static void kmcov_enable(int fd) {
+	debug("====== Enabling kmcov...\n");
 	if (ioctl(fd, KMCOV_ENABLE, 0))
 		fail("kmcov enable failed");
+	
+	debug("====== Enabled kmcov!\n");
 }
 
 // Disable tracing
 static void kmcov_disable(int fd) {
+	debug("====== Disabling kmcov...\n");
 	if (ioctl(fd, KMCOV_DISABLE, 0))
 		fail("kmcov disable failed");
+
+	debug("====== Disabled kmcov!\n");
 }
 
 // Read from kmcov buffer
