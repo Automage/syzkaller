@@ -220,6 +220,9 @@ static thread_t* last_scheduled;
 
 static cover_t extra_cov;
 
+// KMCOV file descriptor - currently to be opened only once
+static int kmcov_fd;
+
 struct res_t {
 	bool executed;
 	uint64 val;
@@ -416,6 +419,9 @@ int main(int argc, char** argv)
 			// Don't enable comps because we don't use them in the fuzzer yet.
 			cover_enable(&extra_cov, false, true);
 		}
+
+		// Open debugfs kmcov file + allocate buffer
+		kmcov_open(&kmcov_fd);
 	}
 
 	int status = 0;
@@ -1086,8 +1092,11 @@ void execute_call(thread_t* th)
 		fail_fd = inject_fault(flag_fault_nth);
 	}
 
-	if (flag_coverage)
+	if (flag_coverage) {
 		cover_reset(&th->cov);
+		// Enable kmcov tracing
+		kmcov_enable(kmcov_fd);
+	}
 	errno = 0;
 	th->res = execute_syscall(call, th->args);
 	th->reserrno = errno;
@@ -1101,6 +1110,10 @@ void execute_call(thread_t* th)
 		cover_collect(&th->cov);
 		if (th->cov.size >= kCoverSize)
 			fail("#%d: too much cover %u", th->id, th->cov.size);
+		
+		//Disable kmcov tracing and read
+		kmcov_disable(kmcov_fd);
+		//TODO: kmcov_read
 	}
 	th->fault_injected = false;
 

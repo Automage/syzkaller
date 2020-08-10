@@ -99,7 +99,7 @@ static intptr_t execute_syscall(const call_t* c, intptr_t a[kMaxArgs])
 
 // KMCOV functions
 // Handles both open and setup. Returns fd.
-static int kmcov_open() {
+static void kmcov_open(int *kmcov_fd) {
 	int fd = open("/sys/kernel/debug/kmcov", O_RDWR);
 	if (fd == -1)
 		fail("open of /sys/kernel/debug/kmcov failed");
@@ -107,7 +107,7 @@ static int kmcov_open() {
 	if (ioctl(fd, KMCOV_SETUP, KMCOV_COVER_SIZE))
 		fail("kmcov setup failed (buffer alloc)");
 
-	return fd;
+	*kmcov_fd = fd;
 }
 
 // Deallocates kmcov buffer
