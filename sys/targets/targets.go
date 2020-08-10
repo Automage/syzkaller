@@ -421,6 +421,7 @@ var (
 		"-pthread",
 		"-Wall",
 		"-Werror",
+		"-Wno-unused-function",
 		"-Wparentheses",
 		"-Wunused-const-variable",
 		"-Wframe-larger-than=16384", // executor uses stacks of limited size, so no jumbo frames
