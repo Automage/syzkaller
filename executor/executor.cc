@@ -1095,6 +1095,7 @@ void execute_call(thread_t* th)
 	if (flag_coverage) {
 		cover_reset(&th->cov);
 		// Enable kmcov tracing
+		debug("=== Calling kmcov enable ...");
 		kmcov_enable(kmcov_fd);
 	}
 	errno = 0;
