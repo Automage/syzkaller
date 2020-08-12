@@ -904,7 +904,7 @@ void write_coverage_signal(cover_t* cov, uint32* signal_count_pos, uint32* cover
 		debug("++++++ Writing kmcov buff ...\n");
 		for (uint32 i = 0; i < KMCOV_COVER_SIZE; i++)
 			//write_output(*(uint32*)kmcov_buf[i]);
-			write_output(static_cast<uint32_t>(kmcov_buf[i]));
+			write_output(static_cast<uint32_t>(((uint64)kmcov_buf)[i]));
 
 		debug("++++++ Wrote kmcov buffer successfully ...\n");
 	}
