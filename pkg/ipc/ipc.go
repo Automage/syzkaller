@@ -17,6 +17,7 @@ import (
 	"unsafe"
 
 	"github.com/google/syzkaller/pkg/cover"
+	"github.com/google/syzkaller/pkg/log"
 	"github.com/google/syzkaller/pkg/osutil"
 	"github.com/google/syzkaller/pkg/signal"
 	"github.com/google/syzkaller/prog"
@@ -320,6 +321,7 @@ func addFallbackSignal(p *prog.Prog, info *ProgInfo) {
 }
 
 func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
+	log.Logf(0, "======== GO: TESTING: PARSE OUTPUT")
 	out := env.out
 	ncmd, ok := readUint32(&out)
 	if !ok {
