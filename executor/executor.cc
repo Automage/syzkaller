@@ -1095,10 +1095,11 @@ void execute_call(thread_t* th)
 	if (flag_coverage) {
 		cover_reset(&th->cov);
 		// Enable kmcov tracing
-		debug("=== Calling kmcov enable ...");
+		debug("=== Calling kmcov enable ...\n");
 		kmcov_enable(kmcov_fd);
 	}
 	errno = 0;
+	debug("=== Executing syscall ...\n");
 	th->res = execute_syscall(call, th->args);
 	th->reserrno = errno;
 	if (th->res == -1 && th->reserrno == 0)
@@ -1113,6 +1114,7 @@ void execute_call(thread_t* th)
 			fail("#%d: too much cover %u", th->id, th->cov.size);
 		
 		//Disable kmcov tracing and read
+		debug("=== Calling kmcov disable ...\n");
 		kmcov_disable(kmcov_fd);
 		//TODO: kmcov_read
 	}
