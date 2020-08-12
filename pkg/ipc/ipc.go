@@ -385,6 +385,10 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 				return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
 					i, reply.index, reply.num, KmcovBufferSize, len(out))
 			}
+			fmt.Printf("======= FUZZER: Read kmcov buffer sucessfully ======\n")
+			for i := 0; i < 20; i++ {
+				fmt.Printf("Access %d: %p\n", i, inf.MemCover[i])
+			}
 		}
 	}
 	fmt.Printf("===== Outside parseoutput Loop, extra parts: %d ======\n", len(extraParts))
