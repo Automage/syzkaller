@@ -902,8 +902,9 @@ void write_coverage_signal(cover_t* cov, uint32* signal_count_pos, uint32* cover
 	// TODO: 32 -> 64 implmentation use write_output_64
 	if (cover_size != 0) {
 		debug("++++++ Writing kmcov buff ...\n");
-		for (uint64 i = 0; i < KMCOV_COVER_SIZE; i++)
-			write_output(*(uint32*)kmcov_buf[i]);
+		for (uint32 i = 0; i < KMCOV_COVER_SIZE; i++)
+			//write_output(*(uint32*)kmcov_buf[i]);
+			write_output(i);
 
 		debug("++++++ Wrote kmcov buffer successfully ...\n");
 	}
