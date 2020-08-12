@@ -94,8 +94,9 @@ type CallInfo struct {
 }
 
 type ProgInfo struct {
-	Calls []CallInfo
-	Extra CallInfo // stores Signal and Cover collected from background threads
+	Calls    []CallInfo
+	Extra    CallInfo // stores Signal and Cover collected from background threads
+	MemCover []uint64 // KMCOV memory address coverage buffer
 }
 
 type Env struct {
@@ -372,6 +373,11 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 	}
 	fmt.Printf("===== Outside parseoutput Loop, extra parts: %d ======\n", len(extraParts))
 	if len(extraParts) == 0 {
+		fmt.Printf("======= FUZZER: READING KMCOV BUFFER... ======\n")
+		//if info.MemCover, ok = readUint32Array(&out, 10000); !ok {
+		//return nil, fmt.Errorf("call %v/%v/%v: cover overflow: %v/%v",
+		///	i, reply.index, reply.num, reply.coverSize, len(out))
+		//}
 		return info, nil
 	}
 	info.Extra = convertExtra(extraParts)
@@ -477,6 +483,25 @@ func readUint32Array(outp *[]byte, size uint32) ([]uint32, bool) {
 	return res, true
 }
 
+/*
+func readUint64Array(outp *[]byte, size uint32) ([]uint32, bool) {
+	if size == 0 {
+		return nil, true
+	}
+	out := *outp
+	if int(size)*4 > len(out) {
+		return nil, false
+	}
+	hdr := reflect.SliceHeader{
+		Data: uintptr(unsafe.Pointer(&out[0])),
+		Len:  int(size),
+		Cap:  int(size),
+	}
+	res := *(*[]uint32)(unsafe.Pointer(&hdr))
+	*outp = out[size*4:]
+	return res, true
+}
+*/
 type command struct {
 	pid      int
 	config   *Config
