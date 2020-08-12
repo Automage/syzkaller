@@ -102,12 +102,12 @@ static intptr_t execute_syscall(const call_t* c, intptr_t a[kMaxArgs])
 // KMCOV functions
 // Handles both open and setup. Returns fd.
 static void kmcov_open(const int kmcov_fd) {
-	debug("====== Opening kmcov...\n");
+	debug("++++++ Opening kmcov...\n");
 	int fd = open("/sys/kernel/debug/kmcov", O_RDWR);
 	if (fd == -1)
 		fail("open of /sys/kernel/debug/kmcov failed");
 
-	debug("====== Setting up kmcov...\n");
+	debug("++++++ Setting up kmcov...\n");
 	if (ioctl(fd, KMCOV_SETUP, KMCOV_COVER_SIZE))
 		fail("kmcov setup failed (buffer alloc)");
 	
@@ -115,45 +115,45 @@ static void kmcov_open(const int kmcov_fd) {
 		fail("filed to dup2(%d, %d) cover fd", fd, kmcov_fd);
 	close(fd);
 
-	debug("====== Set up kmcov!\n");
+	debug("++++++ Set up kmcov!\n");
 }
 
 // Deallocates kmcov buffer
 static void kmcov_close(int fd) {
-	debug("====== Closing kmcov...\n");
+	debug("++++++ Closing kmcov...\n");
 	if (close(fd))
 		fail("kmcov close file failed");
 
-	debug("====== Closed kmcov!\n");
+	debug("++++++ Closed kmcov!\n");
 }
 
 // Enable tracing
 static void kmcov_enable(int fd) {
-	debug("====== Enabling kmcov...\n");
+	debug("++++++ Enabling kmcov...\n");
 	int ret = ioctl(fd, KMCOV_ENABLE, 0);
 	if (ret)
 		fail("kmcov enable failed: ret %d, fd: %d, err: %s", ret, fd, strerror(errno));
 	
-	debug("====== Enabled kmcov!\n");
+	debug("++++++ Enabled kmcov!\n");
 }
 
 // Disable tracing
 static void kmcov_disable(int fd) {
-	debug("====== Disabling kmcov...\n");
+	debug("++++++ Disabling kmcov...\n");
 	if (ioctl(fd, KMCOV_DISABLE, 0))
 		fail("kmcov disable failed");
 
-	debug("====== Disabled kmcov!\n");
+	debug("++++++ Disabled kmcov!\n");
 }
 
 // Read from kmcov buffer
 static void kmcov_read(int fd, void *buf[]) {
-	debug("====== Reading kmcov buffer...\n");
+	debug("++++++ Reading kmcov buffer...\n");
 	int ret = read(fd, buf, KMCOV_COVER_SIZE);
 	if (ret != KMCOV_COVER_SIZE) {
 		fail("kmcov read failed. ret %d", ret);
 	}
-	debug("====== Read kmcov buffer successfully \n");
+	debug("++++++ Read kmcov buffer successfully \n");
 }
 
 static void cover_open(cover_t* cov, bool extra)
@@ -232,13 +232,14 @@ static void cover_reset(cover_t* cov)
 
 static void cover_collect(cover_t* cov, int kmcov_fd, void *kmcov_buf[])
 {
-	if (is_kernel_64_bit)
+	if (is_kernel_64_bit) {
 		cov->size = *(uint64*)cov->data;
-	else
+		// Kmcov piggybacking buffer read
+		kmcov_read(kmcov_fd, kmcov_buf);
+	} else {
 		cov->size = *(uint32*)cov->data;
-
-	// Kmcov piggybacking buffer read
-	kmcov_read(kmcov_fd, kmcov_buf);
+	}
+	
 }
 
 static bool cover_check(uint32 pc)

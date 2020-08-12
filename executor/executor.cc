@@ -971,7 +971,8 @@ void write_call_output(thread_t* th, bool finished)
 			      (th->fault_injected ? call_flag_fault_injected : 0);
 	}
 #if SYZ_EXECUTOR_USES_SHMEM
-	debug("====== KMCOV USING SHARED MEM");
+	debug("++++++ KMCOV USING SHARED MEM");
+	// 7 writes ==> callReply struct in IPC.go
 	write_output(th->call_index);
 	write_output(th->call_num);
 	write_output(reserrno);
@@ -1012,7 +1013,7 @@ void write_call_output(thread_t* th, bool finished)
 	completed++;
 	write_completed(completed);
 #else
-	debug("====== KMCOV USING PIPES");
+	debug("++++++ KMCOV USING PIPES");
 	call_reply reply;
 	reply.header.magic = kOutMagic;
 	reply.header.done = 0;
@@ -1106,11 +1107,11 @@ void execute_call(thread_t* th)
 	if (flag_coverage) {
 		cover_reset(&th->cov);
 		// Enable kmcov tracing
-		debug("=== Calling kmcov enable ...\n");
+		debug("++++++ Calling kmcov enable ...\n");
 		kmcov_enable(kmcov_fd);
 	}
 	errno = 0;
-	debug("=== Executing syscall ...\n");
+	debug("++++++ Executing syscall ...\n");
 	th->res = execute_syscall(call, th->args);
 	th->reserrno = errno;
 	if (th->res == -1 && th->reserrno == 0)
@@ -1125,7 +1126,7 @@ void execute_call(thread_t* th)
 			fail("#%d: too much cover %u", th->id, th->cov.size);
 		
 		//Disable kmcov tracing and read
-		debug("=== Calling kmcov disable ...\n");
+		debug("++++++ Calling kmcov disable ...\n");
 		kmcov_disable(kmcov_fd);
 		//TODO: kmcov_read
 	}
