@@ -442,6 +442,7 @@ int main(int argc, char** argv)
 	else
 		fail("unknown sandbox type");
 
+	kmcov_close(kmcov_fd);
 #if SYZ_EXECUTOR_USES_FORK_SERVER
 	fprintf(stderr, "loop exited with status %d\n", status);
 	// Other statuses happen when fuzzer processes manages to kill loop, e.g. with:
