@@ -320,7 +320,6 @@ func addFallbackSignal(p *prog.Prog, info *ProgInfo) {
 }
 
 func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
-	fmt.Printf("======== GO: TESTING: PARSE OUTPUT")
 	out := env.out
 	ncmd, ok := readUint32(&out)
 	if !ok {
@@ -365,6 +364,8 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 			return nil, err
 		}
 		inf.Comps = comps
+		fmt.Print("======= IPC.GO DEBUGGING ======")
+		fmt.Print(reply)
 	}
 	if len(extraParts) == 0 {
 		return info, nil
