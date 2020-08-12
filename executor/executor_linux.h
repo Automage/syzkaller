@@ -229,12 +229,15 @@ static void cover_reset(cover_t* cov)
 	*(uint64*)cov->data = 0;
 }
 
-static void cover_collect(cover_t* cov)
+static void cover_collect(cover_t* cov, int kmcov_fd, void *kmcov_buf[])
 {
 	if (is_kernel_64_bit)
 		cov->size = *(uint64*)cov->data;
 	else
 		cov->size = *(uint32*)cov->data;
+
+	// Kmcov piggybacking buffer read
+	kmcov_read(kmcov_fd, kmcov_buf);
 }
 
 static bool cover_check(uint32 pc)

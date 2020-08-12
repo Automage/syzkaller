@@ -446,8 +446,7 @@ int main(int argc, char** argv)
 	else
 		fail("unknown sandbox type");
 	
-	// KMCOV read buffer and close debugfs
-	kmcov_read(kmcov_fd, kmcov_buf);
+	// KMCOV close debugfs
 	kmcov_close(kmcov_fd);
 
 	// WRITING TO SHARED MEM
@@ -790,7 +789,7 @@ retry:
 				thread_t* th = &threads[i];
 				if (th->executing) {
 					if (flag_coverage)
-						cover_collect(&th->cov);
+						cover_collect(&th->cov, kmcov_fd, kmcov_buf);
 					write_call_output(th, false);
 				}
 			}
@@ -1037,7 +1036,7 @@ void write_extra_output()
 #if SYZ_EXECUTOR_USES_SHMEM
 	if (!flag_coverage || !flag_extra_coverage || flag_comparisons)
 		return;
-	cover_collect(&extra_cov);
+	cover_collect(&extra_cov, kmcov_fd, kmcov_buf);
 	if (!extra_cov.size)
 		return;
 	write_output(-1); // call index
@@ -1121,7 +1120,7 @@ void execute_call(thread_t* th)
 		th->reserrno = 0;
 	}
 	if (flag_coverage) {
-		cover_collect(&th->cov);
+		cover_collect(&th->cov, kmcov_fd, kmcov_buf);
 		if (th->cov.size >= kCoverSize)
 			fail("#%d: too much cover %u", th->id, th->cov.size);
 		
