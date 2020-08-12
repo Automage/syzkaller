@@ -200,6 +200,9 @@ struct cover_t {
 	char* data_end;
 };
 
+// KMCOV buffer to hold memory addresses
+void *kmcov_buf[KMCOV_COVER_SIZE];
+
 struct thread_t {
 	int id;
 	bool created;
@@ -442,9 +445,13 @@ int main(int argc, char** argv)
 #endif
 	else
 		fail("unknown sandbox type");
-
+	
+	// KMCOV read buffer and close debugfs
+	kmcov_read(kmcov_fd, kmcov_buf);
 	kmcov_close(kmcov_fd);
+
 	// WRITING TO SHARED MEM
+	
 #if SYZ_EXECUTOR_USES_FORK_SERVER
 	fprintf(stderr, "loop exited with status %d\n", status);
 	// Other statuses happen when fuzzer processes manages to kill loop, e.g. with:
