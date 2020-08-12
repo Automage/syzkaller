@@ -84,13 +84,18 @@ const (
 	CallFaultInjected                       // fault was injected into this call
 )
 
+// KMCOV consts
+const (
+	KmcovBufferSize = 10000
+)
+
 type CallInfo struct {
 	Flags  CallFlags
 	Signal []uint32 // feedback signal, filled if FlagSignal is set
 	Cover  []uint32 // per-call coverage, filled if FlagSignal is set and cover == true,
 	// if dedup == false, then cov effectively contains a trace, otherwise duplicates are removed
 	Comps    prog.CompMap // per-call comparison operands
-	MemCover []uint64     // KMCOV memory address coverage buffer
+	MemCover []uint32     // KMCOV memory address coverage buffer
 	Errno    int          // call errno (0 if the call was successful)
 }
 
@@ -367,11 +372,13 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 			return nil, err
 		}
 		inf.Comps = comps
+
+		// KMCOV buffer read
 		fmt.Printf("======= FUZZER: READING KMCOV BUFFER... ======\n")
-		//if info.MemCover, ok = readUint32Array(&out, 10000); !ok {
-		//return nil, fmt.Errorf("call %v/%v/%v: cover overflow: %v/%v",
-		///	i, reply.index, reply.num, reply.coverSize, len(out))
-		//}
+		if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
+			return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
+				i, reply.index, reply.num, KmcovBufferSize, len(out))
+		}
 	}
 	fmt.Printf("===== Outside parseoutput Loop, extra parts: %d ======\n", len(extraParts))
 	if len(extraParts) == 0 {
