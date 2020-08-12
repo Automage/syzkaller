@@ -335,6 +335,7 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 	info := &ProgInfo{Calls: make([]CallInfo, len(p.Calls))}
 	extraParts := make([]CallInfo, 0)
 	for i := uint32(0); i < ncmd; i++ {
+		fmt.Printf("======= parseOutput loop: i = %d, out = %p\n", i, out)
 		if len(out) < int(unsafe.Sizeof(callReply{})) {
 			return nil, fmt.Errorf("failed to read call %v reply", i)
 		}
@@ -343,10 +344,14 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 		out = out[unsafe.Sizeof(callReply{}):]
 		var inf *CallInfo
 		if reply.index != extraReplyIndex {
+			fmt.Printf("======= In i = %d, out = %p, reply.index = %d, rep.num = %d\n", i, out, reply.index, reply.num)
+			fmt.Print(p.Calls)
 			if int(reply.index) >= len(info.Calls) {
 				return nil, fmt.Errorf("bad call %v index %v/%v", i, reply.index, len(info.Calls))
 			}
 			if num := p.Calls[reply.index].Meta.ID; int(reply.num) != num {
+				fmt.Print("reply.num != num\n")
+				fmt.Print(p.Calls[reply.index])
 				return nil, fmt.Errorf("wrong call %v num %v/%v", i, reply.num, num)
 			}
 			inf = &info.Calls[reply.index]
