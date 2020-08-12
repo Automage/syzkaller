@@ -370,7 +370,7 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 		fmt.Print(reply)
 		fmt.Print("\n")
 	}
-	fmt.Print("===== Outside parseoutput Loop, extra parts: %d======\n", len(extraParts))
+	fmt.Printf("===== Outside parseoutput Loop, extra parts: %d ======\n", len(extraParts))
 	if len(extraParts) == 0 {
 		return info, nil
 	}
