@@ -379,10 +379,12 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 		inf.Comps = comps
 
 		// KMCOV buffer read
-		fmt.Printf("======= FUZZER: READING KMCOV BUFFER... ======\n")
-		if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
-			return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
-				i, reply.index, reply.num, KmcovBufferSize, len(out))
+		if reply.coverSize != 0 {
+			fmt.Printf("======= FUZZER: READING KMCOV BUFFER... ======\n")
+			if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
+				return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
+					i, reply.index, reply.num, KmcovBufferSize, len(out))
+			}
 		}
 	}
 	fmt.Printf("===== Outside parseoutput Loop, extra parts: %d ======\n", len(extraParts))
