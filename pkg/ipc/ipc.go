@@ -95,7 +95,7 @@ type CallInfo struct {
 	Cover  []uint32 // per-call coverage, filled if FlagSignal is set and cover == true,
 	// if dedup == false, then cov effectively contains a trace, otherwise duplicates are removed
 	Comps    prog.CompMap // per-call comparison operands
-	MemCover []uint32     // KMCOV memory address coverage buffer
+	MemCover []uint64     // KMCOV memory address coverage buffer
 	Errno    int          // call errno (0 if the call was successful)
 }
 
@@ -381,7 +381,8 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 		// KMCOV buffer read
 		if reply.coverSize != 0 {
 			fmt.Printf("======= FUZZER: READING KMCOV BUFFER... ======\n")
-			if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
+			if inf.MemCover, ok = readUint64Array(&out, KmcovBufferSize); !ok {
+				//if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
 				return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
 					i, reply.index, reply.num, KmcovBufferSize, len(out))
 			}
@@ -498,13 +499,12 @@ func readUint32Array(outp *[]byte, size uint32) ([]uint32, bool) {
 	return res, true
 }
 
-/*
-func readUint64Array(outp *[]byte, size uint32) ([]uint32, bool) {
+func readUint64Array(outp *[]byte, size uint64) ([]uint64, bool) {
 	if size == 0 {
 		return nil, true
 	}
 	out := *outp
-	if int(size)*4 > len(out) {
+	if int(size)*8 > len(out) {
 		return nil, false
 	}
 	hdr := reflect.SliceHeader{
@@ -512,11 +512,11 @@ func readUint64Array(outp *[]byte, size uint32) ([]uint32, bool) {
 		Len:  int(size),
 		Cap:  int(size),
 	}
-	res := *(*[]uint32)(unsafe.Pointer(&hdr))
-	*outp = out[size*4:]
+	res := *(*[]uint64)(unsafe.Pointer(&hdr))
+	*outp = out[size*8:]
 	return res, true
 }
-*/
+
 type command struct {
 	pid      int
 	config   *Config
