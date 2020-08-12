@@ -964,6 +964,7 @@ void write_call_output(thread_t* th, bool finished)
 			      (th->fault_injected ? call_flag_fault_injected : 0);
 	}
 #if SYZ_EXECUTOR_USES_SHMEM
+	debug("====== KMCOV USING SHARED MEM");
 	write_output(th->call_index);
 	write_output(th->call_num);
 	write_output(reserrno);
@@ -1004,6 +1005,7 @@ void write_call_output(thread_t* th, bool finished)
 	completed++;
 	write_completed(completed);
 #else
+	debug("====== KMCOV USING PIPES");
 	call_reply reply;
 	reply.header.magic = kOutMagic;
 	reply.header.done = 0;

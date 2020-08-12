@@ -776,7 +776,9 @@ func (c *command) exec(opts *ExecOpts, progData []byte) (output []byte, hanged b
 			fmt.Fprintf(os.Stderr, "executor %v: got call reply with coverage\n", c.pid)
 			os.Exit(1)
 		}
+		// (?) Copy read-in data back to buffer for a later date
 		copy(outmem, callReplyData)
+		// Advance LOCAL pointer to c.outmem
 		outmem = outmem[len(callReplyData):]
 		*completedCalls++
 	}
