@@ -859,6 +859,7 @@ thread_t* schedule_call(int call_index, int call_num, bool colliding, uint64 cop
 template <typename cover_data_t>
 void write_coverage_signal(cover_t* cov, uint32* signal_count_pos, uint32* cover_count_pos)
 {
+	debug("++++++ Writing coverage signal ...\n");
 	// Write out feedback signals.
 	// Currently it is code edges computed as xor of two subsequent basic block PCs.
 	cover_data_t* cover_data = ((cover_data_t*)cov->data) + 1;
