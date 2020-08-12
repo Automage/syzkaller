@@ -125,8 +125,8 @@ static void kmcov_close(int fd) {
 // Enable tracing
 static void kmcov_enable(int fd) {
 	debug("====== Enabling kmcov...\n");
-	int ret = 0;
-	if (ret = ioctl(fd, KMCOV_ENABLE, 0))
+	int ret = ioctl(fd, KMCOV_ENABLE, 0);
+	if (ret)
 		fail("kmcov enable failed: ret %d", ret);
 	
 	debug("====== Enabled kmcov!\n");
