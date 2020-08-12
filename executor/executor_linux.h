@@ -10,6 +10,7 @@
 #include <sys/prctl.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <errno.h>
 
 const unsigned long KCOV_TRACE_PC = 0;
 const unsigned long KCOV_TRACE_CMP = 1;
@@ -127,7 +128,7 @@ static void kmcov_enable(int fd) {
 	debug("====== Enabling kmcov...\n");
 	int ret = ioctl(fd, KMCOV_ENABLE, 0);
 	if (ret)
-		fail("kmcov enable failed: ret %d", ret);
+		fail("kmcov enable failed: ret %d, errno %d", ret, errno);
 	
 	debug("====== Enabled kmcov!\n");
 }
