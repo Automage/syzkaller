@@ -129,7 +129,7 @@ static void kmcov_enable(int fd) {
 	debug("====== Enabling kmcov...\n");
 	int ret = ioctl(fd, KMCOV_ENABLE, 0);
 	if (ret)
-		fail("kmcov enable failed: ret %d, err: %s", ret, strerr(errno));
+		fail("kmcov enable failed: ret %d, err: %s", ret, strerror(errno));
 	
 	debug("====== Enabled kmcov!\n");
 }
