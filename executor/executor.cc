@@ -422,7 +422,7 @@ int main(int argc, char** argv)
 		}
 
 		// Open debugfs kmcov file + allocate buffer
-		kmcov_open(&kmcov_fd);
+		kmcov_open(kmcov_fd);
 	}
 
 	int status = 0;
