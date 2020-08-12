@@ -344,13 +344,13 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 		out = out[unsafe.Sizeof(callReply{}):]
 		var inf *CallInfo
 		if reply.index != extraReplyIndex {
-			fmt.Printf("======= In i = %d, out = %p, reply.index = %d, rep.num = %d\n", i, out, reply.index, reply.num)
-			fmt.Print(p.Calls)
+			fmt.Printf("======= In i = %d, out = %p, reply.index = %d, rep.num = %d, reply.signalsize = %d, reply.coversize = %d\n",
+				i, out, reply.index, reply.num, reply.signalSize, reply.coverSize)
 			if int(reply.index) >= len(info.Calls) {
 				return nil, fmt.Errorf("bad call %v index %v/%v", i, reply.index, len(info.Calls))
 			}
 			if num := p.Calls[reply.index].Meta.ID; int(reply.num) != num {
-				fmt.Print("reply.num != num\n")
+				fmt.Print("reply.num != num\n p.calls[reply.index]: ")
 				fmt.Print(p.Calls[reply.index])
 				return nil, fmt.Errorf("wrong call %v num %v/%v", i, reply.num, num)
 			}
