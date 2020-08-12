@@ -150,7 +150,7 @@ static void kmcov_disable(int fd) {
 static void kmcov_read(int fd, void *buf[]) {
 	debug("====== Reading kmcov buffer...\n");
 	int ret = read(fd, buf, KMCOV_COVER_SIZE);
-	if (ret != 0) {
+	if (ret != KMCOV_COVER_SIZE) {
 		fail("kmcov read failed. ret %d", ret);
 	}
 	debug("====== Read kmcov buffer successfully \n");
