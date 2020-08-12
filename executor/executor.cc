@@ -68,6 +68,10 @@ const int kMaxArgs = 9;
 const int kCoverSize = 256 << 10;
 const int kFailStatus = 67;
 
+// KMCOV file descriptor - currently to be opened only once
+// Uses highest fd less than Syzkaller fds (i.e. kCoverFd) 
+const int kmcov_fd = kCoverFd - 1;
+
 // Logical error (e.g. invalid input program), use as an assert() alternative.
 static NORETURN PRINTF(1, 2) void fail(const char* msg, ...);
 // Just exit (e.g. due to temporal ENOMEM error).
@@ -219,9 +223,6 @@ static thread_t threads[kMaxThreads];
 static thread_t* last_scheduled;
 
 static cover_t extra_cov;
-
-// KMCOV file descriptor - currently to be opened only once
-static int kmcov_fd;
 
 struct res_t {
 	bool executed;
