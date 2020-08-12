@@ -321,6 +321,7 @@ func addFallbackSignal(p *prog.Prog, info *ProgInfo) {
 
 func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 	out := env.out
+	// Advances read out pointer by 4 bytes
 	ncmd, ok := readUint32(&out)
 	if !ok {
 		return nil, fmt.Errorf("failed to read number of calls")
@@ -332,6 +333,7 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 			return nil, fmt.Errorf("failed to read call %v reply", i)
 		}
 		reply := *(*callReply)(unsafe.Pointer(&out[0]))
+		// Advances out pointer to cover data (after callReply)
 		out = out[unsafe.Sizeof(callReply{}):]
 		var inf *CallInfo
 		if reply.index != extraReplyIndex {
@@ -364,9 +366,11 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 			return nil, err
 		}
 		inf.Comps = comps
-		fmt.Print("======= IPC.GO DEBUGGING ======")
+		fmt.Printf("======= PARSEOUT: REPLY %d ======\n", i)
 		fmt.Print(reply)
+		fmt.Print("\n")
 	}
+	fmt.Print("===== Outside parseoutput Loop, extra parts: %d======\n", len(extraParts))
 	if len(extraParts) == 0 {
 		return info, nil
 	}
