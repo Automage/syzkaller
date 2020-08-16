@@ -12,10 +12,11 @@ import (
 )
 
 type RPCInput struct {
-	Call   string
-	Prog   []byte
-	Signal signal.Serial
-	Cover  []uint32
+	Call     string
+	Prog     []byte
+	Signal   signal.Serial
+	Cover    []uint32
+	MemCover []uint64
 }
 
 type RPCCandidate struct {

@@ -99,6 +99,7 @@ func (proc *Proc) loop() {
 	}
 }
 
+// Pranav: sending memory coverage back to manager
 func (proc *Proc) triageInput(item *WorkTriage) {
 	log.Logf(1, "#%v: triaging type=%x", proc.pid, item.flags)
 
@@ -116,6 +117,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	}
 	log.Logf(3, "triaging input for %v (new signal=%v)", logCallName, newSignal.Len())
 	var inputCover cover.Cover
+	var inputMemCover cover.MemCover
 	const (
 		signalRuns       = 3
 		minimizeAttempts = 3
@@ -133,7 +135,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 			continue
 		}
 		// Pranav: return memCover too
-		thisSignal, thisCover, _ := getSignalAndCover(item.p, info, item.call)
+		thisSignal, thisCover, thisMemCover := getSignalAndCover(item.p, info, item.call)
 		newSignal = newSignal.Intersection(thisSignal)
 		// Without !minimized check manager starts losing some considerable amount
 		// of coverage after each restart. Mechanics of this are not completely clear.
@@ -141,6 +143,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 			return
 		}
 		inputCover.Merge(thisCover)
+		inputMemCover.Merge(thisMemCover)
 	}
 	if item.flags&ProgMinimized == 0 {
 		item.p, item.call = prog.Minimize(item.p, item.call, false,
@@ -150,8 +153,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 					if !reexecutionSuccess(info, &item.info, call1) {
 						// The call was not executed or failed.
 						continue
-					}
-					// Pranav: return memCover too
+					}					
 					thisSignal, _, _ := getSignalAndCover(p1, info, call1)
 					if newSignal.Intersection(thisSignal).Len() == newSignal.Len() {
 						return true
@@ -170,6 +172,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		Prog:   data,
 		Signal: inputSignal.Serialize(),
 		Cover:  inputCover.Serialize(),
+		MemCover: inputMemCover.Serialize()
 	})
 
 	proc.fuzzer.addInputToCorpus(item.p, inputSignal, sig)
