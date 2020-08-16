@@ -153,7 +153,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 					if !reexecutionSuccess(info, &item.info, call1) {
 						// The call was not executed or failed.
 						continue
-					}					
+					}
 					thisSignal, _, _ := getSignalAndCover(p1, info, call1)
 					if newSignal.Intersection(thisSignal).Len() == newSignal.Len() {
 						return true
@@ -168,11 +168,11 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 
 	log.Logf(2, "added new input for %v to corpus:\n%s", logCallName, data)
 	proc.fuzzer.sendInputToManager(rpctype.RPCInput{
-		Call:   callName,
-		Prog:   data,
-		Signal: inputSignal.Serialize(),
-		Cover:  inputCover.Serialize(),
-		MemCover: inputMemCover.Serialize()
+		Call:     callName,
+		Prog:     data,
+		Signal:   inputSignal.Serialize(),
+		Cover:    inputCover.Serialize(),
+		MemCover: inputMemCover.Serialize(),
 	})
 
 	proc.fuzzer.addInputToCorpus(item.p, inputSignal, sig)
