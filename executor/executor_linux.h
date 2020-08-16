@@ -99,6 +99,7 @@ static intptr_t execute_syscall(const call_t* c, intptr_t a[kMaxArgs])
 	return res;
 }
 
+// Pranav
 // KMCOV functions
 // Handles both open and setup. Returns fd.
 static void kmcov_open(const int kmcov_fd) {
@@ -234,6 +235,7 @@ static void cover_collect(cover_t* cov, int kmcov_fd, void *kmcov_buf[])
 {
 	if (is_kernel_64_bit) {
 		cov->size = *(uint64*)cov->data;
+		// Pranav
 		// Kmcov piggybacking buffer read
 		kmcov_read(kmcov_fd, kmcov_buf);
 	} else {

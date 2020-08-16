@@ -68,6 +68,7 @@ const int kMaxArgs = 9;
 const int kCoverSize = 256 << 10;
 const int kFailStatus = 67;
 
+// Pranav
 // KMCOV file descriptor - currently to be opened only once
 // Uses highest fd less than Syzkaller fds (i.e. kCoverFd) 
 const int kmcov_fd = kCoverFd - 1;
@@ -345,6 +346,7 @@ static void setup_features(char** enable, int n);
 
 #include "test.h"
 
+// Pranav
 // KMCOV buffer to hold memory addresses
 void *kmcov_buf[KMCOV_COVER_SIZE];
 
@@ -446,10 +448,9 @@ int main(int argc, char** argv)
 	else
 		fail("unknown sandbox type");
 	
+	// Pranav
 	// KMCOV close debugfs
 	kmcov_close(kmcov_fd);
-
-	// WRITING TO SHARED MEM
 
 #if SYZ_EXECUTOR_USES_FORK_SERVER
 	fprintf(stderr, "loop exited with status %d\n", status);
@@ -898,6 +899,7 @@ void write_coverage_signal(cover_t* cov, uint32* signal_count_pos, uint32* cover
 		write_output(cover_data[i]);
 	*cover_count_pos = cover_size;
 
+	// Pranav
 	// KMCOV buffer write
 	// TODO: 32 -> 64 implmentation use write_output_64
 	if (cover_size != 0) {
@@ -1123,6 +1125,7 @@ void execute_call(thread_t* th)
 
 	if (flag_coverage) {
 		cover_reset(&th->cov);
+		// Pranav
 		// Enable kmcov tracing
 		debug("++++++ Calling kmcov enable ...\n");
 		kmcov_enable(kmcov_fd);
@@ -1138,11 +1141,13 @@ void execute_call(thread_t* th)
 		th->reserrno = 0;
 	}
 	if (flag_coverage) {
+		// KMCOV cover collected here too
 		cover_collect(&th->cov, kmcov_fd, kmcov_buf);
 		if (th->cov.size >= kCoverSize)
 			fail("#%d: too much cover %u", th->id, th->cov.size);
 		
-		//Disable kmcov tracing and read
+		// Pranav
+		// Disable kmcov tracing and read
 		debug("++++++ Calling kmcov disable ...\n");
 		kmcov_disable(kmcov_fd);
 		//TODO: kmcov_read
