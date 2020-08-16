@@ -1125,13 +1125,16 @@ void execute_call(thread_t* th)
 
 	if (flag_coverage) {
 		cover_reset(&th->cov);
+		
 		// Pranav
-		// Enable kmcov tracing
 		debug("++++++ Calling kmcov enable ...\n");
+		// Enable kmcov tracing
 		kmcov_enable(kmcov_fd);
+		debug("++++++ Executing syscall soon...\n");
+		// TODO: Reset buffer?
 	}
 	errno = 0;
-	debug("++++++ Executing syscall ...\n");
+	
 	th->res = execute_syscall(call, th->args);
 	th->reserrno = errno;
 	if (th->res == -1 && th->reserrno == 0)
