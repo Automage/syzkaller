@@ -46,7 +46,7 @@ func (stats *Stats) all() map[string]uint64 {
 		"exec total":     stats.execTotal.get(),
 		"cover":          stats.corpusCover.get(),
 		"signal":         stats.corpusSignal.get(),
-		"mem cover"		  stats.corpusMemCover.get(),
+		"mem cover":      stats.corpusMemCover.get(),
 		"max signal":     stats.maxSignal.get(),
 	}
 	if stats.haveHub {
