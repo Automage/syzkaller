@@ -17,6 +17,7 @@ import (
 	"github.com/google/syzkaller/prog"
 )
 
+// Pranav: Added MemCover
 type RPCServer struct {
 	mgr                   RPCManagerView
 	target                *prog.Target
@@ -26,14 +27,15 @@ type RPCServer struct {
 	sandbox               string
 	batchSize             int
 
-	mu           sync.Mutex
-	fuzzers      map[string]*Fuzzer
-	checkResult  *rpctype.CheckArgs
-	maxSignal    signal.Signal
-	corpusSignal signal.Signal
-	corpusCover  cover.Cover
-	rotator      *prog.Rotator
-	rnd          *rand.Rand
+	mu             sync.Mutex
+	fuzzers        map[string]*Fuzzer
+	checkResult    *rpctype.CheckArgs
+	maxSignal      signal.Signal
+	corpusSignal   signal.Signal
+	corpusCover    cover.Cover
+	corpusMemCover cover.MemCover
+	rotator        *prog.Rotator
+	rnd            *rand.Rand
 }
 
 type Fuzzer struct {
@@ -207,10 +209,11 @@ func (serv *RPCServer) Check(a *rpctype.CheckArgs, r *int) error {
 	return nil
 }
 
+// Pranav: Added memcover stats
 func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	inputSignal := a.Signal.Deserialize()
-	log.Logf(4, "new input from %v for syscall %v (signal=%v, cover=%v)",
-		a.Name, a.Call, inputSignal.Len(), len(a.Cover))
+	log.Logf(4, "new input from %v for syscall %v (signal=%v, cover=%v, memCover=%v)",
+		a.Name, a.Call, inputSignal.Len(), len(a.Cover), len(a.MemCover))
 	bad, disabled := checkProgram(serv.target, serv.targetEnabledSyscalls, a.RPCInput.Prog)
 	if bad || disabled {
 		log.Logf(0, "rejecting program from fuzzer (bad=%v, disabled=%v):\n%s", bad, disabled, a.RPCInput.Prog)
@@ -241,6 +244,10 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	if rotated {
 		serv.stats.rotatedInputs.inc()
 	}
+
+	//Pranav: merge and update mem cover stat
+	serv.corpusMemCover.Merge(a.MemCover)
+	serv.stats.corpusMemCover.set(len(serv.corpusMemCover))
 
 	if genuine {
 		serv.corpusSignal.Merge(inputSignal)
