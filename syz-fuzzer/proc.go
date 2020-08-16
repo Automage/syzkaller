@@ -133,7 +133,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 			continue
 		}
 		// Pranav: return memCover too
-		thisSignal, thisCover, thisMemCover := getSignalAndCover(item.p, info, item.call)
+		thisSignal, thisCover, _ := getSignalAndCover(item.p, info, item.call)
 		newSignal = newSignal.Intersection(thisSignal)
 		// Without !minimized check manager starts losing some considerable amount
 		// of coverage after each restart. Mechanics of this are not completely clear.
