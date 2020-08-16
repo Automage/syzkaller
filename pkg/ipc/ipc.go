@@ -95,7 +95,7 @@ type CallInfo struct {
 	Cover  []uint32 // per-call coverage, filled if FlagSignal is set and cover == true,
 	// if dedup == false, then cov effectively contains a trace, otherwise duplicates are removed
 	Comps    prog.CompMap // per-call comparison operands
-	MemCover []uint64     // KMCOV memory address coverage buffer
+	MemCover []uint64     // Pranav: KMCOV memory address coverage buffer
 	Errno    int          // call errno (0 if the call was successful)
 }
 
@@ -378,6 +378,7 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 		}
 		inf.Comps = comps
 
+		// Pranav
 		// KMCOV buffer read
 		if reply.coverSize != 0 {
 			fmt.Printf("======= FUZZER: READING KMCOV BUFFER... ======\n")
@@ -499,6 +500,8 @@ func readUint32Array(outp *[]byte, size uint32) ([]uint32, bool) {
 	return res, true
 }
 
+// Pranav
+// Read 64 bit array
 func readUint64Array(outp *[]byte, size uint64) ([]uint64, bool) {
 	if size == 0 {
 		return nil, true
