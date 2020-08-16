@@ -147,6 +147,13 @@ static void kmcov_disable(int fd) {
 	debug("++++++ Disabled kmcov!\n");
 }
 
+// Zero out kmcov buffer
+static void kmcov_reset(void *buf[]) {
+	// Shouldn't call many (if any?) syscalls to further
+	// litter mem coverage buffer
+	memset(buf, 0, KMCOV_COVER_SIZE);
+}
+
 // Read from kmcov buffer
 static void kmcov_read(int fd, void *buf[]) {
 	debug("++++++ Reading kmcov buffer...\n");
