@@ -5,6 +5,7 @@
 package cover
 
 type Cover map[uint32]struct{}
+type MemCover map[uint64]struct{}
 
 func (cov *Cover) Merge(raw []uint32) {
 	c := *cov
@@ -27,4 +28,25 @@ func (cov Cover) Serialize() []uint32 {
 
 func RestorePC(pc, base uint32) uint64 {
 	return uint64(base)<<32 + uint64(pc)
+}
+
+// Pranav
+// KMCOV cover functions
+func (cov *MemCover) Merge(raw []uint64) {
+	c := *cov
+	if c == nil {
+		c = make(MemCover)
+		*cov = c
+	}
+	for _, addr := range raw {
+		c[addr] = struct{}{}
+	}
+}
+
+func (cov MemCover) Serialize() []uint64 {
+	res := make([]uint64, 0, len(cov))
+	for addr := range cov {
+		res = append(res, addr)
+	}
+	return res
 }

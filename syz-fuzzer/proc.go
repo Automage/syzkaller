@@ -132,7 +132,8 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 			}
 			continue
 		}
-		thisSignal, thisCover := getSignalAndCover(item.p, info, item.call)
+		// Pranav: return memCover too
+		thisSignal, thisCover, thisMemCover := getSignalAndCover(item.p, info, item.call)
 		newSignal = newSignal.Intersection(thisSignal)
 		// Without !minimized check manager starts losing some considerable amount
 		// of coverage after each restart. Mechanics of this are not completely clear.
@@ -150,7 +151,8 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 						// The call was not executed or failed.
 						continue
 					}
-					thisSignal, _ := getSignalAndCover(p1, info, call1)
+					// Pranav: return memCover too
+					thisSignal, _, _ := getSignalAndCover(p1, info, call1)
 					if newSignal.Intersection(thisSignal).Len() == newSignal.Len() {
 						return true
 					}
@@ -192,12 +194,13 @@ func reexecutionSuccess(info *ipc.ProgInfo, oldInfo *ipc.CallInfo, call int) boo
 	return len(info.Extra.Signal) != 0
 }
 
-func getSignalAndCover(p *prog.Prog, info *ipc.ProgInfo, call int) (signal.Signal, []uint32) {
+// Pranav: Changes made to return MemCover too
+func getSignalAndCover(p *prog.Prog, info *ipc.ProgInfo, call int) (signal.Signal, []uint32, []uint64) {
 	inf := &info.Extra
 	if call != -1 {
 		inf = &info.Calls[call]
 	}
-	return signal.FromRaw(inf.Signal, signalPrio(p, inf, call)), inf.Cover
+	return signal.FromRaw(inf.Signal, signalPrio(p, inf, call)), inf.Cover, inf.MemCover
 }
 
 func (proc *Proc) smashInput(item *WorkSmash) {
