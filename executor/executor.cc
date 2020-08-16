@@ -1130,7 +1130,7 @@ void execute_call(thread_t* th)
 		debug("++++++ Calling kmcov enable ...\n");
 		// Enable kmcov tracing
 		kmcov_enable(kmcov_fd);
-		debug("++++++ Executing syscall soon...\n");
+		// debug("++++++ Executing syscall soon...\n");
 		// TODO: Reset buffer?
 	}
 	errno = 0;
