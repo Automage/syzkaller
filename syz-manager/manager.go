@@ -242,8 +242,8 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 				numFuzzing, executed, corpusCover, corpusMemCover, corpusSignal, maxSignal, crashes, numReproducing)
 
 			//CoverLogger.Println("$$$ %v", corpusMemCover)
-			elapsed := now.Sub(mgr.startTime)
-			coverLogFile.WriteString(fmt.Sprintf("%.0fs (ms: %.0f): %v\n", elapsed.Seconds(), elapsed.Milliseconds(), corpusMemCover))
+			elapsed := time.Since(mgr.startTime)
+			coverLogFile.WriteString(fmt.Sprintf("%.0fs (ms: %d): %v\n", elapsed.Seconds(), elapsed.Milliseconds(), corpusMemCover))
 		}
 	}()
 
