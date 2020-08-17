@@ -243,7 +243,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 
 			//CoverLogger.Println("$$$ %v", corpusMemCover)
 			elapsed := time.Since(mgr.startTime)
-			coverLogFile.WriteString(fmt.Sprintf("%.0fs (ms: %d): %v\n", elapsed.Seconds(), elapsed.Milliseconds(), corpusMemCover))
+			coverLogFile.WriteString(fmt.Sprintf("%.0f %d %v\n", elapsed.Seconds(), elapsed.Milliseconds(), corpusMemCover))
 		}
 	}()
 
