@@ -45,9 +45,9 @@ func (stats *Stats) all() map[string]uint64 {
 		"rotated inputs": stats.rotatedInputs.get(),
 		"exec total":     stats.execTotal.get(),
 		"cover":          stats.corpusCover.get(),
-		"signal":         stats.corpusSignal.get(),
 		// Pranav: added mem cover
 		"mem cover":  stats.corpusMemCover.get(),
+		"signal":     stats.corpusSignal.get(),
 		"max signal": stats.maxSignal.get(),
 	}
 	if stats.haveHub {

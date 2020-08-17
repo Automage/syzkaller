@@ -207,7 +207,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 	//filename := fmt.SPrintf("%d-%02d-%02dT%02d:%02d:%02d-00:00\n",
 	//    t.Year(), t.Month(), t.Day(),
 	//    t.Hour(), t.Minute(), t.Second())
-	coverLogFile, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	coverLogFile, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -243,7 +243,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 
 			//CoverLogger.Println("$$$ %v", corpusMemCover)
 			elapsed := now.Sub(mgr.startTime)
-			coverLogFile.WriteString(fmt.Sprintf("%.0f: %v\n", elapsed.Seconds(), corpusMemCover))
+			coverLogFile.WriteString(fmt.Sprintf("%.0fs (ms: %.0f): %v\n", elapsed.Seconds(), elapsed.Milliseconds(), corpusMemCover))
 		}
 	}()
 
