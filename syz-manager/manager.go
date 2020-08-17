@@ -17,9 +17,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	// Pranav: For kmcov logging
-	"log"
-
 	"github.com/google/syzkaller/dashboard/dashapi"
 	"github.com/google/syzkaller/pkg/cover"
 	"github.com/google/syzkaller/pkg/csource"
@@ -214,9 +211,9 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer coverLogFile.close()
+	defer coverLogFile.Close()
 
-	CoverLogger *log.Logger := log.New(coverLogFile, "COVER: ", log.Ldate|log.Ltime|log.Lshortfile)
+	//CoverLogger *log.Logger := log.New(coverLogFile, "COVER: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	go func() {
 		for lastTime := time.Now(); ; {
@@ -243,7 +240,8 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 			log.Logf(0, "VMs %v, executed %v, corpus cover %v, corpus memory cover %v, corpus signal %v, max signal %v, crashes %v, repro %v",
 				numFuzzing, executed, corpusCover, corpusMemCover, corpusSignal, maxSignal, crashes, numReproducing)
 
-			CoverLogger.Println("$$$ %v", corpusMemCover)
+			//CoverLogger.Println("$$$ %v", corpusMemCover)
+			coverLogFile.WriteString("$$$ %v", corpusMemCover)
 		}
 	}()
 
