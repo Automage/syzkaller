@@ -16,6 +16,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
 	// Pranav: For kmcov cover logging
 	golog "log"
 
@@ -215,7 +216,8 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 	}
 	defer coverLogFile.Close()
 
-	CoverLogger *golog.Logger := golog.New(coverLogFile, "COVER: ", golog.Ldate|golog.Ltime|golog.Lshortfile)
+	CoverLogger * golog.Logger
+	CoverLogger = golog.New(coverLogFile, "COVER: ", golog.Ldate|golog.Ltime|golog.Lshortfile)
 
 	go func() {
 		for lastTime := time.Now(); ; {
