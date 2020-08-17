@@ -241,7 +241,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 				numFuzzing, executed, corpusCover, corpusMemCover, corpusSignal, maxSignal, crashes, numReproducing)
 
 			//CoverLogger.Println("$$$ %v", corpusMemCover)
-			coverLogFile.WriteString(fmt.SPrintf("$$$ %v", corpusMemCover))
+			coverLogFile.WriteString(fmt.Sprintf("$$$ %v", corpusMemCover))
 		}
 	}()
 
