@@ -201,6 +201,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 		mgr.dash = dashapi.New(cfg.DashboardClient, cfg.DashboardAddr, cfg.DashboardKey)
 	}
 
+	// Pranav: Added mem coverage logging
 	go func() {
 		for lastTime := time.Now(); ; {
 			time.Sleep(10 * time.Second)
@@ -218,7 +219,6 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 			corpusCover := mgr.stats.corpusCover.get()
 			corpusSignal := mgr.stats.corpusSignal.get()
 			maxSignal := mgr.stats.maxSignal.get()
-			// Pranav: Added mem coverage logging
 			corpusMemCover := mgr.stats.corpusMemCover.get()
 			mgr.mu.Unlock()
 			numReproducing := atomic.LoadUint32(&mgr.numReproducing)
@@ -226,6 +226,9 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 
 			log.Logf(0, "VMs %v, executed %v, corpus cover %v, corpus memory cover %v, corpus signal %v, max signal %v, crashes %v, repro %v",
 				numFuzzing, executed, corpusCover, corpusMemCover, corpusSignal, maxSignal, crashes, numReproducing)
+
+			// Grep friendly logging
+			fmt.Printf("$$$ %v", corpusMemCover)
 		}
 	}()
 
