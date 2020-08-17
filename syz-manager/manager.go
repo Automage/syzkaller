@@ -207,7 +207,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 	//filename := fmt.SPrintf("%d-%02d-%02dT%02d:%02d:%02d-00:00\n",
 	//    t.Year(), t.Month(), t.Day(),
 	//    t.Hour(), t.Minute(), t.Second())
-	coverLogFile, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0666)
+	coverLogFile, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
