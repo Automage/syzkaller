@@ -17,6 +17,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	// Pranav: For kmcov logging
+	"log"
+
 	"github.com/google/syzkaller/dashboard/dashapi"
 	"github.com/google/syzkaller/pkg/cover"
 	"github.com/google/syzkaller/pkg/csource"
@@ -202,6 +205,19 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 	}
 
 	// Pranav: Added mem coverage logging
+	//t := time.Now()
+	filename := "/home/pranav/rssl/ice-skating-new/logs/syz-manager.log"
+	//filename := fmt.SPrintf("%d-%02d-%02dT%02d:%02d:%02d-00:00\n",
+	//    t.Year(), t.Month(), t.Day(),
+	//    t.Hour(), t.Minute(), t.Second())
+	coverLogFile, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer coverLogFile.close()
+
+	CoverLogger *log.Logger := log.New(coverLogFile, "COVER: ", log.Ldate|log.Ltime|log.Lshortfile)
+
 	go func() {
 		for lastTime := time.Now(); ; {
 			time.Sleep(10 * time.Second)
@@ -227,8 +243,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 			log.Logf(0, "VMs %v, executed %v, corpus cover %v, corpus memory cover %v, corpus signal %v, max signal %v, crashes %v, repro %v",
 				numFuzzing, executed, corpusCover, corpusMemCover, corpusSignal, maxSignal, crashes, numReproducing)
 
-			// Grep friendly logging
-			fmt.Printf("$$$ %v", corpusMemCover)
+			CoverLogger.Println("$$$ %v", corpusMemCover)
 		}
 	}()
 
