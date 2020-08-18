@@ -350,7 +350,7 @@ static void setup_features(char** enable, int n);
 // KMCOV buffer to hold memory addresses
 void *kmcov_addr_buf[KMCOV_COVER_SIZE];
 void *kmcov_ip_buf[KMCOV_COVER_SIZE];
-int *kmcov_type_buf[KMCOV_COVER_SIZE];
+int kmcov_type_buf[KMCOV_COVER_SIZE];
 
 int main(int argc, char** argv)
 {
