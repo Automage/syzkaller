@@ -97,7 +97,7 @@ type CallInfo struct {
 	Comps     prog.CompMap // per-call comparison operands
 	MemCover  []uint64     // Pranav: KMCOV memory address coverage buffer
 	IpCover   []uint64     // Pranav: KMCOV ip buffer
-	TypeCover []uint8      // Pranav: KMCOV access_type
+	TypeCover []uint32     // Pranav: KMCOV access_type
 	Errno     int          // call errno (0 if the call was successful)
 }
 
@@ -374,6 +374,7 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 			return nil, fmt.Errorf("call %v/%v/%v: cover overflow: %v/%v",
 				i, reply.index, reply.num, reply.coverSize, len(out))
 		}
+
 		comps, err := readComps(&out, reply.compsSize)
 		if err != nil {
 			return nil, err
@@ -396,18 +397,17 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 					i, reply.index, reply.num, KmcovBufferSize, len(out))
 			}
 			fmt.Printf("======= FUZZER: READING KMCOV TYPE BUFFER... ======\n")
-			// Playing with fire: bool is 1 byte, see if uint32 works
-			// if inf.TypeCover, ok = readUint8Array(&out, KmcovBufferSize); !ok {
-			// 	//if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
-			// 	return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
-			// 		i, reply.index, reply.num, KmcovBufferSize, len(out))
-			// }
+			if inf.TypeCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
+				//if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
+				return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
+					i, reply.index, reply.num, KmcovBufferSize, len(out))
+			}
 
 			fmt.Printf("======= FUZZER: Read kmcov buffers sucessfully ======\n")
-			for i := 0; i < 20; i++ {
+			for i := 0; i < 10; i++ {
 				fmt.Printf("Access %d: %p\n", i, inf.MemCover[i])
 				fmt.Printf("Ip %d: %p\n", i, inf.IpCover[i])
-				//fmt.Printf("Type %d: %d\n", i, inf.TypeCover[i])
+				fmt.Printf("Type %d: %d\n", i, inf.TypeCover[i])
 			}
 		}
 	}
@@ -535,26 +535,6 @@ func readUint64Array(outp *[]byte, size uint64) ([]uint64, bool) {
 	}
 	res := *(*[]uint64)(unsafe.Pointer(&hdr))
 	*outp = out[size*8:]
-	return res, true
-}
-
-// Pranav
-// Read 8 bit (char/bool) array
-func readUint8Array(outp *[]byte, size uint32) ([]uint8, bool) {
-	if size == 0 {
-		return nil, true
-	}
-	out := *outp
-	if int(size)*1 > len(out) {
-		return nil, false
-	}
-	hdr := reflect.SliceHeader{
-		Data: uintptr(unsafe.Pointer(&out[0])),
-		Len:  int(size),
-		Cap:  int(size),
-	}
-	res := *(*[]uint8)(unsafe.Pointer(&hdr))
-	*outp = out[size:]
 	return res, true
 }
 
