@@ -350,7 +350,7 @@ static void setup_features(char** enable, int n);
 // KMCOV buffer to hold memory addresses
 void *kmcov_addr_buf[KMCOV_COVER_SIZE];
 void *kmcov_ip_buf[KMCOV_COVER_SIZE];
-bool *kmcov_type_buf[KMCOV_COVER_SIZE];
+bool kmcov_type_buf[KMCOV_COVER_SIZE];
 
 int main(int argc, char** argv)
 {
@@ -1058,7 +1058,7 @@ void write_extra_output()
 #if SYZ_EXECUTOR_USES_SHMEM
 	if (!flag_coverage || !flag_extra_coverage || flag_comparisons)
 		return;
-	cover_collect(&extra_cov, kmcov_fd, kmcov_addr_buf);
+	cover_collect(&extra_cov, kmcov_fd, kmcov_addr_buf, kmcov_ip_buf, kmcov_type_buf);
 	if (!extra_cov.size)
 		return;
 	write_output(-1); // call index
