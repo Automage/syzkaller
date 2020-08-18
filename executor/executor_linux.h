@@ -157,6 +157,7 @@ static void kmcov_reset(void *addr_buf[], void *ip_buf[], bool *type_buf) {
 }
 
 // Read from kmcov buffer
+// HACK: 0 - addr, 1 - ips, 2 - type
 static void kmcov_read(int fd, void *addr_buf[], void *ip_buf[], bool *type_buf) {
 	debug("++++++ Reading kmcov buffers...\n");
 	int ret1 = read(fd, addr_buf, 0);
