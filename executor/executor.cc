@@ -348,7 +348,9 @@ static void setup_features(char** enable, int n);
 
 // Pranav
 // KMCOV buffer to hold memory addresses
-void *kmcov_buf[KMCOV_COVER_SIZE];
+void *kmcov_addr_buf[KMCOV_COVER_SIZE];
+void *kmcov_ip_buf[KMCOV_COVER_SIZE];
+bool *kmcov_type_buf[KMCOV_COVER_SIZE];
 
 int main(int argc, char** argv)
 {
@@ -790,7 +792,7 @@ retry:
 				thread_t* th = &threads[i];
 				if (th->executing) {
 					if (flag_coverage)
-						cover_collect(&th->cov, kmcov_fd, kmcov_buf);
+						cover_collect(&th->cov, kmcov_fd, kmcov_addr_buf, kmcov_ip_buf, kmcov_type_buf);
 					write_call_output(th, false);
 				}
 			}
@@ -906,10 +908,10 @@ void write_coverage_signal(cover_t* cov, uint32* signal_count_pos, uint32* cover
 		debug("++++++ Writing kmcov buff ...\n");
 		
 		for (uint32 i = 0; i < KMCOV_COVER_SIZE; i++) {
-			//write_output(*(uint32*)kmcov_buf[i]);
-			//uint64 addr = (uint64)kmcov_buf[i];
+			//write_output(*(uint32*)kmcov_addr_buf[i]);
+			//uint64 addr = (uint64)kmcov_addr_buf[i];
 			//write_output(static_cast<uint32_t>(addr));
-			uint64 addr = (uint64)kmcov_buf[i];
+			uint64 addr = (uint64)kmcov_addr_buf[i];
 			write_output_64(addr);
 		}
 
@@ -1056,7 +1058,7 @@ void write_extra_output()
 #if SYZ_EXECUTOR_USES_SHMEM
 	if (!flag_coverage || !flag_extra_coverage || flag_comparisons)
 		return;
-	cover_collect(&extra_cov, kmcov_fd, kmcov_buf);
+	cover_collect(&extra_cov, kmcov_fd, kmcov_addr_buf);
 	if (!extra_cov.size)
 		return;
 	write_output(-1); // call index
@@ -1131,7 +1133,7 @@ void execute_call(thread_t* th)
 		// Enable kmcov tracing
 		kmcov_enable(kmcov_fd);
 		// debug("++++++ Executing syscall soon...\n");
-		kmcov_reset(kmcov_buf);
+		kmcov_reset(kmcov_addr_buf, kmcov_ip_buf, kmcov_type_buf);
 	}
 	errno = 0;
 	
@@ -1145,7 +1147,7 @@ void execute_call(thread_t* th)
 	}
 	if (flag_coverage) {
 		// KMCOV cover collected here too
-		cover_collect(&th->cov, kmcov_fd, kmcov_buf);
+		cover_collect(&th->cov, kmcov_fd, kmcov_addr_buf, kmcov_ip_buf, kmcov_type_buf);
 		if (th->cov.size >= kCoverSize)
 			fail("#%d: too much cover %u", th->id, th->cov.size);
 		
