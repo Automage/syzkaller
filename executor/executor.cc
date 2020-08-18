@@ -350,7 +350,7 @@ static void setup_features(char** enable, int n);
 // KMCOV buffer to hold memory addresses
 void *kmcov_addr_buf[KMCOV_COVER_SIZE];
 void *kmcov_ip_buf[KMCOV_COVER_SIZE];
-bool kmcov_type_buf[KMCOV_COVER_SIZE];
+int *kmcov_type_buf[KMCOV_COVER_SIZE];
 
 int main(int argc, char** argv)
 {
@@ -923,13 +923,13 @@ void write_coverage_signal(cover_t* cov, uint32* signal_count_pos, uint32* cover
 			write_output_64(ip);
 		}
 
-		// for (uint32 i = 0; i < KMCOV_COVER_SIZE; i++) {
-		// 	//write_output(*(uint32*)kmcov_addr_buf[i]);
-		// 	//uint64 addr = (uint64)kmcov_addr_buf[i];
-		// 	//write_output(static_cast<uint32_t>(addr));
-		// 	uint32 type = (uint32)kmcov_type_buf[i];
-		// 	write_output(type);
-		// }
+		for (uint32 i = 0; i < KMCOV_COVER_SIZE; i++) {
+			//write_output(*(uint32*)kmcov_addr_buf[i]);
+			//uint64 addr = (uint64)kmcov_addr_buf[i];
+			//write_output(static_cast<uint32_t>(addr));
+			uint32 type = (uint32)kmcov_type_buf[i];
+			write_output(type);
+		}
 
 		debug("++++++ Wrote kmcov buffer successfully ...\n");
 	}

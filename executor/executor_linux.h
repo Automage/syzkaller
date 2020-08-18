@@ -148,7 +148,7 @@ static void kmcov_disable(int fd) {
 }
 
 // Zero out kmcov buffer
-static void kmcov_reset(void *addr_buf[], void *ip_buf[], bool *type_buf) {
+static void kmcov_reset(void *addr_buf[], void *ip_buf[], int *type_buf) {
 	// Shouldn't call many (if any?) syscalls to further
 	// litter mem coverage buffer
 	debug("++++++ Reseting kmcov buffers...\n");
@@ -159,7 +159,7 @@ static void kmcov_reset(void *addr_buf[], void *ip_buf[], bool *type_buf) {
 
 // Read from kmcov buffer
 // HACK: 0 - addr, 1 - ips, 2 - type
-static void kmcov_read(int fd, void *addr_buf[], void *ip_buf[], bool *type_buf) {
+static void kmcov_read(int fd, void *addr_buf[], void *ip_buf[], int *type_buf) {
 	debug("++++++ Reading kmcov buffers...\n");
 	int ret1 = read(fd, addr_buf, 0);
 	if (ret1 != KMCOV_COVER_SIZE) {
@@ -252,7 +252,7 @@ static void cover_reset(cover_t* cov)
 	*(uint64*)cov->data = 0;
 }
 
-static void cover_collect(cover_t* cov, int kmcov_fd, void *kmcov_addr_buf[], void *kmcov_ip_buf[], bool *kmcov_type_buf)
+static void cover_collect(cover_t* cov, int kmcov_fd, void *kmcov_addr_buf[], void *kmcov_ip_buf[], int *kmcov_type_buf)
 {
 	if (is_kernel_64_bit) {
 		cov->size = *(uint64*)cov->data;
