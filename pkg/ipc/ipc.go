@@ -397,17 +397,17 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 			}
 			fmt.Printf("======= FUZZER: READING KMCOV TYPE BUFFER... ======\n")
 			// Playing with fire: bool is 1 byte, see if uint32 works
-			if inf.TypeCover, ok = readUint8Array(&out, KmcovBufferSize); !ok {
-				//if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
-				return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
-					i, reply.index, reply.num, KmcovBufferSize, len(out))
-			}
+			// if inf.TypeCover, ok = readUint8Array(&out, KmcovBufferSize); !ok {
+			// 	//if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
+			// 	return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
+			// 		i, reply.index, reply.num, KmcovBufferSize, len(out))
+			// }
 
 			fmt.Printf("======= FUZZER: Read kmcov buffers sucessfully ======\n")
 			for i := 0; i < 20; i++ {
 				fmt.Printf("Access %d: %p\n", i, inf.MemCover[i])
 				fmt.Printf("Ip %d: %p\n", i, inf.IpCover[i])
-				fmt.Printf("Type %d: %d\n", i, inf.TypeCover[i])
+				//fmt.Printf("Type %d: %d\n", i, inf.TypeCover[i])
 			}
 		}
 	}
