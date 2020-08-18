@@ -1079,8 +1079,8 @@ func (mgr *Manager) newInput(inp rpctype.RPCInput, sign signal.Signal) bool {
 
 		// Pranav: Merge old memory cover
 		var memCov cover.MemCover
-		memCov.Merge(old.MemCover)
-		memCov.Merge(inp.MemCover)
+		memCov.Merge(old.MemCover, old.IpCover, old.TypeCover)
+		memCov.Merge(inp.MemCover, inp.IpCover, inp.TypeCover)
 		old.MemCover = memCov.Serialize()
 
 		mgr.corpus[sig] = old
