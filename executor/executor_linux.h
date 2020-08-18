@@ -162,17 +162,17 @@ static void kmcov_reset(void *addr_buf[], void *ip_buf[], bool *type_buf) {
 static void kmcov_read(int fd, void *addr_buf[], void *ip_buf[], bool *type_buf) {
 	debug("++++++ Reading kmcov buffers...\n");
 	int ret1 = read(fd, addr_buf, 0);
-	if (ret1 != 0) {
+	if (ret1 != KMCOV_COVER_SIZE) {
 		fail("kmcov addr read failed. ret %d", ret1);
 	}
 	
 	int ret2 = read(fd, ip_buf, 1);
-	if (ret2 != 0) {
+	if (ret2 != KMCOV_COVER_SIZE) {
 		fail("kmcov ip read failed. ret %d", ret1);
 	}
 
 	int ret3 = read(fd, type_buf, 2);
-	if (ret3 != 0) {
+	if (ret3 != KMCOV_COVER_SIZE) {
 		fail("kmcov type read failed. ret %d", ret1);
 	}
 	debug("++++++ Read kmcov buffers successfully \n");
