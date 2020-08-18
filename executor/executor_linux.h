@@ -43,7 +43,7 @@ typedef char kcov_remote_arg64_size[sizeof(kcov_remote_arg64) == 24 ? 1 : -1];
 #define KMCOV_SETUP     _IOR('t', 1, unsigned long)
 #define KMCOV_ENABLE    _IO('t', 2)
 #define KMCOV_DISABLE   _IO('t', 3)
-#define KMCOV_COVER_SIZE 10000
+#define KMCOV_COVER_SIZE 30000
 
 #define KCOV_INIT_TRACE32 _IOR('c', 1, uint32)
 #define KCOV_INIT_TRACE64 _IOR('c', 1, uint64)
