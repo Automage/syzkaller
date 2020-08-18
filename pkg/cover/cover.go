@@ -32,7 +32,7 @@ func RestorePC(pc, base uint32) uint64 {
 
 // Pranav
 // KMCOV cover functions
-func (cov *MemCover) Merge(raw []uint64) {
+func (cov *MemCover) Merge(addrs []uint64, ips []uint64, accessTypes uint32[]) {
 	c := *cov
 	if c == nil {
 		c = make(MemCover)
