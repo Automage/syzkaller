@@ -47,9 +47,9 @@ func (cov *MemCover) CountDefineUsePairs(addrs []uint64, ips []uint64, accessTyp
 	ipMap := make(map[uint64][]int)
 	for i, addr := range addrs {
 		// Todo: remove limit and observe impact
-		if len(ipMap[addr]) >= 1000 {
-			continue
-		}
+		// if len(ipMap[addr]) >= 1000 {
+		// 	continue
+		// }
 		ipMap[addr] = append(ipMap[addr], i)
 	}
 
