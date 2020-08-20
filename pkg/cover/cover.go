@@ -43,28 +43,54 @@ func (cov *MemCover) Merge(addrs []uint64, ips []uint64, accessTypes []uint32) {
 	}
 }
 
-func (cov *MemCover) MaxIp(addrs []uint64, ips []uint64, accessTypes []uint32) (int, int, int, int, int, int) {
-	c := *cov
-	if c == nil {
-		return -1, -1, -1, -1, -1, -1
-	}
-	ipCount := make(map[uint64]int)
-	max, max2, max3, max4, max5 := 0, 0, 0, 0, 0
-	for _, addr := range addrs {
-		ipCount[addr]++
+func (cov *MemCover) CountDefineUsePairs(addrs []uint64, ips []uint64, accessTypes []uint32) int {
+	ipMap := make(map[uint64][]int)
+	for i, addr := range addrs {
+		// Todo: remove limit and observe impact
+		if len(ipMap[addr]) >= 1000 {
+			continue
+		}
+		ipMap[addr] = append(ipMap[addr], i)
 	}
 
-	for _, v := range ipCount {
-		if v > max {
-			max5 = max4
-			max4 = max3
-			max3 = max2
-			max2 = max
-			max = v
+	duPairs := 0
+	for _, ipIndicies := range ipMap {
+		readCount := 0
+		// Iterate backwards to make DU pair counting easier
+		for i := len(ipIndicies) - 1; i >= 0; i-- {
+			// Count reads
+			if accessTypes[ipIndicies[i]] == 0 { // Read
+				readCount++
+			} else { // Write
+				duPairs += readCount
+			}
 		}
 	}
-	return len(ipCount), max, max2, max3, max4, max5
+	return duPairs
 }
+
+// func (cov *MemCover) MaxIp(addrs []uint64, ips []uint64, accessTypes []uint32) (int, int, int, int, int, int) {
+// 	c := *cov
+// 	if c == nil {
+// 		return -1, -1, -1, -1, -1, -1
+// 	}
+// 	ipCount := make(map[uint64]int)
+// 	max, max2, max3, max4, max5 := 0, 0, 0, 0, 0
+// 	for _, addr := range addrs {
+// 		ipCount[addr]++
+// 	}
+
+// 	for _, v := range ipCount {
+// 		if v > max {
+// 			max5 = max4
+// 			max4 = max3
+// 			max3 = max2
+// 			max2 = max
+// 			max = v
+// 		}
+// 	}
+// 	return len(ipCount), max, max2, max3, max4, max5
+// }
 
 func (cov MemCover) Serialize() []uint64 {
 	res := make([]uint64, 0, len(cov))
