@@ -52,12 +52,15 @@ func (cov *MemCover) MaxIp(addrs []uint64, ips []uint64, accessTypes []uint32) (
 	max, max2, max3, max4, max5 := 0, 0, 0, 0, 0
 	for _, addr := range addrs {
 		ipCount[addr]++
-		if ipCount[addr] > max {
+	}
+
+	for _, v := range ipCount {
+		if v > max {
 			max5 = max4
 			max4 = max3
 			max3 = max2
 			max2 = max
-			max = ipCount[addr]
+			max = v
 		}
 	}
 	return len(ipCount), max, max2, max3, max4, max5
