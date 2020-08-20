@@ -144,8 +144,8 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		}
 		inputCover.Merge(thisCover)
 		inputMemCover.Merge(thisMemCover, thisIpCover, thisTypeCover)
-		max := inputMemCover.MaxIp(thisMemCover, thisIpCover, thisTypeCover)
-		log.Logf(3, "===== MAX IP COUNT: %v", max)
+		max, max2, max3 := inputMemCover.MaxIp(thisMemCover, thisIpCover, thisTypeCover)
+		log.Logf(3, "===== MAX IP COUNT: %v", max, max2, max3)
 	}
 	if item.flags&ProgMinimized == 0 {
 		item.p, item.call = prog.Minimize(item.p, item.call, false,
