@@ -43,6 +43,22 @@ func (cov *MemCover) Merge(addrs []uint64, ips []uint64, accessTypes []uint32) {
 	}
 }
 
+func (cov *MemCover) MaxIp(addrs []uint64, ips []uint64, accessTypes []uint32) int {
+	c := *cov
+	if c == nil {
+		return -1
+	}
+	ipCount := make(map[uint64]int)
+	max := 0
+	for _, addr := range addrs {
+		ipCount[addr]++
+		if ipCount[addr] > max {
+			max = ipCount[addr]
+		}
+	}
+	return max
+}
+
 func (cov MemCover) Serialize() []uint64 {
 	res := make([]uint64, 0, len(cov))
 	for addr := range cov {
