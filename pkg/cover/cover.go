@@ -4,18 +4,13 @@
 // Package cover provides types for working with coverage information (arrays of covered PCs).
 package cover
 
+import (
+	"bytes"
+	"encoding/gob"
+)
+
 type Cover map[uint32]struct{}
 type MemCover map[uint64]struct{}
-
-// A struct representing a unique DU pair. 'first' entry is the value of the ip that occured first
-// in the trace. The actual value of the ip is stored such as future encounters of this DU pair
-// maybe not retain the same ordering of ip1 and ip2.
-// type DuPairEntry struct {
-// 	addr    uint64
-// 	ip1     uint64
-// 	ip2     uint64
-// 	firstIP uint64
-// }
 
 // Struct representing a unique DU pair. Since DU pairs are defined to be write->read, there is
 // no need to keep track of which ip occured first.
@@ -70,8 +65,25 @@ func (cov MemCover) Serialize() []uint64 {
 	return res
 }
 
+func (cov *DuCover) Merge(data []byte) {
+	c := *cov
+	if c == nil {
+		c = make(DuCover)
+		*cov = c
+	}
+
+	if data == nil || len(data) == 0 {
+		return
+	}
+
+	entries := deserialize(data)
+	for _, entry := range entries {
+		c[entry] = struct{}{}
+	}
+}
+
 // Returns total pairs and number of new unique DU pairs discovered
-func (cov *DuCover) Merge(addrs []uint64, ips []uint64, accessTypes []uint32) (int, int) {
+func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uint32) (int, int) {
 	c := *cov
 	if c == nil {
 		c = make(DuCover)
@@ -125,11 +137,26 @@ func (cov *DuCover) Merge(addrs []uint64, ips []uint64, accessTypes []uint32) (i
 	return duPairs, newUniquePairs
 }
 
-// Return num of unique DU pairs for now
-func (cov DuCover) Serialize() int {
-	return len(cov)
+// Serialize DuCover into
+func (cov DuCover) Serialize() []byte {
+	var data bytes.Buffer
+	enc := gob.NewEncoder(&data)
+	enc.Encode(cov)
+	return data.Bytes()
 }
 
+func deserialize(covData []byte) []DuPairEntry {
+	data := bytes.NewBuffer(covData)
+	var res []DuPairEntry
+	enc := gob.NewDecoder(data)
+	err := enc.Decode(&res)
+	if err != nil {
+		return nil
+	}
+	return res
+}
+
+// O(N) operation
 func (cov *MemCover) CountDefineUsePairs(addrs []uint64, ips []uint64, accessTypes []uint32) int {
 	ipMap := make(map[uint64][]int)
 	for i, addr := range addrs {

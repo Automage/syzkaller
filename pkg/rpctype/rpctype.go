@@ -19,7 +19,7 @@ type RPCInput struct {
 	MemCover  []uint64
 	IpCover   []uint64
 	TypeCover []uint32
-	DuCover   int
+	DuCover   []byte
 }
 
 type RPCCandidate struct {
