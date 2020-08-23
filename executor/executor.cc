@@ -905,8 +905,6 @@ void write_coverage_signal(cover_t* cov, uint32* signal_count_pos, uint32* cover
 	// KMCOV buffers write
 	// TODO: 32 -> 64 implmentation use write_output_64
 	if (cover_size != 0) {
-		debug("++++++ Writing kmcov addr buff ...\n");
-		
 		for (uint32 i = 0; i < KMCOV_COVER_SIZE; i++) {
 			//write_output(*(uint32*)kmcov_addr_buf[i]);
 			//uint64 addr = (uint64)kmcov_addr_buf[i];
@@ -1008,7 +1006,6 @@ void write_call_output(thread_t* th, bool finished)
 			      (th->fault_injected ? call_flag_fault_injected : 0);
 	}
 #if SYZ_EXECUTOR_USES_SHMEM
-	debug("++++++ KMCOV USING SHARED MEM\n");
 	// 7 writes ==> callReply struct in IPC.go
 	write_output(th->call_index);
 	write_output(th->call_num);
@@ -1050,7 +1047,6 @@ void write_call_output(thread_t* th, bool finished)
 	completed++;
 	write_completed(completed);
 #else
-	debug("++++++ KMCOV USING PIPES");
 	call_reply reply;
 	reply.header.magic = kOutMagic;
 	reply.header.done = 0;

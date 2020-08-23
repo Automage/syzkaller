@@ -121,30 +121,27 @@ static void kmcov_open(const int kmcov_fd) {
 
 // Deallocates kmcov buffer
 static void kmcov_close(int fd) {
-	debug("++++++ Closing kmcov...\n");
 	if (close(fd))
 		fail("kmcov close file failed");
 
-	debug("++++++ Closed kmcov!\n");
+	debug("++++++ Closed kmcov\n");
 }
 
 // Enable tracing
 static void kmcov_enable(int fd) {
-	debug("++++++ Enabling kmcov...\n");
 	int ret = ioctl(fd, KMCOV_ENABLE, 0);
 	if (ret)
 		fail("kmcov enable failed: ret %d, fd: %d, err: %s", ret, fd, strerror(errno));
 	
-	debug("++++++ Enabled kmcov!\n");
+	debug("++++++ Enabled kmcov\n");
 }
 
 // Disable tracing
 static void kmcov_disable(int fd) {
-	debug("++++++ Disabling kmcov...\n");
 	if (ioctl(fd, KMCOV_DISABLE, 0))
 		fail("kmcov disable failed");
 
-	debug("++++++ Disabled kmcov!\n");
+	debug("++++++ Disabled kmcov\n");
 }
 
 // Zero out kmcov buffer
@@ -160,7 +157,6 @@ static void kmcov_reset(void *addr_buf[], void *ip_buf[], int *type_buf) {
 // Read from kmcov buffer
 // HACK: 0 - addr, 1 - ips, 2 - type
 static void kmcov_read(int fd, void *addr_buf[], void *ip_buf[], int *type_buf) {
-	debug("++++++ Reading kmcov buffers...\n");
 	int ret1 = read(fd, addr_buf, 0);
 	if (ret1 != KMCOV_COVER_SIZE) {
 		fail("kmcov addr read failed. ret %d", ret1);

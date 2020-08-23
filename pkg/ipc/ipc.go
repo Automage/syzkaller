@@ -337,7 +337,6 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 	info := &ProgInfo{Calls: make([]CallInfo, len(p.Calls))}
 	extraParts := make([]CallInfo, 0)
 	for i := uint32(0); i < ncmd; i++ {
-		fmt.Printf("======= parseOutput loop: i = %d, out = %p\n", i, out)
 		if len(out) < int(unsafe.Sizeof(callReply{})) {
 			return nil, fmt.Errorf("failed to read call %v reply", i)
 		}
@@ -346,14 +345,10 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 		out = out[unsafe.Sizeof(callReply{}):]
 		var inf *CallInfo
 		if reply.index != extraReplyIndex {
-			fmt.Printf("======= In i = %d, out = %p, reply.index = %d, rep.num = %d, reply.signalsize = %d, reply.coversize = %d\n",
-				i, out, reply.index, reply.num, reply.signalSize, reply.coverSize)
 			if int(reply.index) >= len(info.Calls) {
 				return nil, fmt.Errorf("bad call %v index %v/%v", i, reply.index, len(info.Calls))
 			}
 			if num := p.Calls[reply.index].Meta.ID; int(reply.num) != num {
-				fmt.Print("reply.num != num\n p.calls[reply.index]: ")
-				fmt.Print(p.Calls[reply.index])
 				return nil, fmt.Errorf("wrong call %v num %v/%v", i, reply.num, num)
 			}
 			inf = &info.Calls[reply.index]
@@ -384,34 +379,25 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 		// Pranav
 		// KMCOV buffer read
 		if reply.coverSize != 0 {
-			fmt.Printf("======= FUZZER: READING KMCOV ADDR BUFFER... ======\n")
+			fmt.Printf("======= FUZZER: READING KMCOV BUFFERS... ======\n")
 			if inf.MemCover, ok = readUint64Array(&out, KmcovBufferSize); !ok {
 				//if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
 				return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
 					i, reply.index, reply.num, KmcovBufferSize, len(out))
 			}
-			fmt.Printf("======= FUZZER: READING KMCOV IP BUFFER... ======\n")
 			if inf.IpCover, ok = readUint64Array(&out, KmcovBufferSize); !ok {
 				//if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
 				return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
 					i, reply.index, reply.num, KmcovBufferSize, len(out))
 			}
-			fmt.Printf("======= FUZZER: READING KMCOV TYPE BUFFER... ======\n")
 			if inf.TypeCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
 				//if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
 				return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
 					i, reply.index, reply.num, KmcovBufferSize, len(out))
 			}
-
-			fmt.Printf("======= FUZZER: Read kmcov buffers sucessfully ======\n")
-			for i := 0; i < 10; i++ {
-				fmt.Printf("Access %d: %p\n", i, inf.MemCover[i])
-				fmt.Printf("Ip %d: %p\n", i, inf.IpCover[i])
-				fmt.Printf("Type %d: %d\n", i, inf.TypeCover[i])
-			}
 		}
 	}
-	fmt.Printf("===== Outside parseoutput Loop, extra parts: %d ======\n", len(extraParts))
+
 	if len(extraParts) == 0 {
 		return info, nil
 	}
