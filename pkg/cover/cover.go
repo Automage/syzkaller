@@ -137,14 +137,30 @@ func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uin
 	return duPairs, newUniquePairs
 }
 
-// Serialize DuCover into
-func (cov DuCover) Serialize() []byte {
+// Serialize DuCover map into []DuPairEntry into bytes
+func (cov *DuCover) Serialize() []byte {
+	c := *cov
+	if c == nil {
+		return nil
+	}
+
+	// Convert to slice/list of pairs
+	var entries []DuPairEntry
+	for entry := range c {
+		entries = append(entries, entry)
+	}
+
+	// Serialize entry list
 	var data bytes.Buffer
 	enc := gob.NewEncoder(&data)
-	enc.Encode(cov)
+	err := enc.Encode(entries)
+	if err != nil {
+		return nil
+	}
 	return data.Bytes()
 }
 
+// Deserialize bytes into []DuEntryPair
 func Deserialize(covData []byte) []DuPairEntry {
 	data := bytes.NewBuffer(covData)
 	var res []DuPairEntry
