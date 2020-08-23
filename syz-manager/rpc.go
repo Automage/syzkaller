@@ -248,7 +248,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 
 	//Pranav: merge and update mem cover stat
 	serv.corpusMemCover.Merge(a.MemCover)
-	serv.corpusDuCover = a.DuCover
+	serv.corpusDuCover += a.DuCover
 	//serv.corpusMemCover.Merge(a.MemCover, a.IpCover, a.TypeCover)
 	serv.stats.corpusMemCover.set(len(serv.corpusMemCover))
 	serv.stats.corpusDuCover.set(serv.corpusDuCover)
