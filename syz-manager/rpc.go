@@ -34,6 +34,7 @@ type RPCServer struct {
 	corpusSignal   signal.Signal
 	corpusCover    cover.Cover
 	corpusMemCover cover.MemCover
+	corpusDuCover  int
 	rotator        *prog.Rotator
 	rnd            *rand.Rand
 }
@@ -247,8 +248,10 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 
 	//Pranav: merge and update mem cover stat
 	serv.corpusMemCover.Merge(a.MemCover)
+	serv.corpusDuCover = a.DuCover
 	//serv.corpusMemCover.Merge(a.MemCover, a.IpCover, a.TypeCover)
 	serv.stats.corpusMemCover.set(len(serv.corpusMemCover))
+	serv.stats.corpusDuCover.set(serv.corpusDuCover)
 
 	if genuine {
 		serv.corpusSignal.Merge(inputSignal)
