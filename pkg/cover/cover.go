@@ -15,9 +15,9 @@ type MemCover map[uint64]struct{}
 // Struct representing a unique DU pair. Since DU pairs are defined to be write->read, there is
 // no need to keep track of which ip occured first.
 type DuPairEntry struct {
-	addr uint64
-	wIP  uint64
-	rIP  uint64
+	Addr    uint64
+	WriteIP uint64
+	ReadIP  uint64
 }
 type DuCover map[DuPairEntry]struct{}
 
