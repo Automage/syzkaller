@@ -78,6 +78,10 @@ func (cov *DuCover) Merge(addrs []uint64, ips []uint64, accessTypes []uint32) (i
 		*cov = c
 	}
 
+	if len(addrs) == 0 {
+		return 0, 0
+	}
+
 	ipMap := make(map[uint64][]int)
 	for i, addr := range addrs {
 		// Todo: remove limit and observe impact
