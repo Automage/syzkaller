@@ -148,9 +148,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		inputCover.Merge(thisCover)
 		inputMemCover.Merge(thisMemCover)
 		duTotal, duUnique := inputDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
-		test := inputDuCover.Serialize()
-		test2 := cover.Deserialize(test)
-		log.Logf(3, "====== DU Pairs: total %v, unique %v, addrs %v, serial size %v, deserial size %v, og size %v", duTotal, duUnique, len(thisMemCover), len(inputDuCover.Serialize()), len(test2), len(inputDuCover))
+		log.Logf(3, "====== DU Pairs: total %v, unique %v, addrs %v", duTotal, duUnique, len(thisMemCover))
 	}
 	if item.flags&ProgMinimized == 0 {
 		item.p, item.call = prog.Minimize(item.p, item.call, false,
