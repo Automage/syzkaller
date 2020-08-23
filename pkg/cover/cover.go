@@ -76,7 +76,7 @@ func (cov *DuCover) Merge(data []byte) {
 		return
 	}
 
-	entries := deserialize(data)
+	entries := Deserialize(data)
 	for _, entry := range entries {
 		c[entry] = struct{}{}
 	}
@@ -145,7 +145,7 @@ func (cov DuCover) Serialize() []byte {
 	return data.Bytes()
 }
 
-func deserialize(covData []byte) []DuPairEntry {
+func Deserialize(covData []byte) []DuPairEntry {
 	data := bytes.NewBuffer(covData)
 	var res []DuPairEntry
 	enc := gob.NewDecoder(data)
