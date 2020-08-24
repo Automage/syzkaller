@@ -105,7 +105,7 @@ func (cov *DuCover) Intersection(cov2 DuCover) DuCover {
 	if c == nil {
 		return DuCover{}
 	}
-	var intersect DuCover
+	intersect := make(DuCover)
 	for pair := range cov2 {
 		if _, ok := c[pair]; ok {
 			intersect[pair] = struct{}{}
