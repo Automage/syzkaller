@@ -234,12 +234,13 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 			corpusSignal := mgr.stats.corpusSignal.get()
 			maxSignal := mgr.stats.maxSignal.get()
 			corpusMemCover := mgr.stats.corpusMemCover.get()
+			corpusDuCover := mgr.stats.corpusDuCover.get()
 			mgr.mu.Unlock()
 			numReproducing := atomic.LoadUint32(&mgr.numReproducing)
 			numFuzzing := atomic.LoadUint32(&mgr.numFuzzing)
 
-			log.Logf(0, "VMs %v, executed %v, corpus cover %v, corpus memory cover %v, corpus signal %v, max signal %v, crashes %v, repro %v",
-				numFuzzing, executed, corpusCover, corpusMemCover, corpusSignal, maxSignal, crashes, numReproducing)
+			log.Logf(0, "VMs %v, executed %v, corpus cover %v, corpus memory cover %v, corpus du cover %v, corpus signal %v, max signal %v, crashes %v, repro %v",
+				numFuzzing, executed, corpusCover, corpusMemCover, corpusDuCover, corpusSignal, maxSignal, crashes, numReproducing)
 
 			//CoverLogger.Println("$$$ %v", corpusMemCover)
 			//Test commit
