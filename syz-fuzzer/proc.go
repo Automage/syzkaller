@@ -106,6 +106,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	prio := signalPrio(item.p, &item.info, item.call)
 	inputSignal := signal.FromRaw(item.info.Signal, prio)
 	newSignal := proc.fuzzer.corpusSignalDiff(inputSignal)
+	// 3141 - Possible discard of call
 	if newSignal.Empty() {
 		return
 	}
@@ -261,6 +262,7 @@ func (proc *Proc) executeHintSeed(p *prog.Prog, call int) {
 
 func (proc *Proc) execute(execOpts *ipc.ExecOpts, p *prog.Prog, flags ProgTypes, stat Stat) *ipc.ProgInfo {
 	info := proc.executeRaw(execOpts, p, stat)
+	// 3141 - Possible throw away of calls
 	calls, extra := proc.fuzzer.checkNewSignal(p, info)
 	for _, callIndex := range calls {
 		proc.enqueueCallTriage(p, flags, callIndex, info.Calls[callIndex])

@@ -82,7 +82,8 @@ func (cov *DuCover) Merge(data []byte) {
 	}
 }
 
-// Returns total pairs and number of new unique DU pairs discovered
+// Returns total pairs and number of new unique DU pairs discovered. (Technically computing LP
+// Pairs as no writes are allowed in between)
 func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uint32) (int, int) {
 	c := *cov
 	if c == nil {
@@ -131,6 +132,10 @@ func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uin
 				}
 				duPairs += readCount
 				newUniquePairs += unique
+				// Do not let every read after every write be a DU pair
+				// as, assuming pure sequential execution, the most recent
+				// write is all that is needed to be considered.
+				readIps = nil
 			}
 		}
 	}

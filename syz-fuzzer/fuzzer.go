@@ -492,6 +492,7 @@ func (fuzzer *Fuzzer) checkNewSignal(p *prog.Prog, info *ipc.ProgInfo) (calls []
 	fuzzer.signalMu.RLock()
 	defer fuzzer.signalMu.RUnlock()
 	for i, inf := range info.Calls {
+		// 3141 - Append call if new signal found
 		if fuzzer.checkNewCallSignal(p, &inf, i) {
 			calls = append(calls, i)
 		}
