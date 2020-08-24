@@ -150,7 +150,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		var currDuCover cover.DuCover
 		if i == 0 {
 			duTotal, duUnique := intersectDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
-			log.Logf(3, "====== DU Pairs: total %v unique %v addrs %v intersect %v", duTotal, duUnique, len(thisMemCover), 0)
+			log.Logf(3, "====== DU Pairs: total %v unique %v addrs %v first_compute", duTotal, duUnique, len(thisMemCover))
 		} else {
 			duTotal, duUnique := currDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
 			intersectDuCover = intersectDuCover.Intersection(currDuCover)
