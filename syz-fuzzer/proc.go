@@ -120,6 +120,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	var inputCover cover.Cover
 	var inputMemCover cover.MemCover
 	var inputDuCover cover.DuCover
+	var intersectDuCover cover.DuCover
 	const (
 		signalRuns       = 3
 		minimizeAttempts = 3
@@ -139,19 +140,32 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		// Pranav: return memCover too
 		thisSignal, thisCover, thisMemCover, thisIpCover, thisTypeCover := getSignalAndCover(item.p, info, item.call)
 		newSignal = newSignal.Intersection(thisSignal)
+
+		// Pranav : compute memcover, Du Pairs and calculate intersection
+		inputMemCover.Merge(thisMemCover)
+		var currDuCover cover.DuCover
+		if i == 0 {
+			duTotal, duUnique := intersectDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
+			log.Logf(3, "====== DU Pairs: total %v unique %v addrs %v intersect %v", duTotal, duUnique, len(thisMemCover), 0)
+		} else {
+			duTotal, duUnique := currDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
+			intersectDuCover = intersectDuCover.Intersection(currDuCover)
+			log.Logf(3, "====== DU Pairs: total %v unique %v addrs %v intersect %v", duTotal, duUnique, len(thisMemCover), len(intersectDuCover))
+		}
+
 		// Without !minimized check manager starts losing some considerable amount
 		// of coverage after each restart. Mechanics of this are not completely clear.
 		if newSignal.Empty() && item.flags&ProgMinimized == 0 {
+			// 3141 - If no intersection in signal between calls, discard as it is flaky/no real coverage
 			return
 		}
 
-		// Pranav: Merge memcover and ducover
 		inputCover.Merge(thisCover)
-		inputMemCover.Merge(thisMemCover)
 		duTotal, duUnique := inputDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
-		log.Logf(3, "====== DU Pairs: total %v, unique %v, addrs %v", duTotal, duUnique, len(thisMemCover))
+
 	}
 	if item.flags&ProgMinimized == 0 {
+		// 3141 - Minimize prog cuts all calls that do not contribute to signal
 		item.p, item.call = prog.Minimize(item.p, item.call, false,
 			func(p1 *prog.Prog, call1 int) bool {
 				for i := 0; i < minimizeAttempts; i++ {

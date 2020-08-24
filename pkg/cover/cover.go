@@ -57,6 +57,22 @@ func (cov *MemCover) Merge(addrs []uint64) {
 	}
 }
 
+// Return a MemCover representing the intersection of the list of addrs
+// and the current MemCover. Follows prototype of signal.Intersect.
+func (cov *MemCover) Intersection(addrs []uint64) MemCover {
+	c := *cov
+	if c == nil {
+		return MemCover{}
+	}
+	var intersect MemCover
+	for _, addr := range addrs {
+		if _, ok := c[addr]; ok {
+			intersect[addr] = struct{}{}
+		}
+	}
+	return intersect
+}
+
 func (cov MemCover) Serialize() []uint64 {
 	res := make([]uint64, 0, len(cov))
 	for addr := range cov {
@@ -82,8 +98,25 @@ func (cov *DuCover) Merge(data []byte) {
 	}
 }
 
+// Return a DuCover representing the intersection of the argument
+// and the current DuCover. Follows prototype of signal.Intersect.
+func (cov *DuCover) Intersection(cov2 DuCover) DuCover {
+	c := *cov
+	if c == nil {
+		return DuCover{}
+	}
+	var intersect DuCover
+	for pair := range cov2 {
+		if _, ok := c[pair]; ok {
+			intersect[pair] = struct{}{}
+		}
+	}
+	return intersect
+}
+
 // Returns total pairs and number of new unique DU pairs discovered. (Technically computing LP
-// Pairs as no writes are allowed in between)
+// Pairs as no writes are allowed in between). If previous DuCover is present, merge new du pairs
+// into map.
 func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uint32) (int, int) {
 	c := *cov
 	if c == nil {
