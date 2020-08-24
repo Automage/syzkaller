@@ -76,14 +76,14 @@ func (cov *DuCover) Merge(data []byte) {
 		return
 	}
 
-	entries := Deserialize(data)
+	entries := deserialize(data)
 	for _, entry := range entries {
 		c[entry] = struct{}{}
 	}
 }
 
 // Returns total pairs and number of new unique DU pairs discovered
-func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uint32) (int, int) {
+func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uint32) (int, int, DuPairEntry) {
 	c := *cov
 	if c == nil {
 		c = make(DuCover)
@@ -105,6 +105,8 @@ func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uin
 
 	duPairs := 0
 	newUniquePairs := 0
+	testBool := false
+	var pair1 DuPairEntry
 	for memAddr, ipIndicies := range ipMap {
 		readCount := 0
 		var readIps []uint64
@@ -127,6 +129,11 @@ func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uin
 					if _, ok := c[pair]; !ok {
 						c[pair] = struct{}{}
 						unique++
+					} else {
+						if !testBool {
+							testBool = true
+							pair1 = pair
+						}
 					}
 				}
 				duPairs += readCount
@@ -134,7 +141,7 @@ func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uin
 			}
 		}
 	}
-	return duPairs, newUniquePairs
+	return duPairs, newUniquePairs, pair1
 }
 
 // Serialize DuCover map into []DuPairEntry into bytes
@@ -161,7 +168,7 @@ func (cov *DuCover) Serialize() []byte {
 }
 
 // Deserialize bytes into []DuEntryPair
-func Deserialize(covData []byte) []DuPairEntry {
+func deserialize(covData []byte) []DuPairEntry {
 	data := bytes.NewBuffer(covData)
 	var res []DuPairEntry
 	enc := gob.NewDecoder(data)

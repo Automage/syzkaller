@@ -147,8 +147,8 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		// Pranav: Merge memcover and ducover
 		inputCover.Merge(thisCover)
 		inputMemCover.Merge(thisMemCover)
-		duTotal, duUnique := inputDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
-		log.Logf(3, "====== DU Pairs: total %v, unique %v, addrs %v", duTotal, duUnique, len(thisMemCover))
+		duTotal, duUnique, pair := inputDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
+		log.Logf(3, "====== DU Pairs: total %v, unique %v, addrs %v, egpair %v, c[pair] %v", duTotal, duUnique, len(thisMemCover), pair, inputDuCover[pair])
 	}
 	if item.flags&ProgMinimized == 0 {
 		item.p, item.call = prog.Minimize(item.p, item.call, false,
@@ -178,9 +178,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		Signal:   inputSignal.Serialize(),
 		Cover:    inputCover.Serialize(),
 		MemCover: inputMemCover.Serialize(),
-		// IpCover:   thisIpCover,
-		// TypeCover: thisTypeCover,
-		DuCover: inputDuCover.Serialize(),
+		DuCover:  inputDuCover.Serialize(),
 	})
 
 	proc.fuzzer.addInputToCorpus(item.p, inputSignal, sig)
