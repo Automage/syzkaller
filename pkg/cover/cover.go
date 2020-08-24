@@ -134,7 +134,8 @@ func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uin
 				newUniquePairs += unique
 				// Do not let every read after every write be a DU pair
 				// as, assuming pure sequential execution, the most recent
-				// write is all that is needed to be considered.
+				// write will always occur after the previous ones, and thus
+				// is all that is needed to be considered.
 				readIps = nil
 			}
 		}
