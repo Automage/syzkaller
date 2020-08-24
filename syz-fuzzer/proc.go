@@ -161,7 +161,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		}
 
 		inputCover.Merge(thisCover)
-		duTotal, duUnique := inputDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
+		inputDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
 
 	}
 	if item.flags&ProgMinimized == 0 {
