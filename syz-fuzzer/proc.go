@@ -106,6 +106,11 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	prio := signalPrio(item.p, &item.info, item.call)
 	inputSignal := signal.FromRaw(item.info.Signal, prio)
 	newSignal := proc.fuzzer.corpusSignalDiff(inputSignal)
+	// Pranav: compute du pairs for this call
+	var inputDuCover cover.DuCover
+	total, unique := inputDuCover.ComputeDuCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
+	log.Logf(3, "====== DU Pairs: total %v unique %v PRE-INTERSECT", duTotal, duUnique)
+
 	// 3141 - Possible discard of call
 	if newSignal.Empty() {
 		return
@@ -119,7 +124,6 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	log.Logf(3, "triaging input for %v (new signal=%v)", logCallName, newSignal.Len())
 	var inputCover cover.Cover
 	var inputMemCover cover.MemCover
-	var inputDuCover cover.DuCover
 	var intersectDuCover cover.DuCover
 	const (
 		signalRuns       = 3
@@ -161,8 +165,6 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		}
 
 		inputCover.Merge(thisCover)
-		inputDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
-
 	}
 	if item.flags&ProgMinimized == 0 {
 		// 3141 - Minimize prog cuts all calls that do not contribute to signal
