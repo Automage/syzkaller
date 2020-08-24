@@ -147,9 +147,8 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		// Pranav: Merge memcover and ducover
 		inputCover.Merge(thisCover)
 		inputMemCover.Merge(thisMemCover)
-		duTotal, duUnique, pair := inputDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
-		_, ok := inputDuCover[pair]
-		log.Logf(3, "====== DU Pairs: total %v, unique %v, addrs %v, egpair %v, c[pair] %v", duTotal, duUnique, len(thisMemCover), pair, ok)
+		duTotal, duUnique := inputDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
+		log.Logf(3, "====== DU Pairs: total %v, unique %v, addrs %v", duTotal, duUnique, len(thisMemCover))
 	}
 	if item.flags&ProgMinimized == 0 {
 		item.p, item.call = prog.Minimize(item.p, item.call, false,

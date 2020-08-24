@@ -83,7 +83,7 @@ func (cov *DuCover) Merge(data []byte) {
 }
 
 // Returns total pairs and number of new unique DU pairs discovered
-func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uint32) (int, int, DuPairEntry) {
+func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uint32) (int, int) {
 	c := *cov
 	if c == nil {
 		c = make(DuCover)
@@ -91,7 +91,7 @@ func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uin
 	}
 
 	if len(addrs) == 0 {
-		return 0, 0, DuPairEntry{}
+		return 0, 0
 	}
 
 	ipMap := make(map[uint64][]int)
@@ -105,8 +105,6 @@ func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uin
 
 	duPairs := 0
 	newUniquePairs := 0
-	testBool := false
-	var pair1 DuPairEntry
 	for memAddr, ipIndicies := range ipMap {
 		readCount := 0
 		var readIps []uint64
@@ -129,11 +127,6 @@ func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uin
 					if _, ok := c[pair]; !ok {
 						c[pair] = struct{}{}
 						unique++
-					} else {
-						if !testBool {
-							testBool = true
-							pair1 = pair
-						}
 					}
 				}
 				duPairs += readCount
