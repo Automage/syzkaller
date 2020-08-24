@@ -134,7 +134,7 @@ func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uin
 			}
 		}
 	}
-	return duPairs, newUniquePairs, pair1
+	return duPairs, newUniquePairs
 }
 
 // Serialize DuCover map into []DuPairEntry into bytes
