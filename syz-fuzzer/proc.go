@@ -109,7 +109,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	// Pranav: compute du pairs for this call
 	var inputDuCover cover.DuCover
 	total, unique := inputDuCover.ComputeDuCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
-	log.Logf(3, "====== DU Pairs: total %v unique %v PRE-INTERSECT", duTotal, duUnique)
+	log.Logf(3, "====== DU Pairs: total %v unique %v PRE-INTERSECT", total, unique)
 
 	// 3141 - Possible discard of call
 	if newSignal.Empty() {
