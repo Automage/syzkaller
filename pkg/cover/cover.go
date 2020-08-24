@@ -91,7 +91,7 @@ func (cov *DuCover) ComputeDuCov(addrs []uint64, ips []uint64, accessTypes []uin
 	}
 
 	if len(addrs) == 0 {
-		return 0, 0
+		return 0, 0, DuPairEntry{}
 	}
 
 	ipMap := make(map[uint64][]int)
