@@ -109,7 +109,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	// Pranav: compute du pairs for this call
 	var inputDuCover cover.DuCover
 	total, unique := inputDuCover.ComputeDuCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
-	log.Logf(3, "====== DU Pairs: total %v unique %v eg %v PRE-INTERSECT", total, unique, item.info.MemCover[5])
+	log.Logf(3, "====== DU Pairs: total %v unique %v PRE-INTERSECT", total, unique)
 
 	// 3141 - Possible discard of call
 	if newSignal.Empty() {
@@ -280,6 +280,7 @@ func (proc *Proc) execute(execOpts *ipc.ExecOpts, p *prog.Prog, flags ProgTypes,
 	info := proc.executeRaw(execOpts, p, stat)
 	// 3141 - Possible throw away of calls
 	calls, extra := proc.fuzzer.checkNewSignal(p, info)
+	log.Logf(1, "3141: %v", len(info.Calls[0].MemCover))
 	for _, callIndex := range calls {
 		proc.enqueueCallTriage(p, flags, callIndex, info.Calls[callIndex])
 	}
