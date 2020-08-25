@@ -17,6 +17,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/google/syzkaller/pkg/cover"
 	"github.com/google/syzkaller/pkg/csource"
 	"github.com/google/syzkaller/pkg/hash"
 	"github.com/google/syzkaller/pkg/host"
@@ -58,6 +59,8 @@ type Fuzzer struct {
 	corpusSignal signal.Signal // signal of inputs in corpus
 	maxSignal    signal.Signal // max signal ever observed including flakes
 	newSignal    signal.Signal // diff of maxSignal since last sync with master
+
+	corpusDuCover cover.DuCover // Pranav: Corpus DuCover to test for new coverage
 
 	logMu sync.Mutex
 }
@@ -434,7 +437,8 @@ func (fuzzer *FuzzerSnapshot) chooseProgram(r *rand.Rand) *prog.Prog {
 	return fuzzer.corpus[idx]
 }
 
-func (fuzzer *Fuzzer) addInputToCorpus(p *prog.Prog, sign signal.Signal, sig hash.Sig) {
+// Pranav: Modify to include duCover
+func (fuzzer *Fuzzer) addInputToCorpus(p *prog.Prog, sign signal.Signal, sig hash.Sig, inputDuCover cover.DuCover) {
 	fuzzer.corpusMu.Lock()
 	if _, ok := fuzzer.corpusHashes[sig]; !ok {
 		fuzzer.corpus = append(fuzzer.corpus, p)
@@ -448,12 +452,16 @@ func (fuzzer *Fuzzer) addInputToCorpus(p *prog.Prog, sign signal.Signal, sig has
 	}
 	fuzzer.corpusMu.Unlock()
 
+	//fuzzer.signalMu.Lock()
+	//if !sign.Empty() && len(){
 	if !sign.Empty() {
 		fuzzer.signalMu.Lock()
 		fuzzer.corpusSignal.Merge(sign)
 		fuzzer.maxSignal.Merge(sign)
+		fuzzer.corpusDuCover.MergeMap(inputDuCover)
 		fuzzer.signalMu.Unlock()
 	}
+	//fuzzer.signalMu.Unlock()
 }
 
 func (fuzzer *Fuzzer) snapshot() FuzzerSnapshot {
@@ -486,6 +494,13 @@ func (fuzzer *Fuzzer) corpusSignalDiff(sign signal.Signal) signal.Signal {
 	fuzzer.signalMu.RLock()
 	defer fuzzer.signalMu.RUnlock()
 	return fuzzer.corpusSignal.Diff(sign)
+}
+
+// Pranav: Return diff number of corpusDuCover and arg
+func (fuzzer *Fuzzer) corpusDuCoverDiff(cov cover.DuCover) int {
+	fuzzer.signalMu.RLock()
+	defer fuzzer.signalMu.RUnlock()
+	return fuzzer.corpusDuCover.Diff(cov)
 }
 
 func (fuzzer *Fuzzer) checkNewSignal(p *prog.Prog, info *ipc.ProgInfo) (calls []int, extra bool) {

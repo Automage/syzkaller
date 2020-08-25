@@ -107,13 +107,21 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	prio := signalPrio(item.p, &item.info, item.call)
 	inputSignal := signal.FromRaw(item.info.Signal, prio)
 	newSignal := proc.fuzzer.corpusSignalDiff(inputSignal)
+
 	// Pranav: compute du pairs for this call
 	var inputDuCover cover.DuCover
 	total, unique := inputDuCover.ComputeDuCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
 	log.Logf(3, "====== DU Pairs: total %v unique %v PRE-INTERSECT", total, unique)
+	duDiff := proc.fuzzer.corpusDuCoverDiff(inputDuCover)
+	if duDiff < 0 {
+		log.Logf("ASSERT FAILED: DUDIFF < 0 : %v", duDiff)
+	} else if len(duDiff) == 0 {
+		log.Logf("3141: Rejecting call due to no ducover...")
+	}
 
-	// 3141 - Possible discard of call
-	if newSignal.Empty() {
+	// Pranav - Make sure call has new ducover as well
+	//if newSignal.Empty() {
+	if newSignal.Empty() || duDuff == 0 {
 		return
 	}
 	callName := ".extra"
@@ -158,9 +166,16 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 			log.Logf(3, "====== DU Pairs: total %v unique %v addrs %v intersect %v", duTotal, duUnique, len(thisMemCover), len(intersectDuCover))
 		}
 
+		if intersectDuCover.Empty() {
+			log.Logf("3141: Rejecting call due to empty intersect...")
+		}
+
 		// Without !minimized check manager starts losing some considerable amount
 		// of coverage after each restart. Mechanics of this are not completely clear.
-		if newSignal.Empty() && item.flags&ProgMinimized == 0 {
+		//if newSignal.Empty() && item.flags&ProgMinimized == 0 {
+		// Pranav: Check if ducov intersect is also empty (probably never the case)
+		// TODO: maybe less than a threshold?
+		if (newSignal.Empty() && item.flags&ProgMinimized == 0) || (intersectDuCover.Empty()) {
 			// 3141 - If no intersection in signal between calls, discard as it is flaky/no real coverage
 			return
 		}
@@ -199,7 +214,8 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		DuCover:  inputDuCover.Serialize(),
 	})
 
-	proc.fuzzer.addInputToCorpus(item.p, inputSignal, sig)
+	// Pranav: send ducov map to fuzzer corpus as well
+	proc.fuzzer.addInputToCorpus(item.p, inputSignal, sig, inputDuCover)
 
 	if item.flags&ProgSmashed == 0 {
 		proc.fuzzer.workQueue.enqueue(&WorkSmash{item.p, item.call})

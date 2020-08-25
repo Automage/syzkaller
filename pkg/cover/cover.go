@@ -98,6 +98,22 @@ func (cov *DuCover) Merge(data []byte) {
 	}
 }
 
+func (cov *DuCover) MergeMap(cov2 DuCover) {
+	c := *cov
+	if c == nil {
+		c = make(DuCover)
+		*cov = c
+	}
+
+	if len(cov2) == 0 {
+		return
+	}
+
+	for pair, _ := range cov2 {
+		c[pair] = struct{}{}
+	}
+}
+
 // Return a DuCover representing the intersection of the argument
 // and the current DuCover. Follows prototype of signal.Intersect.
 func (cov *DuCover) Intersection(cov2 DuCover) DuCover {
@@ -112,6 +128,30 @@ func (cov *DuCover) Intersection(cov2 DuCover) DuCover {
 		}
 	}
 	return intersect
+}
+
+// Computes the number of elements not in (cov and cov2)
+func (cov *DuCover) Diff(cov2 DuCover) int {
+	c := *cov
+	if c == nil {
+		return len(cov2)
+	}
+
+	if len(cov2) == 0 {
+		return len(c)
+	}
+
+	intersect := len(cov.Intersection(cov2))
+	return (len(c) - intersect) + (len(cov2) - intersect)
+}
+
+// Checks if cov is empty
+func (cov *DuCover) Empty() bool {
+	c := *cov
+	if c == nil {
+		return true
+	}
+	return len(c) == 0
 }
 
 // Returns total pairs and number of new unique DU pairs discovered. (Technically computing LP
