@@ -73,7 +73,8 @@ func (proc *Proc) loop() {
 			case *WorkTriage:
 				proc.triageInput(item)
 			case *WorkCandidate:
-				proc.execute(proc.execOpts, item.p, item.flags, StatCandidate)
+				// Pranav: execOpts -> execOptsCover to compute DuPairs
+				proc.execute(proc.execOptsCover, item.p, item.flags, StatCandidate)
 			case *WorkSmash:
 				proc.smashInput(item)
 			default:
