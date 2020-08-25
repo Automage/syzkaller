@@ -111,8 +111,8 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	// Pranav: compute du pairs for this call
 	var inputDuCover cover.DuCover
 	total, unique := inputDuCover.ComputeDuCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
-	log.Logf(3, "====== DU Pairs: total %v unique %v PRE-INTERSECT", total, unique)
 	duDiff := proc.fuzzer.corpusDuCoverDiff(inputDuCover)
+	log.Logf(3, "====== DU Pairs: total %v unique %v PRE-INTERSECT duDiff: %v", total, unique, duDiff)
 	if duDiff < 0 {
 		log.Logf(3, "ASSERT FAILED: DUDIFF < 0 : %v", duDiff)
 	} else if duDiff == 0 {
