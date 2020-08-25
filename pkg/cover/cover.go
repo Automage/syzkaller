@@ -81,6 +81,40 @@ func (cov MemCover) Serialize() []uint64 {
 	return res
 }
 
+// Computes the number of elements in addrs but not cov
+func (cov *MemCover) Diff(addrs []uint64) int {
+	c := *cov
+	if c == nil {
+		return len(addrs)
+	}
+
+	if len(addrs) == 0 {
+		return 0
+	}
+
+	// intersect := len(cov.Intersection(cov2))
+	// return (len(c) - intersect) + (len(cov2) - intersect)
+
+	diff := 0
+	for _, addr := range addrs {
+		if _, ok := c[addr]; !ok {
+			diff++
+		}
+	}
+
+	return diff
+}
+
+func (cov *MemCover) Empty() bool {
+	c := *cov
+	if c == nil {
+		return true
+	}
+	return len(c) == 0
+}
+
+/* Pranav: Du Coverage functions */
+
 func (cov *DuCover) Merge(data []byte) {
 	c := *cov
 	if c == nil {
@@ -130,7 +164,7 @@ func (cov *DuCover) Intersection(cov2 DuCover) DuCover {
 	return intersect
 }
 
-// Computes the number of elements not in cov2 but not cov
+// Computes the number of elements in cov2 but not cov
 func (cov *DuCover) Diff(cov2 DuCover) int {
 	c := *cov
 	if c == nil {

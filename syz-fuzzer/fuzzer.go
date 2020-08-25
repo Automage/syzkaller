@@ -60,7 +60,8 @@ type Fuzzer struct {
 	maxSignal    signal.Signal // max signal ever observed including flakes
 	newSignal    signal.Signal // diff of maxSignal since last sync with master
 
-	corpusDuCover cover.DuCover // Pranav: Corpus DuCover to test for new coverage
+	corpusMemCover cover.MemCover // Pranav: Corpus mem address cover
+	corpusDuCover  cover.DuCover  // Pranav: Corpus DuCover to test for new coverage
 
 	logMu sync.Mutex
 }
@@ -399,7 +400,7 @@ func (fuzzer *Fuzzer) addInputFromAnotherFuzzer(inp rpctype.RPCInput) {
 	sign := inp.Signal.Deserialize()
 	var duCover cover.DuCover
 	duCover.Merge(inp.DuCover)
-	fuzzer.addInputToCorpus(p, sign, sig, duCover)
+	fuzzer.addInputToCorpus(p, sign, sig, duCover, inp.MemCover)
 }
 
 func (fuzzer *Fuzzer) addCandidateInput(candidate rpctype.RPCCandidate) {
@@ -440,7 +441,7 @@ func (fuzzer *FuzzerSnapshot) chooseProgram(r *rand.Rand) *prog.Prog {
 }
 
 // Pranav: Modify to include duCover
-func (fuzzer *Fuzzer) addInputToCorpus(p *prog.Prog, sign signal.Signal, sig hash.Sig, inputDuCover cover.DuCover) {
+func (fuzzer *Fuzzer) addInputToCorpus(p *prog.Prog, sign signal.Signal, sig hash.Sig, inputDuCover cover.DuCover, inputMemCover []uint64) {
 	fuzzer.corpusMu.Lock()
 	if _, ok := fuzzer.corpusHashes[sig]; !ok {
 		fuzzer.corpus = append(fuzzer.corpus, p)
@@ -460,6 +461,7 @@ func (fuzzer *Fuzzer) addInputToCorpus(p *prog.Prog, sign signal.Signal, sig has
 		fuzzer.signalMu.Lock()
 		fuzzer.corpusSignal.Merge(sign)
 		fuzzer.maxSignal.Merge(sign)
+		fuzzer.corpusMemCover.Merge(inputMemCover)
 		fuzzer.corpusDuCover.MergeMap(inputDuCover)
 		fuzzer.signalMu.Unlock()
 	}
@@ -496,6 +498,13 @@ func (fuzzer *Fuzzer) corpusSignalDiff(sign signal.Signal) signal.Signal {
 	fuzzer.signalMu.RLock()
 	defer fuzzer.signalMu.RUnlock()
 	return fuzzer.corpusSignal.Diff(sign)
+}
+
+// Pranav: Return diff number of corpusDuCover and arg
+func (fuzzer *Fuzzer) corpusMemCoverDiff(cov []uint64) int {
+	fuzzer.signalMu.RLock()
+	defer fuzzer.signalMu.RUnlock()
+	return fuzzer.corpusMemCover.Diff(cov)
 }
 
 // Pranav: Return diff number of corpusDuCover and arg

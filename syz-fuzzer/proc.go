@@ -108,10 +108,16 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	inputSignal := signal.FromRaw(item.info.Signal, prio)
 	newSignal := proc.fuzzer.corpusSignalDiff(inputSignal)
 
-	// Pranav: compute du pairs for this call
+	// Pranav: compute mem cov and du pairs for this call
+	var inputMemCover cover.MemCover
+	inputMemCover.Merge(item.info.MemCover)
+	inputMemCoverSerialized := inputMemCover.Serialize()
+	mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
+
 	var inputDuCover cover.DuCover
 	total, unique := inputDuCover.ComputeDuCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
 	duDiff := proc.fuzzer.corpusDuCoverDiff(inputDuCover)
+
 	log.Logf(3, "====== DU Pairs: total %v unique %v PRE-INTERSECT duDiff: %v fuzzerCorpus: %v", total, unique, duDiff, len(proc.fuzzer.corpusDuCover))
 	if duDiff < 0 {
 		log.Logf(3, "ASSERT FAILED: DUDIFF < 0 : %v", duDiff)
@@ -121,6 +127,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 
 	// Pranav - Make sure call has new ducover as well
 	//if newSignal.Empty() {
+	// if newSignal.Empty() || mCovDiff == 0 {
 	if newSignal.Empty() || duDiff == 0 {
 		return
 	}
@@ -132,7 +139,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	}
 	log.Logf(3, "triaging input for %v (new signal=%v)", logCallName, newSignal.Len())
 	var inputCover cover.Cover
-	var inputMemCover cover.MemCover
+	var intersectMemCover cover.MemCover
 	var intersectDuCover cover.DuCover
 	const (
 		signalRuns       = 3
@@ -155,19 +162,24 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		newSignal = newSignal.Intersection(thisSignal)
 
 		// Pranav : compute memcover, Du Pairs and calculate intersection
-		inputMemCover.Merge(thisMemCover)
-		var currDuCover cover.DuCover
 		if i == 0 {
+			intersectMemCover.Merge(thisMemCover)
 			duTotal, duUnique := intersectDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
 			log.Logf(3, "====== DU Pairs: total %v unique %v addrs %v intersect %v (first compute)", duTotal, duUnique, len(thisMemCover), len(intersectDuCover))
 		} else {
+			var currDuCover cover.DuCover
+			intersectMemCover.Intersection(thisMemCover)
 			duTotal, duUnique := currDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
 			intersectDuCover = intersectDuCover.Intersection(currDuCover)
 			log.Logf(3, "====== DU Pairs: total %v unique %v addrs %v intersect %v", duTotal, duUnique, len(thisMemCover), len(intersectDuCover))
 		}
 
 		if intersectDuCover.Empty() {
-			log.Logf(3, "3141: Rejecting call due to empty intersect...")
+			log.Logf(3, "3141: Rejecting call due to empty du intersect...")
+		}
+
+		if intersectMemCover.Empty() {
+			log.Logf(3, "3141: Rejecting call due to empty mem intersect...")
 		}
 
 		// Without !minimized check manager starts losing some considerable amount
@@ -175,7 +187,8 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		//if newSignal.Empty() && item.flags&ProgMinimized == 0 {
 		// Pranav: Check if ducov intersect is also empty (probably never the case)
 		// TODO: maybe less than a threshold?
-		if (newSignal.Empty() && item.flags&ProgMinimized == 0) || (intersectDuCover.Empty()) {
+		//if (newSignal.Empty() && item.flags&ProgMinimized == 0) || intersectMemCover.Empty() {
+		if (newSignal.Empty() && item.flags&ProgMinimized == 0) || intersectDuCover.Empty() {
 			// 3141 - If no intersection in signal between calls, discard as it is flaky/no real coverage
 			return
 		}
@@ -210,12 +223,12 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		Prog:     data,
 		Signal:   inputSignal.Serialize(),
 		Cover:    inputCover.Serialize(),
-		MemCover: inputMemCover.Serialize(),
+		MemCover: inputMemCoverSerialized,
 		DuCover:  inputDuCover.Serialize(),
 	})
 
 	// Pranav: send ducov map to fuzzer corpus as well
-	proc.fuzzer.addInputToCorpus(item.p, inputSignal, sig, inputDuCover)
+	proc.fuzzer.addInputToCorpus(item.p, inputSignal, sig, inputDuCover, inputMemCoverSerialized)
 
 	if item.flags&ProgSmashed == 0 {
 		proc.fuzzer.workQueue.enqueue(&WorkSmash{item.p, item.call})
