@@ -112,7 +112,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	var inputDuCover cover.DuCover
 	total, unique := inputDuCover.ComputeDuCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
 	duDiff := proc.fuzzer.corpusDuCoverDiff(inputDuCover)
-	log.Logf(3, "====== DU Pairs: total %v unique %v PRE-INTERSECT duDiff: %v", total, unique, duDiff)
+	log.Logf(3, "====== DU Pairs: total %v unique %v PRE-INTERSECT duDiff: %v fuzzerCorpus: %v", total, unique, duDiff, len(proc.fuzzer.corpusDuCover))
 	if duDiff < 0 {
 		log.Logf(3, "ASSERT FAILED: DUDIFF < 0 : %v", duDiff)
 	} else if duDiff == 0 {
