@@ -182,12 +182,10 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		// Pranav : compute memcover, Du Pairs and calculate intersection
 		if evalDu { // Du cov
 			if i == 0 {
-				intersectMemCover.Merge(thisMemCover)
 				duTotal, duUnique := intersectDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
 				log.Logf(3, "====== DU Pairs: total %v unique %v addrs %v intersect %v (first compute)", duTotal, duUnique, len(thisMemCover), len(intersectDuCover))
 			} else {
 				var currDuCover cover.DuCover
-				intersectMemCover.Intersection(thisMemCover)
 				duTotal, duUnique := currDuCover.ComputeDuCov(thisMemCover, thisIpCover, thisTypeCover)
 				intersectDuCover = intersectDuCover.Intersection(currDuCover)
 				log.Logf(3, "====== DU Pairs: total %v unique %v addrs %v intersect %v", duTotal, duUnique, len(thisMemCover), len(intersectDuCover))
@@ -201,7 +199,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 				intersectMemCover.Merge(thisMemCover)
 				log.Logf(3, "====== Mem Cov: total %v intersect %v (first compute)", len(item.info.MemCover), len(intersectMemCover))
 			} else {
-				intersectMemCover.Intersection(thisMemCover)
+				intersectMemCover = intersectMemCover.Intersection(thisMemCover)
 				log.Logf(3, "====== Mem Cov: total %v intersect %v", len(item.info.MemCover), len(intersectMemCover))
 			}
 
