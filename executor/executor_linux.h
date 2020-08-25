@@ -103,12 +103,12 @@ static intptr_t execute_syscall(const call_t* c, intptr_t a[kMaxArgs])
 // KMCOV functions
 // Handles both open and setup. Returns fd.
 static void kmcov_open(const int kmcov_fd) {
-	debug("++++++ Opening kmcov...\n");
+	//debug("++++++ Opening kmcov...\n");
 	int fd = open("/sys/kernel/debug/kmcov", O_RDWR);
 	if (fd == -1)
 		fail("open of /sys/kernel/debug/kmcov failed");
 
-	debug("++++++ Setting up kmcov...\n");
+	//debug("++++++ Setting up kmcov...\n");
 	if (ioctl(fd, KMCOV_SETUP, KMCOV_COVER_SIZE))
 		fail("kmcov setup failed (buffer alloc)");
 	
@@ -116,7 +116,7 @@ static void kmcov_open(const int kmcov_fd) {
 		fail("filed to dup2(%d, %d) cover fd", fd, kmcov_fd);
 	close(fd);
 
-	debug("++++++ Set up kmcov!\n");
+	//debug("++++++ Set up kmcov!\n");
 }
 
 // Deallocates kmcov buffer
@@ -124,7 +124,7 @@ static void kmcov_close(int fd) {
 	if (close(fd))
 		fail("kmcov close file failed");
 
-	debug("++++++ Closed kmcov\n");
+	//debug("++++++ Closed kmcov\n");
 }
 
 // Enable tracing
@@ -133,7 +133,7 @@ static void kmcov_enable(int fd) {
 	if (ret)
 		fail("kmcov enable failed: ret %d, fd: %d, err: %s", ret, fd, strerror(errno));
 	
-	debug("++++++ Enabled kmcov\n");
+	//debug("++++++ Enabled kmcov\n");
 }
 
 // Disable tracing
@@ -141,14 +141,14 @@ static void kmcov_disable(int fd) {
 	if (ioctl(fd, KMCOV_DISABLE, 0))
 		fail("kmcov disable failed");
 
-	debug("++++++ Disabled kmcov\n");
+	//debug("++++++ Disabled kmcov\n");
 }
 
 // Zero out kmcov buffer
 static void kmcov_reset(void *addr_buf[], void *ip_buf[], int *type_buf) {
 	// Shouldn't call many (if any?) syscalls to further
 	// litter mem coverage buffer
-	debug("++++++ Reseting kmcov buffers...\n");
+	//debug("++++++ Reseting kmcov buffers...\n");
 	memset(addr_buf, 0, KMCOV_COVER_SIZE);
 	memset(ip_buf, 0, KMCOV_COVER_SIZE);
 	memset(type_buf, 0, KMCOV_COVER_SIZE);
@@ -171,7 +171,7 @@ static void kmcov_read(int fd, void *addr_buf[], void *ip_buf[], int *type_buf) 
 	if (ret3 != KMCOV_COVER_SIZE) {
 		fail("kmcov type read failed. ret %d", ret1);
 	}
-	debug("++++++ Read kmcov buffers successfully \n");
+	//ebug("++++++ Read kmcov buffers successfully \n");
 }
 
 static void cover_open(cover_t* cov, bool extra)
