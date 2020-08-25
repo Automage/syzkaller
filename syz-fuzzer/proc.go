@@ -114,8 +114,8 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	log.Logf(3, "====== DU Pairs: total %v unique %v PRE-INTERSECT", total, unique)
 	duDiff := proc.fuzzer.corpusDuCoverDiff(inputDuCover)
 	if duDiff < 0 {
-		log.Logf("ASSERT FAILED: DUDIFF < 0 : %v", duDiff)
-	} else if len(duDiff) == 0 {
+		log.Logf(3, "ASSERT FAILED: DUDIFF < 0 : %v", duDiff)
+	} else if duDiff == 0 {
 		log.Logf("3141: Rejecting call due to no ducover...")
 	}
 
@@ -296,6 +296,7 @@ func (proc *Proc) executeHintSeed(p *prog.Prog, call int) {
 func (proc *Proc) execute(execOpts *ipc.ExecOpts, p *prog.Prog, flags ProgTypes, stat Stat) *ipc.ProgInfo {
 	info := proc.executeRaw(execOpts, p, stat)
 	// 3141 - Possible throw away of calls
+	// TODO: modify
 	calls, extra := proc.fuzzer.checkNewSignal(p, info)
 	//log.Logf(1, "3141 %v, cover=%v", info.Calls[0].MemCover, execOpts.Flags&ipc.FlagCollectCover)
 	for _, callIndex := range calls {
