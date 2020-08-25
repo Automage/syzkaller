@@ -108,7 +108,8 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	inputSignal := signal.FromRaw(item.info.Signal, prio)
 	newSignal := proc.fuzzer.corpusSignalDiff(inputSignal)
 
-	// Pranav: compute mem cov and du pairs for this call
+	// Pranav: compute mem cov or du pairs for this call
+	evalDu := false
 	var inputMemCover cover.MemCover
 	inputMemCover.Merge(item.info.MemCover)
 	inputMemCoverSerialized := inputMemCover.Serialize()
@@ -118,18 +119,34 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	total, unique := inputDuCover.ComputeDuCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
 	duDiff := proc.fuzzer.corpusDuCoverDiff(inputDuCover)
 
-	log.Logf(3, "====== DU Pairs: total %v unique %v PRE-INTERSECT duDiff: %v fuzzerCorpus: %v", total, unique, duDiff, len(proc.fuzzer.corpusDuCover))
-	if duDiff < 0 {
-		log.Logf(3, "ASSERT FAILED: DUDIFF < 0 : %v", duDiff)
-	} else if duDiff == 0 {
-		log.Logf(3, "3141: Rejecting call due to no ducover...")
-	}
+	if evalDu { // Du cov
+		log.Logf(3, "====== DU Pairs: total %v unique %v PRE-INTERSECT duDiff: %v fuzzerCorpus: %v", total, unique, duDiff, len(proc.fuzzer.corpusDuCover))
+		if duDiff < 0 {
+			log.Logf(3, "ASSERT FAILED: DUDIFF < 0 : %v", duDiff)
+		} else if duDiff == 0 {
+			log.Logf(3, "3141: Rejecting call due to no ducover...")
+		}
 
-	// Pranav - Make sure call has new ducover as well
-	//if newSignal.Empty() {
-	// if newSignal.Empty() || mCovDiff == 0 {
-	if newSignal.Empty() || duDiff == 0 {
-		return
+		// Pranav - Make sure call has new ducover as well
+		//if newSignal.Empty() {
+		// if newSignal.Empty() || mCovDiff == 0 {
+		if newSignal.Empty() || duDiff == 0 {
+			return
+		}
+	} else { // Mem cov
+		log.Logf(3, "====== Mem Cov: total %v unique %v PRE-INTERSECT mCovDiff: %v fuzzerCorpus: %v", len(item.info.MemCover), len(inputMemCover), mCovDiff, len(proc.fuzzer.corpusMemCover))
+		if mCovDiff < 0 {
+			log.Logf(3, "ASSERT FAILED: MCOVDIFF < 0 : %v", duDiff)
+		} else if mCovDiff == 0 {
+			log.Logf(3, "3141: Rejecting call due to no mem cov...")
+		}
+
+		// Pranav - Make sure call has new ducover as well
+		//if newSignal.Empty() {
+		// if newSignal.Empty() || mCovDiff == 0 {
+		if newSignal.Empty() || mCovDiff == 0 {
+			return
+		}
 	}
 	callName := ".extra"
 	logCallName := "extra"
@@ -174,11 +191,11 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 			log.Logf(3, "====== DU Pairs: total %v unique %v addrs %v intersect %v", duTotal, duUnique, len(thisMemCover), len(intersectDuCover))
 		}
 
-		if intersectDuCover.Empty() {
+		if evalDu && intersectDuCover.Empty() {
 			log.Logf(3, "3141: Rejecting call due to empty du intersect...")
 		}
 
-		if intersectMemCover.Empty() {
+		if !evalDu && intersectMemCover.Empty() {
 			log.Logf(3, "3141: Rejecting call due to empty mem intersect...")
 		}
 
@@ -188,7 +205,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		// Pranav: Check if ducov intersect is also empty (probably never the case)
 		// TODO: maybe less than a threshold?
 		//if (newSignal.Empty() && item.flags&ProgMinimized == 0) || intersectMemCover.Empty() {
-		if (newSignal.Empty() && item.flags&ProgMinimized == 0) || intersectDuCover.Empty() {
+		if (newSignal.Empty() && item.flags&ProgMinimized == 0) || (evalDu && intersectDuCover.Empty()) || (!evalDu && intersectMemCover.Empty()) {
 			// 3141 - If no intersection in signal between calls, discard as it is flaky/no real coverage
 			return
 		}
