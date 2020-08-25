@@ -397,7 +397,9 @@ func (fuzzer *Fuzzer) addInputFromAnotherFuzzer(inp rpctype.RPCInput) {
 	}
 	sig := hash.Hash(inp.Prog)
 	sign := inp.Signal.Deserialize()
-	fuzzer.addInputToCorpus(p, sign, sig, inp.DuCover)
+	var duCover cover.DuCover
+	duCover.Merge(inp.DuCover)
+	fuzzer.addInputToCorpus(p, sign, sig, duCover)
 }
 
 func (fuzzer *Fuzzer) addCandidateInput(candidate rpctype.RPCCandidate) {
