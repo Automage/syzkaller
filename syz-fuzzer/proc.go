@@ -121,7 +121,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 
 	// Pranav - Make sure call has new ducover as well
 	//if newSignal.Empty() {
-	if newSignal.Empty() || duDuff == 0 {
+	if newSignal.Empty() || duDiff == 0 {
 		return
 	}
 	callName := ".extra"
