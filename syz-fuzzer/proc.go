@@ -110,10 +110,11 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 
 	// Pranav: compute mem cov or du pairs for this call
 	evalDu := false
+
 	var inputMemCover cover.MemCover
 	inputMemCover.Merge(item.info.MemCover)
 	inputMemCoverSerialized := inputMemCover.Serialize()
-	//mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
+	mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
 
 	var inputDuCover cover.DuCover
 	total, unique := inputDuCover.ComputeDuCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
