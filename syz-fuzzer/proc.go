@@ -112,7 +112,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	var inputMemCover cover.MemCover
 	inputMemCover.Merge(item.info.MemCover)
 	inputMemCoverSerialized := inputMemCover.Serialize()
-	mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
+	//mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
 
 	var inputDuCover cover.DuCover
 	total, unique := inputDuCover.ComputeDuCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
