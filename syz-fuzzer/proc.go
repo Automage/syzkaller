@@ -258,7 +258,8 @@ func (proc *Proc) smashInput(item *WorkSmash) {
 		p := item.p.Clone()
 		p.Mutate(proc.rnd, prog.RecommendedCalls, proc.fuzzer.choiceTable, fuzzerSnapshot.corpus)
 		log.Logf(1, "#%v: smash mutated", proc.pid)
-		proc.execute(proc.execOpts, p, ProgNormal, StatSmash)
+		// Pranav: execOpts -> execOptscover for du evaluation
+		proc.execute(proc.execOptsCover, p, ProgNormal, StatSmash)
 	}
 }
 
