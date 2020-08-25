@@ -109,7 +109,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	newSignal := proc.fuzzer.corpusSignalDiff(inputSignal)
 
 	// Pranav: compute mem cov or du pairs for this call
-	evalDu := false
+	evalDu := true
 
 	var inputMemCover cover.MemCover
 	inputMemCover.Merge(item.info.MemCover)
