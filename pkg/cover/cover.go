@@ -64,7 +64,7 @@ func (cov *MemCover) Intersection(addrs []uint64) MemCover {
 	if c == nil {
 		return MemCover{}
 	}
-	var intersect MemCover
+	intersect := make(MemCover)
 	for _, addr := range addrs {
 		if _, ok := c[addr]; ok {
 			intersect[addr] = struct{}{}
