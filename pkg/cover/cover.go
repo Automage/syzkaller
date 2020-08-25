@@ -130,7 +130,7 @@ func (cov *DuCover) Intersection(cov2 DuCover) DuCover {
 	return intersect
 }
 
-// Computes the number of elements not in (cov and cov2)
+// Computes the number of elements not in cov2 but not cov
 func (cov *DuCover) Diff(cov2 DuCover) int {
 	c := *cov
 	if c == nil {
@@ -138,11 +138,20 @@ func (cov *DuCover) Diff(cov2 DuCover) int {
 	}
 
 	if len(cov2) == 0 {
-		return len(c)
+		return 0
 	}
 
-	intersect := len(cov.Intersection(cov2))
-	return (len(c) - intersect) + (len(cov2) - intersect)
+	// intersect := len(cov.Intersection(cov2))
+	// return (len(c) - intersect) + (len(cov2) - intersect)
+
+	diff := 0
+	for pair := range cov2 {
+		if _, ok := c[pair]; !ok {
+			diff++
+		}
+	}
+
+	return diff
 }
 
 // Checks if cov is empty
