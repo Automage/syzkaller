@@ -116,7 +116,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	if duDiff < 0 {
 		log.Logf(3, "ASSERT FAILED: DUDIFF < 0 : %v", duDiff)
 	} else if duDiff == 0 {
-		log.Logf("3141: Rejecting call due to no ducover...")
+		log.Logf(3, "3141: Rejecting call due to no ducover...")
 	}
 
 	// Pranav - Make sure call has new ducover as well
@@ -167,7 +167,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		}
 
 		if intersectDuCover.Empty() {
-			log.Logf("3141: Rejecting call due to empty intersect...")
+			log.Logf(3, "3141: Rejecting call due to empty intersect...")
 		}
 
 		// Without !minimized check manager starts losing some considerable amount
