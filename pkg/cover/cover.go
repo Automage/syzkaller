@@ -321,4 +321,4 @@ func (cov *MemCover) CountDefineUsePairs(addrs []uint64, ips []uint64, accessTyp
 	return duPairs
 }
 
-//1
+//2
