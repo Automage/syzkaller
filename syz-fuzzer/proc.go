@@ -109,7 +109,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	newSignal := proc.fuzzer.corpusSignalDiff(inputSignal)
 
 	// Pranav: compute mem cov or du pairs for this call
-	evalDu := false
+	evalDu := 0 // 0 - edge, 1 - memcover, 2 - du cover
 
 	var inputMemCover cover.MemCover
 	inputMemCover.Merge(item.info.MemCover)
@@ -120,7 +120,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	total, unique := inputDuCover.ComputeDuCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
 	duDiff := proc.fuzzer.corpusDuCoverDiff(inputDuCover)
 
-	if evalDu { // Du cov
+	if evalDu == 2 { // Du cov
 		log.Logf(3, "====== DU Pairs: total %v unique %v PRE-INTERSECT duDiff: %v fuzzerCorpus: %v", total, unique, duDiff, len(proc.fuzzer.corpusDuCover))
 		if duDiff < 0 {
 			log.Logf(3, "ASSERT FAILED: DUDIFF < 0 : %v", duDiff)
@@ -129,12 +129,10 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		}
 
 		// Pranav - Make sure call has new ducover as well
-		//if newSignal.Empty() {
-		// if newSignal.Empty() || mCovDiff == 0 {
 		if newSignal.Empty() || duDiff == 0 {
 			return
 		}
-	} else { // Mem cov
+	} else if evalDu == 1 { // Mem cov
 		log.Logf(3, "====== Mem Cov: total %v unique %v PRE-INTERSECT mCovDiff: %v fuzzerCorpus: %v", len(item.info.MemCover), len(inputMemCover), mCovDiff, len(proc.fuzzer.corpusMemCover))
 		if mCovDiff < 0 {
 			log.Logf(3, "ASSERT FAILED: MCOVDIFF < 0 : %v", duDiff)
@@ -142,13 +140,15 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 			log.Logf(3, "3141: Rejecting call due to no mem cov...")
 		}
 
-		// Pranav - Make sure call has new ducover as well
-		//if newSignal.Empty() {
-		// if newSignal.Empty() || mCovDiff == 0 {
 		if newSignal.Empty() || mCovDiff == 0 {
 			return
 		}
+	} else { // OG Syzkaller
+		if newSignal.Empty() {
+			return
+		}
 	}
+
 	callName := ".extra"
 	logCallName := "extra"
 	if item.call != -1 {
