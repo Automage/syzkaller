@@ -6,7 +6,9 @@ package cover
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/gob"
+	"hash/crc64"
 )
 
 type Cover map[uint32]struct{}
@@ -319,4 +321,35 @@ func (cov *MemCover) CountDefineUsePairs(addrs []uint64, ips []uint64, accessTyp
 		}
 	}
 	return duPairs
+}
+
+/* Hash experiment */
+
+type HashCover map[uint64]struct{}
+
+const MemBits = 5
+
+func (cov *HashCover) ComputeHashCov(addrs []uint64, ips []uint64, accessTypes []uint32) {
+	c := *cov
+	if c == nil {
+		c = make(HashCover)
+		*cov = c
+	}
+
+	ipMask := uint64(0xFFFFFFFF)
+	addrMask := uint64((1 << MemBits) - 1)
+
+	for i, addr := range addrs {
+		ip := ips[i] % (1 << 32)
+		accessType := uint64(accessTypes[i])
+
+		buf := make([]byte, binary.MaxVarintLen64)
+		binary.PutUvarint(buf, addr)
+		hashAddr := crc64.Checksum(buf, crc64.MakeTable(crc64.ISO))
+		truncAddr := hashAddr % (1 << MemBits)
+
+		x := ((ip & ipMask) << 32) | ((truncAddr & addrMask) << 1) | (accessType & uint64(1))
+		c[x] = struct{}{}
+	}
+
 }
