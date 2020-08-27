@@ -325,14 +325,14 @@ func (cov *MemCover) CountDefineUsePairs(addrs []uint64, ips []uint64, accessTyp
 
 /* Hash experiment */
 
-type HashCover map[uint64]struct{}
+// type HashCover map[uint64]struct{}
 
 const MemBits = 5
 
-func (cov *HashCover) ComputeHashCov(addrs []uint64, ips []uint64, accessTypes []uint32) {
+func (cov *MemCover) ComputeHashCov(addrs []uint64, ips []uint64, accessTypes []uint32) {
 	c := *cov
 	if c == nil {
-		c = make(HashCover)
+		c = make(MemCover)
 		*cov = c
 	}
 
