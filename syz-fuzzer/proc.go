@@ -161,7 +161,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	log.Logf(3, "triaging input for %v (new signal=%v)", logCallName, newSignal.Len())
 	var inputCover cover.Cover
 	var intersectMemCover cover.MemCover
-	var intersectDuCover cover.DuCover
+	//var intersectDuCover cover.DuCover
 	const (
 		signalRuns       = 3
 		minimizeAttempts = 3
@@ -198,11 +198,14 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		// 		log.Logf(3, "3141: Rejecting call due to empty du intersect...")
 		// 	}
 		// } else { // Mem cov
+		var currMemCover cover.MemCover
+		currMemCover.ComputeHashCov(thisMemCover, thisIpCover, thisTypeCover)
 		if i == 0 {
-			intersectMemCover.Merge(thisMemCover)
+			//intersectMemCover.Merge(thisMemCover)
+			intersectMemCover.Merge(currMemCover)
 			log.Logf(3, "====== Mem Cov: total %v intersect %v (first compute)", len(item.info.MemCover), len(intersectMemCover))
 		} else {
-			intersectMemCover = intersectMemCover.Intersection(thisMemCover)
+			intersectMemCover = intersectMemCover.Intersection(currMemCover)
 			log.Logf(3, "====== Mem Cov: total %v intersect %v", len(item.info.MemCover), len(intersectMemCover))
 		}
 
