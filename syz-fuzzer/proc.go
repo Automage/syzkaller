@@ -202,10 +202,10 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		currMemCover.ComputeHashCov(thisMemCover, thisIpCover, thisTypeCover)
 		if i == 0 {
 			//intersectMemCover.Merge(thisMemCover)
-			intersectMemCover.Merge(currMemCover)
+			intersectMemCover.Merge(currMemCover.Serialize())
 			log.Logf(3, "====== Mem Cov: total %v intersect %v (first compute)", len(item.info.MemCover), len(intersectMemCover))
 		} else {
-			intersectMemCover = intersectMemCover.Intersection(currMemCover)
+			intersectMemCover = intersectMemCover.Intersection(currMemCover.Serialize())
 			log.Logf(3, "====== Mem Cov: total %v intersect %v", len(item.info.MemCover), len(intersectMemCover))
 		}
 
