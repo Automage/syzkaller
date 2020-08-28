@@ -329,7 +329,7 @@ func (cov *MemCover) CountDefineUsePairs(addrs []uint64, ips []uint64, accessTyp
 
 const MemBits = 5
 
-func (cov *MemCover) ComputeHashCov(addrs []uint64, ips []uint64, accessTypes []uint32) {
+func (cov *MemCover) ComputeHashCov(addrs []uint64, ips []uint64, accessTypes []uint32) int {
 	c := *cov
 	if c == nil {
 		c = make(MemCover)
@@ -338,6 +338,7 @@ func (cov *MemCover) ComputeHashCov(addrs []uint64, ips []uint64, accessTypes []
 
 	ipMask := uint64(0xFFFFFFFF)
 	addrMask := uint64((1 << MemBits) - 1)
+	total := 0
 
 	for i, addr := range addrs {
 		ip := ips[i] % (1 << 32)
@@ -350,6 +351,11 @@ func (cov *MemCover) ComputeHashCov(addrs []uint64, ips []uint64, accessTypes []
 
 		x := ((ip & ipMask) << 32) | ((truncAddr & addrMask) << 1) | (accessType & uint64(1))
 		c[x] = struct{}{}
+
+		if addr != 0 {
+			total++
+		}
 	}
 
+	return total
 }

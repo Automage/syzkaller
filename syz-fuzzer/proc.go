@@ -203,14 +203,14 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		// 	}
 		// } else { // Mem cov
 		var currMemCover cover.MemCover
-		currMemCover.ComputeHashCov(thisMemCover, thisIpCover, thisTypeCover)
+		total := currMemCover.ComputeHashCov(thisMemCover, thisIpCover, thisTypeCover)
 		if i == 0 {
 			//intersectMemCover.Merge(thisMemCover)
 			intersectMemCover.Merge(currMemCover.Serialize())
-			log.Logf(3, "====== Mem Cov: total %v intersect %v (first compute)", len(item.info.MemCover), len(intersectMemCover))
+			log.Logf(3, "====== Mem Cov: total %v intersect %v (first compute)", total, len(intersectMemCover))
 		} else {
 			intersectMemCover = intersectMemCover.Intersection(currMemCover.Serialize())
-			log.Logf(3, "====== Mem Cov: total %v intersect %v", len(item.info.MemCover), len(intersectMemCover))
+			log.Logf(3, "====== Mem Cov: total %v intersect %v", total, len(intersectMemCover))
 		}
 
 		if intersectMemCover.Empty() {
