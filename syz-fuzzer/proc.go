@@ -147,6 +147,10 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	inputMemCover.ComputeHashCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
 	inputMemCoverSerialized := inputMemCover.Serialize()
 
+	if inputMemCover.Empty() {
+		log.Logf(3, "Khushboo : Call rejected due")
+	}
+
 	if newSignal.Empty() || inputMemCover.Empty() {
 		return
 	}
