@@ -538,7 +538,7 @@ func (fuzzer *Fuzzer) checkNewCallSignal(p *prog.Prog, info *ipc.CallInfo, call 
 	fuzzer.signalMu.Lock()
 	fuzzer.maxSignal.Merge(diff)
 	fuzzer.newSignal.Merge(diff)
-	fuzzer.corpusMemCover.Merge(memDiff)
+	fuzzer.corpusMemCover.Merge(info.MemCover)
 	fuzzer.signalMu.Unlock()
 	fuzzer.signalMu.RLock()
 	return true
