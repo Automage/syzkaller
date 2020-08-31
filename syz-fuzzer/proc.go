@@ -348,7 +348,7 @@ func (proc *Proc) execute(execOpts *ipc.ExecOpts, p *prog.Prog, flags ProgTypes,
 	// 3141 - Possible throw away of calls
 	// TODO: modify
 	calls, extra := proc.fuzzer.checkNewSignal(p, info)
-	//log.Logf(1, "3141 %v, cover=%v", info.Calls[0].MemCover, execOpts.Flags&ipc.FlagCollectCover)
+	log.Logf(1, "$$$ calls=%v", len(calls))
 	for _, callIndex := range calls {
 		proc.enqueueCallTriage(p, flags, callIndex, info.Calls[callIndex])
 	}
