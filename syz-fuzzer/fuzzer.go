@@ -527,15 +527,18 @@ func (fuzzer *Fuzzer) checkNewSignal(p *prog.Prog, info *ipc.ProgInfo) (calls []
 	return
 }
 
+// Pranav - add memcov checks
 func (fuzzer *Fuzzer) checkNewCallSignal(p *prog.Prog, info *ipc.CallInfo, call int) bool {
 	diff := fuzzer.maxSignal.DiffRaw(info.Signal, signalPrio(p, info, call))
-	if diff.Empty() {
+	memDiff := fuzzer.corpusMemCoverDiff(info.MemCover)
+	if diff.Empty() && memDiff == 0 {
 		return false
 	}
 	fuzzer.signalMu.RUnlock()
 	fuzzer.signalMu.Lock()
 	fuzzer.maxSignal.Merge(diff)
 	fuzzer.newSignal.Merge(diff)
+	fuzzer.corpusMemCover.Merge(memDiff)
 	fuzzer.signalMu.Unlock()
 	fuzzer.signalMu.RLock()
 	return true
