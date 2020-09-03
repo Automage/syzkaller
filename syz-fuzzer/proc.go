@@ -149,7 +149,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
 
 	if mCovDiff == 0 {
-		log.Logf(3, "Khushboo : Call rejected due")
+		log.Logf(3, "Khushboo : Call rejected due to no diff : len inp: %v", len(inputMemCoverSerialized))
 	}
 
 	covMetric := 0 // 0 - added by edge, 1 - added by mem, 2 - added by both
