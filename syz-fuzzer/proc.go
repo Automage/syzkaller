@@ -146,12 +146,13 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	// } else { // OG Syzkaller
 	inputMemCover.ComputeHashCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
 	inputMemCoverSerialized := inputMemCover.Serialize()
+	mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
 
-	if inputMemCover.Empty() {
+	if mCovDiff == 0 {
 		log.Logf(3, "Khushboo : Call rejected due")
 	}
 
-	if newSignal.Empty() || inputMemCover.Empty() {
+	if newSignal.Empty() || mCovDiff == 0 {
 		return
 	}
 	// }

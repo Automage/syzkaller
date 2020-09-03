@@ -75,9 +75,13 @@ func (cov *MemCover) Intersection(addrs []uint64) MemCover {
 	return intersect
 }
 
-func (cov MemCover) Serialize() []uint64 {
-	res := make([]uint64, 0, len(cov))
-	for addr := range cov {
+func (cov *MemCover) Serialize() []uint64 {
+	c := *cov
+	if c == nil {
+		return []uint64{}
+	}
+	res := make([]uint64, 0, len(c))
+	for addr := range c {
 		res = append(res, addr)
 	}
 	return res
