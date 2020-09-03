@@ -238,7 +238,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		}
 
 		inputCover.Merge(thisCover)
-		inputMemCover.Merge(currMemCover)
+		inputMemCover.Merge(currMemCover.Serialize())
 	}
 	if item.flags&ProgMinimized == 0 {
 		// 3141 - Minimize prog cuts all calls that do not contribute to signal
