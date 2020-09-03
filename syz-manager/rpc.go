@@ -233,6 +233,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 		return nil
 	}
 	if !serv.mgr.newInput(a.RPCInput, inputSignal) {
+		// Potential throw-away of call
 		return nil
 	}
 
@@ -252,6 +253,14 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 
 	serv.stats.corpusMemCover.set(len(serv.corpusMemCover))
 	serv.stats.corpusDuCover.set(len(serv.corpusDuCover))
+
+	if a.Metric == 0 {
+		serv.stats.edgeMetric.inc()
+	} else if a.Metric == 1 {
+		serv.stats.memMetric.inc()
+	} else if a.Metric == 2 {
+		serv.stats.bothMetric.inc()
+	}
 
 	if genuine {
 		serv.corpusSignal.Merge(inputSignal)

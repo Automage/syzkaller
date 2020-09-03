@@ -152,10 +152,17 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		log.Logf(3, "Khushboo : Call rejected due")
 	}
 
+	covMetric := 0 // 0 - added by edge, 1 - added by mem, 2 - added by both
 	if newSignal.Empty() && mCovDiff == 0 {
 		return
+	} else if newSignal.Empty() {
+		covMetric = 1
+	} else if mCovDiff == 0 {
+		covMetric = 0
+	} else {
+		covMetric = 2
 	}
-	// }
+	//}
 
 	callName := ".extra"
 	logCallName := "extra"
@@ -231,6 +238,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		}
 
 		inputCover.Merge(thisCover)
+		inputMemCover.Merge(currMemCover)
 	}
 	if item.flags&ProgMinimized == 0 {
 		// 3141 - Minimize prog cuts all calls that do not contribute to signal
@@ -260,8 +268,9 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		Prog:     data,
 		Signal:   inputSignal.Serialize(),
 		Cover:    inputCover.Serialize(),
-		MemCover: inputMemCoverSerialized,
+		MemCover: inputMemCover.Serialize(),
 		DuCover:  inputDuCover.Serialize(),
+		Metric:   covMetric,
 	})
 
 	// Pranav: send ducov map to fuzzer corpus as well

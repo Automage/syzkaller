@@ -20,6 +20,7 @@ type RPCInput struct {
 	IpCover   []uint64
 	TypeCover []uint32
 	DuCover   []byte
+	Metric    int
 }
 
 type RPCCandidate struct {

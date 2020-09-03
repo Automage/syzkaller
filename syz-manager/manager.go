@@ -1090,6 +1090,9 @@ func (mgr *Manager) newInput(inp rpctype.RPCInput, sign signal.Signal) bool {
 		old.MemCover = memCov.Serialize()
 		old.DuCover = duCov.Serialize()
 
+		// Update to newest metric that added input
+		old.Metric = inp.Metric
+
 		mgr.corpus[sig] = old
 	} else {
 		mgr.corpus[sig] = inp

@@ -29,6 +29,9 @@ type Stats struct {
 	corpusSignal     Stat
 	corpusMemCover   Stat
 	corpusDuCover    Stat
+	edgeMetric       Stat
+	memMetric        Stat
+	bothMetric       Stat
 	maxSignal        Stat
 
 	mu         sync.Mutex
@@ -47,10 +50,13 @@ func (stats *Stats) all() map[string]uint64 {
 		"exec total":     stats.execTotal.get(),
 		"cover":          stats.corpusCover.get(),
 		// Pranav: added mem cover and du cover
-		"mem cover":     stats.corpusMemCover.get(),
-		"du pair cover": stats.corpusDuCover.get(),
-		"signal":        stats.corpusSignal.get(),
-		"max signal":    stats.maxSignal.get(),
+		"mem cover":          stats.corpusMemCover.get(),
+		"du pair cover":      stats.corpusDuCover.get(),
+		"edge metric inputs": stats.edgeMetric.get(),
+		"mem metric inputs":  stats.memMetric.get(),
+		"both metric inputs": stats.bothMetric.get(),
+		"signal":             stats.corpusSignal.get(),
+		"max signal":         stats.maxSignal.get(),
 	}
 	if stats.haveHub {
 		m["hub: send prog add"] = stats.hubSendProgAdd.get()
