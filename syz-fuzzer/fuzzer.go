@@ -531,7 +531,7 @@ func (fuzzer *Fuzzer) checkNewSignal(p *prog.Prog, info *ipc.ProgInfo) (calls []
 func (fuzzer *Fuzzer) checkNewCallSignal(p *prog.Prog, info *ipc.CallInfo, call int) bool {
 	diff := fuzzer.maxSignal.DiffRaw(info.Signal, signalPrio(p, info, call))
 	memDiff := fuzzer.corpusMemCoverDiff(info.MemCover)
-	log.Logf(1, "$$$ diff=%v memdiff=%v", len(diff), memDiff)
+	log.Logf(1, "$$$ diff=%v memdiff=%v, memcover=%v", len(diff), memDiff, info.MemCover)
 	if diff.Empty() && memDiff == 0 {
 		return false
 	}
