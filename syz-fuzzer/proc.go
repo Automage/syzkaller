@@ -152,7 +152,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		log.Logf(3, "Khushboo : Call rejected due")
 	}
 
-	if newSignal.Empty() || mCovDiff == 0 {
+	if newSignal.Empty() && mCovDiff == 0 {
 		return
 	}
 	// }
