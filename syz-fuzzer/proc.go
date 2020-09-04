@@ -145,13 +145,13 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	// } else { // OG Syzkaller
 	var inputMemCover cover.MemCover
 	//inputMemCover.ComputeHashCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
-	//inputMemCoverSerialized := inputMemCover.Serialize()
+	inputMemCoverSerialized := inputMemCover.Serialize()
 	//mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
 
-	if mCovDiff == 0 {
-		log.Logf(3, "Khushboo : Call rejected due to no diff : len inp: %v\ninp: %v", len(inputMemCoverSerialized), inputMemCover)
-	}
-	log.Logf(3, "Jain : mCovDiff %v diff %v", mCovDiff, newSignal.Len())
+	// if mCovDiff == 0 {
+	// 	log.Logf(3, "Khushboo : Call rejected due to no diff : len inp: %v\ninp: %v", len(inputMemCoverSerialized), inputMemCover)
+	// }
+	// log.Logf(3, "Jain : mCovDiff %v diff %v", mCovDiff, newSignal.Len())
 
 	covMetric := 0 // 0 - added by only edge, 1 - added by only mem, 2 - added by both
 	// If either coverage is increased, keep inspecting
