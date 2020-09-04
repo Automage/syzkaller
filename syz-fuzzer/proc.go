@@ -151,7 +151,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	if mCovDiff == 0 {
 		log.Logf(3, "Khushboo : Call rejected due to no diff : len inp: %v\ninp: %v", len(inputMemCoverSerialized), inputMemCover)
 	}
-	log.Logf(3, "Jain : mCovDiff %v diff %v", len(inputMemCoverSerialized), newSignal.Len())
+	log.Logf(3, "Jain : mCovDiff %v diff %v", mCovDiff, newSignal.Len())
 
 	covMetric := 0 // 0 - added by edge, 1 - added by mem, 2 - added by both
 	// If either coverage is increased, keep inspecting
