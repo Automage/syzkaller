@@ -391,6 +391,7 @@ func (fuzzer *Fuzzer) sendInputToManager(inp rpctype.RPCInput) {
 	}
 }
 
+// TODO merge memcov when consideirng multiple VMs
 func (fuzzer *Fuzzer) addInputFromAnotherFuzzer(inp rpctype.RPCInput) {
 	p := fuzzer.deserializeInput(inp.Prog)
 	if p == nil {

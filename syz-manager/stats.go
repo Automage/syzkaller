@@ -32,6 +32,7 @@ type Stats struct {
 	edgeMetric       Stat
 	memMetric        Stat
 	bothMetric       Stat
+	corpusOgMemCover Stat
 	maxSignal        Stat
 
 	mu         sync.Mutex
@@ -55,6 +56,7 @@ func (stats *Stats) all() map[string]uint64 {
 		"edge metric inputs": stats.edgeMetric.get(),
 		"mem metric inputs":  stats.memMetric.get(),
 		"both metric inputs": stats.bothMetric.get(),
+		"og mem cover":       stats.corpusOgMemCover.get(),
 		"signal":             stats.corpusSignal.get(),
 		"max signal":         stats.maxSignal.get(),
 	}

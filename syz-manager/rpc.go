@@ -27,16 +27,17 @@ type RPCServer struct {
 	sandbox               string
 	batchSize             int
 
-	mu             sync.Mutex
-	fuzzers        map[string]*Fuzzer
-	checkResult    *rpctype.CheckArgs
-	maxSignal      signal.Signal
-	corpusSignal   signal.Signal
-	corpusCover    cover.Cover
-	corpusMemCover cover.MemCover
-	corpusDuCover  cover.DuCover
-	rotator        *prog.Rotator
-	rnd            *rand.Rand
+	mu               sync.Mutex
+	fuzzers          map[string]*Fuzzer
+	checkResult      *rpctype.CheckArgs
+	maxSignal        signal.Signal
+	corpusSignal     signal.Signal
+	corpusCover      cover.Cover
+	corpusMemCover   cover.MemCover
+	corpusOgMemCover cover.MemCover
+	corpusDuCover    cover.DuCover
+	rotator          *prog.Rotator
+	rnd              *rand.Rand
 }
 
 type Fuzzer struct {
@@ -250,9 +251,11 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	//Pranav: merge and update mem cover stat
 	serv.corpusMemCover.Merge(a.MemCover)
 	serv.corpusDuCover.Merge(a.DuCover)
+	serv.corpusOgMemCover.Merge(a.OgMemCover)
 
 	serv.stats.corpusMemCover.set(len(serv.corpusMemCover))
 	serv.stats.corpusDuCover.set(len(serv.corpusDuCover))
+	serv.stats.corpusOgMemCover.set(len(serv.corpusOgMemCover))
 
 	if a.Metric == 0 {
 		serv.stats.edgeMetric.inc()

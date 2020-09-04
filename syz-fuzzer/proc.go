@@ -111,9 +111,8 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	// Pranav: compute mem cov or du pairs for this call
 	//evalDu := 0 // 0 - edge, 1 - memcover, 2 - du cover
 
-	var inputMemCover cover.MemCover
-	// inputMemCover.Merge(item.info.MemCover)
-	// inputMemCoverSerialized := inputMemCover.Serialize()
+	var inputOgMemCover cover.MemCover
+	inputOgMemCover.Merge(item.info.MemCover)
 	// mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
 
 	var inputDuCover cover.DuCover
@@ -144,6 +143,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	// 		return
 	// 	}
 	// } else { // OG Syzkaller
+	var inputMemCover cover.MemCover
 	inputMemCover.ComputeHashCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
 	inputMemCoverSerialized := inputMemCover.Serialize()
 	mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
@@ -153,6 +153,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	}
 
 	covMetric := 0 // 0 - added by edge, 1 - added by mem, 2 - added by both
+	// If either coverage is increased, keep inspecting
 	if newSignal.Empty() && mCovDiff == 0 {
 		return
 	} else if newSignal.Empty() {
@@ -210,6 +211,9 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		// 		log.Logf(3, "3141: Rejecting call due to empty du intersect...")
 		// 	}
 		// } else { // Mem cov
+		var currOgMemCover cover.MemCover
+		currOgMemCover.Merge(thisMemCover)
+
 		var currMemCover cover.MemCover
 		total := currMemCover.ComputeHashCov(thisMemCover, thisIpCover, thisTypeCover)
 		if i == 0 {
@@ -239,6 +243,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 
 		inputCover.Merge(thisCover)
 		inputMemCover.Merge(currMemCover.Serialize())
+		inputOgMemCover.Merge(currOgMemCover)
 	}
 	if item.flags&ProgMinimized == 0 {
 		// 3141 - Minimize prog cuts all calls that do not contribute to signal
@@ -264,13 +269,14 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 
 	log.Logf(2, "added new input for %v to corpus:\n%s", logCallName, data)
 	proc.fuzzer.sendInputToManager(rpctype.RPCInput{
-		Call:     callName,
-		Prog:     data,
-		Signal:   inputSignal.Serialize(),
-		Cover:    inputCover.Serialize(),
-		MemCover: inputMemCover.Serialize(),
-		DuCover:  inputDuCover.Serialize(),
-		Metric:   covMetric,
+		Call:       callName,
+		Prog:       data,
+		Signal:     inputSignal.Serialize(),
+		Cover:      inputCover.Serialize(),
+		MemCover:   inputMemCover.Serialize(),
+		DuCover:    inputDuCover.Serialize(),
+		Metric:     covMetric,
+		OgMemCover: inputOgMemCover.Serialize(),
 	})
 
 	// Pranav: send ducov map to fuzzer corpus as well

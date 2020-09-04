@@ -212,7 +212,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 		log.Fatal(err)
 	}
 	defer coverLogFile.Close()
-	coverLogFile.WriteString("Seconds,Milliseconds,Tests,Cover,MemCover,EdgeMetric,MemMetric,BothMetric\n")
+	coverLogFile.WriteString("Seconds,Milliseconds,Tests,Cover,MemCover,OgMemCover,EdgeMetric,MemMetric,BothMetric\n")
 	//CoverLogger * golog.Logger
 	//CoverLogger = golog.New(coverLogFile, "COVER: ", golog.Ldate|golog.Ltime|golog.Lshortfile)
 
@@ -238,17 +238,18 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 			edgeMetric := mgr.stats.edgeMetric.get()
 			memMetric := mgr.stats.memMetric.get()
 			bothMetric := mgr.stats.bothMetric.get()
+			corpusOgMemCover := mgr.stats.corpusOgMemCover.get()
 			mgr.mu.Unlock()
 			numReproducing := atomic.LoadUint32(&mgr.numReproducing)
 			numFuzzing := atomic.LoadUint32(&mgr.numFuzzing)
 
-			log.Logf(0, "VMs %v, executed %v, corpus cover %v, corpus memory cover %v, corpus du cover %v, corpus signal %v, max signal %v, crashes %v, repro %v",
-				numFuzzing, executed, corpusCover, corpusMemCover, corpusDuCover, corpusSignal, maxSignal, crashes, numReproducing)
+			log.Logf(0, "VMs %v, executed %v, corpus cover %v, corpus memory cover %v, corpus du cover %v, corpus og mem cover %v, corpus signal %v, max signal %v, crashes %v, repro %v",
+				numFuzzing, executed, corpusCover, corpusMemCover, corpusDuCover, corpusOgMemCover, corpusSignal, maxSignal, crashes, numReproducing)
 
 			//CoverLogger.Println("$$$ %v", corpusMemCover)
 			//Test commit
 			elapsed := time.Since(mgr.startTime)
-			coverLogFile.WriteString(fmt.Sprintf("%.0f %d %v %v %v %v %v %v\n", elapsed.Seconds(), elapsed.Milliseconds(), executed, corpusCover, corpusMemCover, edgeMetric, memMetric, bothMetric))
+			coverLogFile.WriteString(fmt.Sprintf("%.0f %d %v %v %v %v %v %v\n", elapsed.Seconds(), elapsed.Milliseconds(), executed, corpusCover, corpusMemCover, corpusOgMemCover, edgeMetric, memMetric, bothMetric))
 		}
 	}()
 
