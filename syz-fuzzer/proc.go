@@ -164,6 +164,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	} else {
 		covMetric = 2
 	}
+	log.Logf(3, "Jain : metric chosen %v", covMetric)
 	//}
 
 	callName := ".extra"
@@ -269,6 +270,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	sig := hash.Hash(data)
 
 	log.Logf(2, "added new input for %v to corpus:\n%s", logCallName, data)
+	log.Logf(3, "Jain : adding metric chosen %v", covMetric)
 	proc.fuzzer.sendInputToManager(rpctype.RPCInput{
 		Call:       callName,
 		Prog:       data,
