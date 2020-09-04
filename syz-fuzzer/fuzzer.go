@@ -531,7 +531,10 @@ func (fuzzer *Fuzzer) checkNewSignal(p *prog.Prog, info *ipc.ProgInfo) (calls []
 // Pranav - add memcov checks
 func (fuzzer *Fuzzer) checkNewCallSignal(p *prog.Prog, info *ipc.CallInfo, call int) bool {
 	diff := fuzzer.maxSignal.DiffRaw(info.Signal, signalPrio(p, info, call))
-	memDiff := fuzzer.corpusMemCoverDiff(info.MemCover)
+	var hashCov cover.MemCover
+	hashCov.ComputeHashCov(info.MemCover)
+	memDiff := fuzzer.corpusMemCoverDiff(hashCov.Serialize())
+	//memDiff := fuzzer.corpusMemCoverDiff(info.MemCover)
 	log.Logf(1, "$$$ diff=%v memdiff=%v, memcover=%v", len(diff), memDiff, len(info.MemCover))
 	if diff.Empty() && memDiff == 0 {
 		return false
