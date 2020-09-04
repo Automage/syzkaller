@@ -363,3 +363,36 @@ func (cov *MemCover) ComputeHashCov(addrs []uint64, ips []uint64, accessTypes []
 
 	return total
 }
+
+func MaxIp(addrs []uint64, ips []uint64) (uint64, uint64, uint64) {
+
+	ipCount := make(map[uint64]int)
+	max := 0
+	for _, addr := range addrs {
+		ipCount[addr]++
+	}
+	var amax, amax2, amax3 uint64
+	for addr, v := range ipCount {
+		if v > max {
+			max = v
+
+			amax3 = amax2
+			amax2 = amax
+			amax = addr
+		}
+	}
+
+	var ip1, ip2, ip3 uint64
+	for i, addr := range addrs {
+		if addr == amax {
+			ip1 = ips[i]
+		}
+		if addr == amax2 {
+			ip2 = ips[i]
+		}
+		if addr == amax3 {
+			ip3 = ips[i]
+		}
+	}
+	return ip1, ip2, ip3
+}

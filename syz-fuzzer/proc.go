@@ -153,7 +153,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	}
 	log.Logf(3, "Jain : mCovDiff %v diff %v", mCovDiff, newSignal.Len())
 
-	covMetric := 0 // 0 - added by edge, 1 - added by mem, 2 - added by both
+	covMetric := 0 // 0 - added by only edge, 1 - added by only mem, 2 - added by both
 	// If either coverage is increased, keep inspecting
 	if newSignal.Empty() && mCovDiff == 0 {
 		return
@@ -166,6 +166,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	}
 	log.Logf(3, "Jain : metric chosen %v", covMetric)
 	//}
+	log.Logf(3, "Jain : max ips %v", MaxIp(item.info.MemCover, item.info.IpCover))
 
 	callName := ".extra"
 	logCallName := "extra"
