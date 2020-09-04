@@ -199,7 +199,8 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 			continue
 		}
 		// Pranav: return memCover too
-		thisSignal, thisCover, thisMemCover, thisIpCover, thisTypeCover := getSignalAndCover(item.p, info, item.call)
+		//thisSignal, thisCover, thisMemCover, thisIpCover, thisTypeCover := getSignalAndCover(item.p, info, item.call)
+		thisSignal, thisCover, thisMemCover, _, _ := getSignalAndCover(item.p, info, item.call)
 		newSignal = newSignal.Intersection(thisSignal)
 
 		// Pranav : compute memcover, Du Pairs and calculate intersection
