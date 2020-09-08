@@ -214,6 +214,7 @@ func (serv *RPCServer) Check(a *rpctype.CheckArgs, r *int) error {
 // Pranav: Added memcover stats
 func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	inputSignal := a.Signal.Deserialize()
+	log.GoLogf(0, "hi %v", a.Metric)
 	log.Logf(4, "new input from %v for syscall %v (signal=%v, cover=%v, memCover=%v, duCover=%v)",
 		a.Name, a.Call, inputSignal.Len(), len(a.Cover), len(a.MemCover), len(a.DuCover))
 	bad, disabled := checkProgram(serv.target, serv.targetEnabledSyscalls, a.RPCInput.Prog)
