@@ -331,7 +331,7 @@ func (cov *MemCover) CountDefineUsePairs(addrs []uint64, ips []uint64, accessTyp
 
 // type HashCover map[uint64]struct{}
 
-const MemBits = 6
+const MemBits = 8
 
 func (cov *MemCover) ComputeHashCov(addrs []uint64, ips []uint64, accessTypes []uint32) int {
 	c := *cov
