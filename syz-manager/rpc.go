@@ -250,6 +250,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	}
 
 	//Pranav: merge and update mem cover stat
+	log.Logf(0, "hello %v", a.Metric)
 	serv.corpusMemCover.Merge(a.MemCover)
 	serv.corpusDuCover.Merge(a.DuCover)
 	serv.corpusOgMemCover.Merge(a.OgMemCover)
