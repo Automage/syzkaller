@@ -93,6 +93,11 @@ func Logf(v int, msg string, args ...interface{}) {
 	}
 }
 
+// Straight log without caching/verbosity checks
+func GoLogf(msg string, args ...interface{}) {
+	golog.Printf(msg, args...)
+}
+
 func Fatal(err error) {
 	golog.Fatal(err)
 }
