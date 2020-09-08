@@ -232,7 +232,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	if !genuine && f.rotatedSignal != nil {
 		rotated = !f.rotatedSignal.Diff(inputSignal).Empty()
 	}
-	log.GoLogf("hi3 %v", a.Metric)
+	log.GoLogf("hi3 metric: %v,  g: %v, r: %v", a.Metric, genuine, rotated)
 	if !genuine && !rotated {
 		return nil
 	}
