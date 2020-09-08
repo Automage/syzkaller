@@ -222,6 +222,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 		log.Logf(0, "rejecting program from fuzzer (bad=%v, disabled=%v):\n%s", bad, disabled, a.RPCInput.Prog)
 		return nil
 	}
+	log.GoLogf("hi2 %v", a.Metric)
 	serv.mu.Lock()
 	defer serv.mu.Unlock()
 
@@ -231,9 +232,11 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	if !genuine && f.rotatedSignal != nil {
 		rotated = !f.rotatedSignal.Diff(inputSignal).Empty()
 	}
+	log.GoLogf("hi3 %v", a.Metric)
 	if !genuine && !rotated {
 		return nil
 	}
+	log.GoLogf("hi4 %v", a.Metric)
 	if !serv.mgr.newInput(a.RPCInput, inputSignal) {
 		// Potential throw-away of call
 		log.Logf(0, "Throwing away input with metric %v", a.Metric)
