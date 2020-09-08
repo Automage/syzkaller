@@ -235,6 +235,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	}
 	if !serv.mgr.newInput(a.RPCInput, inputSignal) {
 		// Potential throw-away of call
+		log.Logf(0, "Throwing away input with metric %v", a.Metric)
 		return nil
 	}
 
