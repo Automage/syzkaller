@@ -221,6 +221,9 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		var currOgMemCover cover.MemCover
 		currOgMemCover.Merge(thisMemCover)
 
+		var currComMemCover cover.ComMemCover
+		currComMemCover.Compute(thisMemCover, thisTypeCover)
+
 		var currMemCover cover.MemCover
 		total := currMemCover.ComputeHashCov(thisMemCover, thisIpCover, thisTypeCover)
 		if i == 0 {
@@ -251,7 +254,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		inputCover.Merge(thisCover)
 		inputMemCover.Merge(currMemCover.Serialize())
 		inputOgMemCover.Merge(currOgMemCover.Serialize())
-		inputComMemCover.Compute(thisMemCover, thisTypeCover)
+		inputComMemCover.MergeMap(currComMemCover)
 	}
 	if item.flags&ProgMinimized == 0 {
 		// 3141 - Minimize prog cuts all calls that do not contribute to signal
