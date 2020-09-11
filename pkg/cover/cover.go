@@ -453,13 +453,14 @@ func (cov *ComMemCover) MergeMap(cov2 ComMemCover) {
 	}
 
 	// TODO: ADD COUNTS
-	c[MAGIC_COUNT_ENTRY] += cov2[MAGIC_COUNT_ENTRY]
 	for addr, accessType := range cov2 {
 		if addr == MAGIC_COUNT_ENTRY {
 			continue
 		}
 		if entry, ok := c[addr]; ok {
-			if entry != 2 && (entry != accessType) {
+			if entry == 2 {
+				c[MAGIC_COUNT_ENTRY]++
+			} else if entry != accessType {
 				c[addr] = 2
 				c[MAGIC_COUNT_ENTRY]++
 			}
