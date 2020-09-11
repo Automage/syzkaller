@@ -400,6 +400,7 @@ func MaxIp(addrs []uint64, ips []uint64) (uint64, uint64, uint64) {
 /* Communicated memory coverage experiment */
 
 type ComMemCover map[uint64]uint32 // 0 - read only, 1 - write only, 2 - wr
+const MAGIC_COUNT_ENTRY = 7
 
 func (cov *ComMemCover) Compute(addrs []uint64, types []uint32) {
 	c := *cov
@@ -411,8 +412,9 @@ func (cov *ComMemCover) Compute(addrs []uint64, types []uint32) {
 	for i, addr := range addrs {
 		accessType := types[i]
 		if entry, ok := c[addr]; ok {
-			if accessType != entry {
+			if entry != 2 && (accessType != entry) {
 				c[addr] = 2
+				c[MAGIC_COUNT_ENTRY]++
 			}
 		} else {
 			c[addr] = accessType
@@ -421,21 +423,14 @@ func (cov *ComMemCover) Compute(addrs []uint64, types []uint32) {
 
 }
 
-func (cov *ComMemCover) GetCommunicatedAddrs() (res []uint64, count int) {
+// TODO: Return addresses too
+func (cov *ComMemCover) GetCommunicatedAddrs() int {
 	c := *cov
 	if c == nil {
-		return []uint64{}, 0
+		return 0
 	}
 
-	count = 0
-	for addr, accessType := range c {
-		if accessType == 2 {
-			res = append(res, addr)
-			count++
-		}
-	}
-
-	return
+	return int(c[MAGIC_COUNT_ENTRY])
 }
 
 func (cov *ComMemCover) Merge(data []byte) {
@@ -458,9 +453,10 @@ func (cov *ComMemCover) MergeMap(cov2 ComMemCover) {
 	}
 
 	for addr, accessType := range cov2 {
-		if accessType2, ok := c[addr]; ok {
-			if accessType2 != accessType {
+		if entry, ok := c[addr]; ok {
+			if entry != 2 && (entry != accessType) {
 				c[addr] = 2
+				c[MAGIC_COUNT_ENTRY]++
 			}
 		} else {
 			c[addr] = accessType
