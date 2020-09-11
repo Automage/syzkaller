@@ -58,7 +58,7 @@ func (stats *Stats) all() map[string]uint64 {
 		"mem metric inputs":      stats.memMetric.get(),
 		"both metric inputs":     stats.bothMetric.get(),
 		"og mem cover":           stats.corpusOgMemCover.get(),
-		"communicated mem cover": stats.corpusCommMemCover.get(),
+		"communicated mem cover": stats.corpusComMemCover.get(),
 		"signal":                 stats.corpusSignal.get(),
 		"max signal":             stats.maxSignal.get(),
 	}
