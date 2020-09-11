@@ -11,29 +11,30 @@ import (
 type Stat uint64
 
 type Stats struct {
-	crashes          Stat
-	crashTypes       Stat
-	crashSuppressed  Stat
-	vmRestarts       Stat
-	newInputs        Stat
-	rotatedInputs    Stat
-	execTotal        Stat
-	hubSendProgAdd   Stat
-	hubSendProgDel   Stat
-	hubSendRepro     Stat
-	hubRecvProg      Stat
-	hubRecvProgDrop  Stat
-	hubRecvRepro     Stat
-	hubRecvReproDrop Stat
-	corpusCover      Stat
-	corpusSignal     Stat
-	corpusMemCover   Stat
-	corpusDuCover    Stat
-	edgeMetric       Stat
-	memMetric        Stat
-	bothMetric       Stat
-	corpusOgMemCover Stat
-	maxSignal        Stat
+	crashes           Stat
+	crashTypes        Stat
+	crashSuppressed   Stat
+	vmRestarts        Stat
+	newInputs         Stat
+	rotatedInputs     Stat
+	execTotal         Stat
+	hubSendProgAdd    Stat
+	hubSendProgDel    Stat
+	hubSendRepro      Stat
+	hubRecvProg       Stat
+	hubRecvProgDrop   Stat
+	hubRecvRepro      Stat
+	hubRecvReproDrop  Stat
+	corpusCover       Stat
+	corpusSignal      Stat
+	corpusMemCover    Stat
+	corpusDuCover     Stat
+	edgeMetric        Stat
+	memMetric         Stat
+	bothMetric        Stat
+	corpusOgMemCover  Stat
+	corpusComMemCover Stat
+	maxSignal         Stat
 
 	mu         sync.Mutex
 	namedStats map[string]uint64
@@ -50,15 +51,16 @@ func (stats *Stats) all() map[string]uint64 {
 		"rotated inputs": stats.rotatedInputs.get(),
 		"exec total":     stats.execTotal.get(),
 		"cover":          stats.corpusCover.get(),
-		// Pranav: added mem cover and du cover
-		"mem cover":          stats.corpusMemCover.get(),
-		"du pair cover":      stats.corpusDuCover.get(),
-		"edge metric inputs": stats.edgeMetric.get(),
-		"mem metric inputs":  stats.memMetric.get(),
-		"both metric inputs": stats.bothMetric.get(),
-		"og mem cover":       stats.corpusOgMemCover.get(),
-		"signal":             stats.corpusSignal.get(),
-		"max signal":         stats.maxSignal.get(),
+		// Pranav: added mem cover, du cover, og mem, com mem cover
+		"mem cover":              stats.corpusMemCover.get(),
+		"du pair cover":          stats.corpusDuCover.get(),
+		"edge metric inputs":     stats.edgeMetric.get(),
+		"mem metric inputs":      stats.memMetric.get(),
+		"both metric inputs":     stats.bothMetric.get(),
+		"og mem cover":           stats.corpusOgMemCover.get(),
+		"communicated mem cover": stats.corpusCommMemCover.get(),
+		"signal":                 stats.corpusSignal.get(),
+		"max signal":             stats.maxSignal.get(),
 	}
 	if stats.haveHub {
 		m["hub: send prog add"] = stats.hubSendProgAdd.get()

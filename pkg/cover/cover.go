@@ -331,7 +331,7 @@ func (cov *MemCover) CountDefineUsePairs(addrs []uint64, ips []uint64, accessTyp
 
 // type HashCover map[uint64]struct{}
 
-const MemBits = 8
+const MemBits = 10
 
 func (cov *MemCover) ComputeHashCov(addrs []uint64, ips []uint64, accessTypes []uint32) int {
 	c := *cov
@@ -395,4 +395,104 @@ func MaxIp(addrs []uint64, ips []uint64) (uint64, uint64, uint64) {
 		}
 	}
 	return ip1, ip2, ip3
+}
+
+/* Communicated memory coverage experiment */
+
+type ComMemCover map[uint64]uint32 // 0 - read only, 1 - write only, 2 - wr
+
+func (cov *ComMemCover) Compute(addrs []uint64, types []uint32) {
+	c := *cov
+	if c == nil {
+		c = make(ComMemCover)
+		*cov = c
+	}
+
+	for i, addr := range addrs {
+		accessType := types[i]
+		if entry, ok := c[addr]; ok {
+			if accessType != entry {
+				c[addr] = 2
+			}
+		} else {
+			c[addr] = accessType
+		}
+	}
+
+}
+
+func (cov *ComMemCover) GetCommunicatedAddrs() (res []uint64, count int) {
+	c := *cov
+	if c == nil {
+		return []uint64{}, 0
+	}
+
+	count = 0
+	for addr, accessType := range c {
+		if accessType == 2 {
+			res = append(res, addr)
+			count++
+		}
+	}
+
+	return
+}
+
+func (cov *ComMemCover) Merge(data []byte) {
+	c := *cov
+	if c == nil {
+		c = make(ComMemCover)
+		*cov = c
+	}
+
+	deserial := deserializeComMemCov(data)
+	c.MergeMap(deserial)
+
+}
+
+func (cov *ComMemCover) MergeMap(cov2 ComMemCover) {
+	c := *cov
+	if c == nil {
+		c = make(ComMemCover)
+		*cov = c
+	}
+
+	for addr, accessType := range cov2 {
+		if accessType2, ok := c[addr]; ok {
+			if accessType2 != accessType {
+				c[addr] = 2
+			}
+		} else {
+			c[addr] = accessType
+		}
+	}
+}
+
+// Serialize ComMemCover map
+func (cov *ComMemCover) Serialize() []byte {
+	c := *cov
+	if c == nil {
+		return nil
+	}
+
+	// Serialize map
+	var data bytes.Buffer
+	enc := gob.NewEncoder(&data)
+	err := enc.Encode(c)
+	if err != nil {
+		return nil
+	}
+	return data.Bytes()
+}
+
+// Deserialize bytes into []DuEntryPair
+func deserializeComMemCov(covData []byte) ComMemCover {
+	data := bytes.NewBuffer(covData)
+	var res ComMemCover
+	enc := gob.NewDecoder(data)
+	err := enc.Decode(&res)
+	if err != nil {
+		return nil
+	}
+	return res
 }

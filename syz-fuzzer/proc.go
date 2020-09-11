@@ -143,6 +143,9 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	// 		return
 	// 	}
 	// } else { // OG Syzkaller
+	var inputComMemCover cover.ComMemCover
+	inputComMemCover.Compute(item.info.MemCover, item.info.TypeCover)
+
 	var inputMemCover cover.MemCover
 	inputMemCover.ComputeHashCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
 	inputMemCoverSerialized := inputMemCover.Serialize()
@@ -248,6 +251,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		inputCover.Merge(thisCover)
 		inputMemCover.Merge(currMemCover.Serialize())
 		inputOgMemCover.Merge(currOgMemCover.Serialize())
+		inputComMemCover.Compute(thisMemCover, thisTypeCover)
 	}
 	if item.flags&ProgMinimized == 0 {
 		// 3141 - Minimize prog cuts all calls that do not contribute to signal
@@ -274,14 +278,15 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	log.Logf(2, "added new input for %v to corpus:\n%s", logCallName, data)
 	log.Logf(3, "Jain : adding metric chosen %v", covMetric)
 	proc.fuzzer.sendInputToManager(rpctype.RPCInput{
-		Call:       callName,
-		Prog:       data,
-		Signal:     inputSignal.Serialize(),
-		Cover:      inputCover.Serialize(),
-		MemCover:   inputMemCover.Serialize(),
-		DuCover:    inputDuCover.Serialize(),
-		Metric:     covMetric,
-		OgMemCover: inputOgMemCover.Serialize(),
+		Call:        callName,
+		Prog:        data,
+		Signal:      inputSignal.Serialize(),
+		Cover:       inputCover.Serialize(),
+		MemCover:    inputMemCover.Serialize(),
+		DuCover:     inputDuCover.Serialize(),
+		Metric:      covMetric,
+		OgMemCover:  inputOgMemCover.Serialize(),
+		ComMemCover: inputComMemCover.Serialize(),
 	})
 
 	// Pranav: send ducov map to fuzzer corpus as well
