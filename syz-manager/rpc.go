@@ -228,7 +228,8 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	defer serv.mu.Unlock()
 
 	f := serv.fuzzers[a.Name]
-	genuine := !serv.corpusSignal.Diff(inputSignal).Empty()
+	// Pranav - edit genuine criteria to include memory cover
+	genuine := !serv.corpusSignal.Diff(inputSignal).Empty() || serv.corpusMemCover.Diff(a.MemCover) > 8
 	rotated := false
 	if !genuine && f.rotatedSignal != nil {
 		rotated = !f.rotatedSignal.Diff(inputSignal).Empty()
