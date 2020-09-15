@@ -500,3 +500,83 @@ func deserializeComMemCov(covData []byte) ComMemCover {
 	}
 	return res
 }
+
+/* Endpoint coverage experiment */
+
+type EpCover map[uint64]uint32 // 1 - write, 0 - read
+
+func (cov *EpCover) Merge(ips []uint64, types []uint32) (weird bool) {
+	c := *cov
+	if c == nil {
+		c = make(EpCover)
+		*cov = c
+	}
+
+	for i, ip := range ips {
+		if accessType, ok := c[ip]; ok && accessType != types[i] {
+			weird = true
+		}
+		c[ip] = types[i]
+	}
+
+	return
+}
+
+func (cov *EpCover) MergeMap(cov2 EpCover) {
+	c := *cov
+	if c == nil {
+		c = make(EpCover)
+		*cov = c
+	}
+
+	for ip, accessType := range cov2 {
+		c[ip] = accessType
+	}
+}
+
+// Serialize EpCover map
+func (cov *EpCover) Serialize() []byte {
+	c := *cov
+	if c == nil {
+		return nil
+	}
+
+	// Serialize map
+	var data bytes.Buffer
+	enc := gob.NewEncoder(&data)
+	err := enc.Encode(c)
+	if err != nil {
+		return nil
+	}
+	return data.Bytes()
+}
+
+// Deserialize bytes into []DuEntryPair
+func deserializeEpCov(covData []byte) EpCover {
+	data := bytes.NewBuffer(covData)
+	var res EpCover
+	enc := gob.NewDecoder(data)
+	err := enc.Decode(&res)
+	if err != nil {
+		return nil
+	}
+	return res
+}
+
+// Get read and write endpoints
+func (cov *EpCover) Breakdown() (read int, write int) {
+	c := *cov
+	if c == nil {
+		return 0, 0
+	}
+
+	for _, accessType := range c {
+		if accessType == 0 {
+			read++
+		} else {
+			write++
+		}
+	}
+
+	return
+}
