@@ -212,7 +212,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 		log.Fatal(err)
 	}
 	defer coverLogFile.Close()
-	coverLogFile.WriteString("Seconds,Milliseconds,Tests,Cover,MemCover,OgMemCover,EdgeMetric,MemMetric,BothMetric,ComMemCover\n")
+	coverLogFile.WriteString("Seconds,Milliseconds,Tests,Cover,MemCover,OgMemCover,EdgeMetric,MemMetric,BothMetric,ComMemCover,EpCover,EpPairCover\n")
 	//CoverLogger * golog.Logger
 	//CoverLogger = golog.New(coverLogFile, "COVER: ", golog.Ldate|golog.Ltime|golog.Lshortfile)
 
@@ -240,17 +240,19 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 			bothMetric := mgr.stats.bothMetric.get()
 			corpusOgMemCover := mgr.stats.corpusOgMemCover.get()
 			corpusComMemCover := mgr.stats.corpusComMemCover.get()
+			corpusEpCover := mgr.stats.corpusEpCover.get()
+			corpusEpPairCover := mgr.stats.corpusEpPairCover.get()
 			mgr.mu.Unlock()
 			numReproducing := atomic.LoadUint32(&mgr.numReproducing)
 			numFuzzing := atomic.LoadUint32(&mgr.numFuzzing)
 
-			log.Logf(0, "VMs %v, executed %v, corpus cover %v, corpus memory cover %v, corpus du cover %v, corpus og mem cover %v, corpus com mem cover %v, corpus signal %v, max signal %v, crashes %v, repro %v",
-				numFuzzing, executed, corpusCover, corpusMemCover, corpusDuCover, corpusOgMemCover, corpusComMemCover, corpusSignal, maxSignal, crashes, numReproducing)
+			log.Logf(0, "VMs %v, executed %v, corpus cover %v, corpus memory cover %v, corpus du cover %v, corpus og mem cover %v, corpus com mem cover %v, epCov %v, epPairCov %v, corpus signal %v, max signal %v, crashes %v, repro %v",
+				numFuzzing, executed, corpusCover, corpusMemCover, corpusDuCover, corpusOgMemCover, corpusComMemCover, corpusEpCover, corpusEpPairCover, corpusSignal, maxSignal, crashes, numReproducing)
 
 			//CoverLogger.Println("$$$ %v", corpusMemCover)
 			//Test commit
 			elapsed := time.Since(mgr.startTime)
-			coverLogFile.WriteString(fmt.Sprintf("%.0f %d %v %v %v %v %v %v %v\n", elapsed.Seconds(), elapsed.Milliseconds(), executed, corpusCover, corpusMemCover, corpusOgMemCover, edgeMetric, memMetric, bothMetric, corpusComMemCover))
+			coverLogFile.WriteString(fmt.Sprintf("%.0f %d %v %v %v %v %v %v %v %v %v\n", elapsed.Seconds(), elapsed.Milliseconds(), executed, corpusCover, corpusMemCover, corpusOgMemCover, edgeMetric, memMetric, bothMetric, corpusComMemCover, corpusEpCover, corpusEpPairCover))
 		}
 	}()
 
