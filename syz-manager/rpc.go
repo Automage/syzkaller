@@ -268,8 +268,9 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	serv.stats.corpusDuCover.set(len(serv.corpusDuCover))
 	serv.stats.corpusOgMemCover.set(len(serv.corpusOgMemCover))
 	serv.stats.corpusComMemCover.set(serv.corpusComMemCover.GetCommunicatedAddrs())
-	serv.stats.corpusEpCover.set(serv.corpusEpCover.GetEndpointCount())
 	serv.stats.corpusEpPairCover.add(pairs)
+	read, write := serv.corpusEpCover.GetEndpointCount()
+	serv.stats.corpusEpCover.set(read + write)
 
 	if a.Metric == 0 {
 		serv.stats.edgeMetric.inc()
