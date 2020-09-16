@@ -9,6 +9,8 @@ import (
 	"encoding/binary"
 	"encoding/gob"
 	"hash/crc64"
+
+	"github.com/google/syzkaller/pkg/log"
 )
 
 type Cover map[uint32]struct{}
@@ -525,6 +527,7 @@ func (cov *EpCover) Merge(addrs []uint64, ips []uint64, types []uint32) int {
 	newEPs := 0
 
 	for i, addr := range addrs {
+		log.Logf(3, "Jain : trying addr %v", addr)
 		newEPs += tryAddEp(c[addr], ips[i], int(types[i]))
 	}
 
@@ -575,7 +578,9 @@ func tryAddEp(im map[uint64]int, ip uint64, accessType int) (newEPs int) {
 		return 0
 	}
 
+	log.Logf(3, "Jain : before ep")
 	if _, ok := im[ip]; !ok {
+		log.Logf(3, "Jain : adding ep")
 		im[ip] = accessType
 		if accessType == 0 { // Read
 			newEPs = im[MAGIC_WRITE_ENTRY]
