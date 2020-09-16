@@ -37,6 +37,7 @@ type RPCServer struct {
 	corpusOgMemCover  cover.MemCover
 	corpusDuCover     cover.DuCover
 	corpusComMemCover cover.ComMemCover
+	corpusEpCover     cover.EpCover
 	rotator           *prog.Rotator
 	rnd               *rand.Rand
 }
@@ -215,7 +216,7 @@ func (serv *RPCServer) Check(a *rpctype.CheckArgs, r *int) error {
 // Pranav: Added memcover stats
 func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	inputSignal := a.Signal.Deserialize()
-	log.GoLogf("hi %v", a.Metric)
+
 	log.Logf(4, "new input from %v for syscall %v (signal=%v, cover=%v, memCover=%v, duCover=%v)",
 		a.Name, a.Call, inputSignal.Len(), len(a.Cover), len(a.MemCover), len(a.DuCover))
 	bad, disabled := checkProgram(serv.target, serv.targetEnabledSyscalls, a.RPCInput.Prog)
@@ -223,7 +224,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 		log.Logf(0, "rejecting program from fuzzer (bad=%v, disabled=%v):\n%s", bad, disabled, a.RPCInput.Prog)
 		return nil
 	}
-	log.GoLogf("hi2 %v", a.Metric)
+
 	serv.mu.Lock()
 	defer serv.mu.Unlock()
 
@@ -234,11 +235,11 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	if !genuine && f.rotatedSignal != nil {
 		rotated = !f.rotatedSignal.Diff(inputSignal).Empty()
 	}
-	log.GoLogf("hi3 metric: %v,  g: %v, r: %v", a.Metric, genuine, rotated)
+
 	if !genuine && !rotated {
 		return nil
 	}
-	log.GoLogf("hi4 %v", a.Metric)
+
 	if !serv.mgr.newInput(a.RPCInput, inputSignal) {
 		// Potential throw-away of call
 		log.Logf(0, "Throwing away input with metric %v", a.Metric)
@@ -261,11 +262,14 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	serv.corpusDuCover.Merge(a.DuCover)
 	serv.corpusOgMemCover.Merge(a.OgMemCover)
 	serv.corpusComMemCover.Merge(a.ComMemCover)
+	pairs := serv.corpusEpCover.Merge(a.EpCover)
 
 	serv.stats.corpusMemCover.set(len(serv.corpusMemCover))
 	serv.stats.corpusDuCover.set(len(serv.corpusDuCover))
 	serv.stats.corpusOgMemCover.set(len(serv.corpusOgMemCover))
 	serv.stats.corpusComMemCover.set(serv.corpusComMemCover.GetCommunicatedAddrs())
+	serv.stats.corpusEpCover.set(serv.corpusEpCover.GetEndpointCount())
+	serv.stats.corpusEpPairCover.add(pairs)
 
 	if a.Metric == 0 {
 		serv.stats.edgeMetric.inc()

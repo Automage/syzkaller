@@ -23,6 +23,7 @@ type RPCInput struct {
 	Metric      int
 	OgMemCover  []uint64
 	ComMemCover []byte
+	EpCover     []byte
 }
 
 type RPCCandidate struct {

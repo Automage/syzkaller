@@ -34,6 +34,8 @@ type Stats struct {
 	bothMetric        Stat
 	corpusOgMemCover  Stat
 	corpusComMemCover Stat
+	corpusEpCover     Stat
+	corpusEpPairCover Stat
 	maxSignal         Stat
 
 	mu         sync.Mutex
@@ -52,15 +54,17 @@ func (stats *Stats) all() map[string]uint64 {
 		"exec total":     stats.execTotal.get(),
 		"cover":          stats.corpusCover.get(),
 		// Pranav: added mem cover, du cover, og mem, com mem cover
-		"mem cover":              stats.corpusMemCover.get(),
-		"du pair cover":          stats.corpusDuCover.get(),
-		"edge metric inputs":     stats.edgeMetric.get(),
-		"mem metric inputs":      stats.memMetric.get(),
-		"both metric inputs":     stats.bothMetric.get(),
-		"og mem cover":           stats.corpusOgMemCover.get(),
-		"communicated mem cover": stats.corpusComMemCover.get(),
-		"signal":                 stats.corpusSignal.get(),
-		"max signal":             stats.maxSignal.get(),
+		"mem cover":               stats.corpusMemCover.get(),
+		"du pair cover":           stats.corpusDuCover.get(),
+		"edge metric inputs":      stats.edgeMetric.get(),
+		"mem metric inputs":       stats.memMetric.get(),
+		"both metric inputs":      stats.bothMetric.get(),
+		"og mem cover":            stats.corpusOgMemCover.get(),
+		"communicated mem cover":  stats.corpusComMemCover.get(),
+		"endpoint coverage":       stats.corpusEpCover.get(),
+		"endpoint pair coverage ": stats.corpusEpPairCover.get(),
+		"signal":                  stats.corpusSignal.get(),
+		"max signal":              stats.maxSignal.get(),
 	}
 	if stats.haveHub {
 		m["hub: send prog add"] = stats.hubSendProgAdd.get()

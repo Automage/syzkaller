@@ -143,8 +143,12 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	// 		return
 	// 	}
 	// } else { // OG Syzkaller
+
 	var inputComMemCover cover.ComMemCover
-	inputComMemCover.Compute(item.info.MemCover, item.info.TypeCover)
+	// inputComMemCover.Compute(item.info.MemCover, item.info.TypeCover)
+
+	var inputEpCover cover.EpCover
+	inputEpCover.Merge(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
 
 	var inputMemCover cover.MemCover
 	inputMemCover.ComputeHashCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
@@ -221,8 +225,11 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		var currOgMemCover cover.MemCover
 		currOgMemCover.Merge(thisMemCover)
 
-		var currComMemCover cover.ComMemCover
-		currComMemCover.Compute(thisMemCover, thisTypeCover)
+		// var currComMemCover cover.ComMemCover
+		// currComMemCover.Compute(thisMemCover, thisTypeCover)
+
+		var currEpCover cover.EpCover
+		currEpCover.Merge(thisMemCover, thisIpCover, thisTypeCover)
 
 		var currMemCover cover.MemCover
 		total := currMemCover.ComputeHashCov(thisMemCover, thisIpCover, thisTypeCover)
@@ -254,7 +261,9 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		inputCover.Merge(thisCover)
 		inputMemCover.Merge(currMemCover.Serialize())
 		inputOgMemCover.Merge(currOgMemCover.Serialize())
-		inputComMemCover.MergeMap(currComMemCover)
+		// inputComMemCover.MergeMap(currComMemCover)
+		inputEpCover.MergeMap(currEpCover)
+
 	}
 	if item.flags&ProgMinimized == 0 {
 		// 3141 - Minimize prog cuts all calls that do not contribute to signal
@@ -290,6 +299,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		Metric:      covMetric,
 		OgMemCover:  inputOgMemCover.Serialize(),
 		ComMemCover: inputComMemCover.Serialize(),
+		EpCover:     inputEpCover.Serialize(),
 	})
 
 	// Pranav: send ducov map to fuzzer corpus as well
