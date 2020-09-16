@@ -607,7 +607,7 @@ func (cov *EpCover) Serialize() []byte {
 }
 
 // Deserialize bytes into EpCover
-func deserializeEpCov(covData []byte) EpCover {
+func DeserializeEpCov(covData []byte) EpCover {
 	data := bytes.NewBuffer(covData)
 	var res EpCover
 	enc := gob.NewDecoder(data)
