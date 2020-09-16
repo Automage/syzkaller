@@ -9,8 +9,6 @@ import (
 	"encoding/binary"
 	"encoding/gob"
 	"hash/crc64"
-
-	"github.com/google/syzkaller/pkg/log"
 )
 
 type Cover map[uint32]struct{}
@@ -532,7 +530,6 @@ func (cov *EpCover) Merge(addrs []uint64, ips []uint64, types []uint32) int {
 		newEPs += pairs
 	}
 
-	log.Logf(3, "Jain : inside ep len %v, pairs %v", len(c), newEPs)
 	return newEPs
 }
 

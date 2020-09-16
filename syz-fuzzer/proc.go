@@ -155,8 +155,6 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	inputMemCoverSerialized := inputMemCover.Serialize()
 	mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
 
-	log.Logf(3, "Jain : epcov: %v memcov %v", len(inputEpCover), len(inputMemCover))
-
 	if mCovDiff == 0 {
 		log.Logf(3, "Khushboo : Call rejected due to no diff : len inp: %v\ninp: %v", len(inputMemCoverSerialized), inputMemCover)
 	}
@@ -290,7 +288,6 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	sig := hash.Hash(data)
 
 	log.Logf(2, "added new input for %v to corpus:\n%s", logCallName, data)
-	log.Logf(3, "Jain : inputEpCover len : %v, serialized: %v", len(inputEpCover), len(inputEpCover.Serialize()))
 	proc.fuzzer.sendInputToManager(rpctype.RPCInput{
 		Call:        callName,
 		Prog:        data,

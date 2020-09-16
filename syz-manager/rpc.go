@@ -272,7 +272,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	serv.stats.corpusEpPairCover.add(pairs)
 	read, write := serv.corpusEpCover.GetEndpointCount()
 	serv.stats.corpusEpCover.set(read + write)
-	log.GoLogf("bytes: %v map: %v eps: %v pairs: %v", len(a.EpCover), len(inputEpCover), pairs, read+write)
+	// log.GoLogf("bytes: %v map: %v eps: %v pairs: %v", len(a.EpCover), len(inputEpCover), pairs, read+write)
 
 	if a.Metric == 0 {
 		serv.stats.edgeMetric.inc()
