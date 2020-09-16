@@ -531,6 +531,7 @@ func (cov *EpCover) Merge(addrs []uint64, ips []uint64, types []uint32) int {
 		newEPs += tryAddEp(c[addr], ips[i], int(types[i]))
 	}
 
+	log.Logf(3, "Jain : inside ep len %v, pairs %v", len(c), newEPs)
 	return newEPs
 }
 
@@ -578,9 +579,7 @@ func tryAddEp(im map[uint64]int, ip uint64, accessType int) (newEPs int) {
 		return 0
 	}
 
-	log.Logf(3, "Jain : before ep")
 	if _, ok := im[ip]; !ok {
-		log.Logf(3, "Jain : adding ep")
 		im[ip] = accessType
 		if accessType == 0 { // Read
 			newEPs = im[MAGIC_WRITE_ENTRY]
