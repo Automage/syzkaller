@@ -527,8 +527,9 @@ func (cov *EpCover) Merge(addrs []uint64, ips []uint64, types []uint32) int {
 	newEPs := 0
 
 	for i, addr := range addrs {
-		log.Logf(3, "Jain : trying addr %v", addr)
-		newEPs += tryAddEp(c[addr], ips[i], int(types[i]))
+		var pairs int
+		c[addr], pairs = tryAddEp(c[addr], ips[i], int(types[i]))
+		newEPs += pairs
 	}
 
 	log.Logf(3, "Jain : inside ep len %v, pairs %v", len(c), newEPs)
@@ -546,7 +547,9 @@ func (cov *EpCover) MergeMap(cov2 EpCover) int {
 
 	for addr, epMap := range cov2 {
 		for ip, accessType := range epMap {
-			newEPs += tryAddEp(c[addr], ip, accessType)
+			var pairs int
+			c[addr], pairs = tryAddEp(c[addr], ip, accessType)
+			newEPs += pairs
 		}
 	}
 
@@ -569,16 +572,17 @@ func (cov *EpCover) MergeMap(cov2 EpCover) int {
 // }
 
 // Inserts an endpoint into epMap
-func tryAddEp(im map[uint64]int, ip uint64, accessType int) (newEPs int) {
+func tryAddEp(im map[uint64]int, ip uint64, accessType int) (map[uint64]int, int) {
 	if im == nil {
 		im = make(map[uint64]int)
 	}
 
 	// Reserved ips
 	if ip == MAGIC_WRITE_ENTRY || ip == MAGIC_READ_ENTRY {
-		return 0
+		return im, 0
 	}
 
+	newEPs := 0
 	if _, ok := im[ip]; !ok {
 		im[ip] = accessType
 		if accessType == 0 { // Read
@@ -590,7 +594,7 @@ func tryAddEp(im map[uint64]int, ip uint64, accessType int) (newEPs int) {
 		}
 	}
 
-	return
+	return im, newEPs
 }
 
 // Serialize EpCover map
