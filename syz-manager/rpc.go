@@ -262,7 +262,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	serv.corpusDuCover.Merge(a.DuCover)
 	serv.corpusOgMemCover.Merge(a.OgMemCover)
 	serv.corpusComMemCover.Merge(a.ComMemCover)
-	pairs := serv.corpusEpCover.MergeMap(cover.DeserializeEpCover(a.EpCover))
+	pairs := serv.corpusEpCover.MergeMap(cover.DeserializeEpCov(a.EpCover))
 
 	serv.stats.corpusMemCover.set(len(serv.corpusMemCover))
 	serv.stats.corpusDuCover.set(len(serv.corpusDuCover))
