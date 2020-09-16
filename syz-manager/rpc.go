@@ -262,7 +262,8 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	serv.corpusDuCover.Merge(a.DuCover)
 	serv.corpusOgMemCover.Merge(a.OgMemCover)
 	serv.corpusComMemCover.Merge(a.ComMemCover)
-	pairs := serv.corpusEpCover.MergeMap(cover.DeserializeEpCov(a.EpCover))
+	inputEpCover := cover.DeserializeEpCov(a.EpCover)
+	pairs := serv.corpusEpCover.MergeMap(inputEpCover)
 
 	serv.stats.corpusMemCover.set(len(serv.corpusMemCover))
 	serv.stats.corpusDuCover.set(len(serv.corpusDuCover))
@@ -271,7 +272,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	serv.stats.corpusEpPairCover.add(pairs)
 	read, write := serv.corpusEpCover.GetEndpointCount()
 	serv.stats.corpusEpCover.set(read + write)
-	log.GoLogf("eps: %v pairs: %v", pairs, read+write)
+	log.GoLogf("bytes: %v map: %v eps: %v pairs: %v", len(a.EpCover), len(inputEpCover), pairs, read+write)
 
 	if a.Metric == 0 {
 		serv.stats.edgeMetric.inc()
