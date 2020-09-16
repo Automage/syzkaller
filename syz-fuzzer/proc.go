@@ -155,6 +155,8 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	inputMemCoverSerialized := inputMemCover.Serialize()
 	mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
 
+	log.Logf(3, "Jain : epcov: %v memcov %v", len(inputEpCover), len(inputMemCover))
+
 	if mCovDiff == 0 {
 		log.Logf(3, "Khushboo : Call rejected due to no diff : len inp: %v\ninp: %v", len(inputMemCoverSerialized), inputMemCover)
 	}
