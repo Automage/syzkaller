@@ -671,7 +671,7 @@ func (cov *EpCover) ComputeEpPairs(cov2 EpCover) EpPairCover {
 		return nil
 	}
 
-	var epPairs EpPairCover
+	epPairs := make(EpPairCover)
 	for ep2, addrMap2 := range cov2 {
 		for ep1, addrMap1 := range c {
 			// Check if same access type
