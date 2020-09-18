@@ -506,93 +506,114 @@ func deserializeComMemCov(covData []byte) ComMemCover {
 type endpoint struct {
 	ip         uint64
 	accessType bool
+	//testid
 }
 
+type epPair struct {
+	readEp  endpoint
+	writeEp endpoint
+}
+
+type EpCover map[endpoint]map[uint64]struct{}
+
 // type EpCover map[uint64]map[endpoint]struct{}
-type EpCover map[uint64]map[uint64]int
+// type EpCover map[uint64]map[uint64]int
+type EpPairCover map[epPair]struct{}
 
 const MAGIC_READ_ENTRY = 6
 const MAGIC_WRITE_ENTRY = 7
 
 // Merges new data and returns new endpoint pairs discovered
-func (cov *EpCover) Merge(addrs []uint64, ips []uint64, types []uint32) int {
+func (cov *EpCover) Merge(addrs []uint64, ips []uint64, types []uint32) {
 	c := *cov
 	if c == nil {
 		c = make(EpCover)
 		*cov = c
 	}
 
-	newEPs := 0
+	// newEPs := 0
 
-	for i, addr := range addrs {
-		var pairs int
-		c[addr], pairs = tryAddEp(c[addr], ips[i], int(types[i]))
-		newEPs += pairs
-	}
+	// for i, addr := range addrs {
+	// 	var pairs int
+	// 	c[addr], pairs = tryAddEp(c[addr], ips[i], int(types[i]))
+	// 	newEPs += pairs
+	// }
 
-	return newEPs
-}
+	// return newEPs
 
-func (cov *EpCover) MergeMap(cov2 EpCover) int {
-	c := *cov
-	if c == nil {
-		c = make(EpCover)
-		*cov = c
-	}
+	for i, ip := range ips {
+		var ep endpoint
+		if types[i] == 0 {
+			ep = endpoint{ip, false}
+		} else {
+			ep = endpoint{ip, true}
+		}
 
-	newEPs := 0
-
-	for addr, epMap := range cov2 {
-		for ip, accessType := range epMap {
-			var pairs int
-			c[addr], pairs = tryAddEp(c[addr], ip, accessType)
-			newEPs += pairs
+		if _, ok := c[ep]; ok {
+			c[ep][addrs[i]] = struct{}{}
+		} else {
+			c[ep] = make(map[uint64]struct{})
+			c[ep][addrs[i]] = struct{}{}
 		}
 	}
-
-	return newEPs
 }
 
-// func (cov *EpCover) ComputeEpPairs(cov2 EpCover) int {
-// 	c := *cov
-// 	if c == nil {
-// 		return -1
-// 	}
+func (cov *EpCover) MergeMap(cov2 EpCover) {
+	c := *cov
+	if c == nil {
+		c = make(EpCover)
+		*cov = c
+	}
 
-// 	pairs := 0
-// 	for addr, epMap2 := range cov2 {
-// 		// Corpus cover contains endpoints referring to address
-// 		if epMap, ok := c[addr]; ok {
-// 			pairs +=
-// 		}
-// 	}
-// }
+	// newEPs := 0
+
+	// for addr, epMap := range cov2 {
+	// 	for ip, accessType := range epMap {
+	// 		var pairs int
+	// 		c[addr], pairs = tryAddEp(c[addr], ip, accessType)
+	// 		newEPs += pairs
+	// 	}
+	// }
+
+	// return newEPs
+
+	for ep, addrMap := range cov2 {
+		for addr := range addrMap {
+			if _, ok := c[ep]; ok {
+				c[ep][addr] = struct{}{}
+			} else {
+				c[ep] = make(map[uint64]struct{})
+				c[ep][addr] = struct{}{}
+			}
+		}
+	}
+}
 
 // Inserts an endpoint into epMap
-func tryAddEp(im map[uint64]int, ip uint64, accessType int) (map[uint64]int, int) {
-	if im == nil {
-		im = make(map[uint64]int)
-	}
+// func tryAddEp(im map[uint64]int, ip uint64, accessType int) (map[uint64]int, int) {
+// 	if im == nil {
+// 		im = make(map[uint64]int)
+// 	}
 
-	// Reserved ips
-	if ip == MAGIC_WRITE_ENTRY || ip == MAGIC_READ_ENTRY {
-		return im, 0
-	}
+// 	// Reserved ips
+// 	if ip == MAGIC_WRITE_ENTRY || ip == MAGIC_READ_ENTRY {
+// 		return im, 0
+// 	}
 
-	newEPs := 0
-	if _, ok := im[ip]; !ok {
-		im[ip] = accessType
-		if accessType == 0 { // Read
-			newEPs = im[MAGIC_WRITE_ENTRY]
-			im[MAGIC_READ_ENTRY]++
-		} else if accessType == 1 { // Write
-			newEPs = im[MAGIC_READ_ENTRY]
-			im[MAGIC_WRITE_ENTRY]++
-		}
-	}
+// 	newEPs := 0
+// 	if _, ok := im[ip]; !ok {
+// 		im[ip] = accessType
+// 		if accessType == 0 { // Read
+// 			newEPs = im[MAGIC_WRITE_ENTRY]
+// 			im[MAGIC_READ_ENTRY]++
+// 		} else if accessType == 1 { // Write
+// 			newEPs = im[MAGIC_READ_ENTRY]
+// 			im[MAGIC_WRITE_ENTRY]++
+// 		}
+// 	}
 
-	return im, newEPs
-}
+// 	return im, newEPs
+// }
 
 // Serialize EpCover map
 func (cov *EpCover) Serialize() []byte {
@@ -624,16 +645,60 @@ func DeserializeEpCov(covData []byte) EpCover {
 }
 
 // Get read and write endpoints
-func (cov *EpCover) GetEndpointCount() (read int, write int) {
+func (cov *EpCover) GetEndpointCount() int {
 	c := *cov
 	if c == nil {
-		return 0, 0
+		return 0
 	}
 
-	for _, epMap := range c {
-		read += epMap[MAGIC_READ_ENTRY]
-		write += epMap[MAGIC_WRITE_ENTRY]
+	// for _, epMap := range c {
+	// 	read += epMap[MAGIC_READ_ENTRY]
+	// 	write += epMap[MAGIC_WRITE_ENTRY]
+	// }
+
+	// return
+
+	return len(c)
+}
+
+func (cov *EpCover) ComputeEpPairs(cov2 EpCover) EpPairCover {
+	c := *cov
+	if c == nil {
+		return nil
 	}
 
-	return
+	var epPairs EpPairCover
+	for ep2, addrMap2 := range cov2 {
+		for ep1, addrMap1 := range c {
+			// Check if same access type
+			if ep1.accessType == ep2.accessType {
+				continue
+			}
+
+			for addr := range addrMap2 {
+				if _, ok := addrMap1[addr]; ok {
+					if ep1.accessType == false {
+						epPairs[epPair{ep1, ep2}] = struct{}{}
+					} else {
+						epPairs[epPair{ep2, ep1}] = struct{}{}
+					}
+					break
+				}
+			}
+		}
+	}
+
+	return epPairs
+}
+
+func (cov *EpPairCover) Merge(cov2 EpPairCover) {
+	c := *cov
+	if c == nil {
+		c = make(EpPairCover)
+		*cov = c
+	}
+
+	for epPair := range cov2 {
+		c[epPair] = struct{}{}
+	}
 }
