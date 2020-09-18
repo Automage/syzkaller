@@ -505,22 +505,22 @@ func deserializeComMemCov(covData []byte) ComMemCover {
 
 /* Endpoint coverage experiment */
 
-type endpoint struct {
-	ip         uint64
-	accessType bool
+type Endpoint struct {
+	Ip         uint64
+	AccessType bool
 	//testid
 }
 
-type epPair struct {
-	readEp  endpoint
-	writeEp endpoint
+type EpPair struct {
+	ReadEp  Endpoint
+	WriteEp Endpoint
 }
 
-type EpCover map[endpoint]map[uint64]struct{}
+type EpCover map[Endpoint]map[uint64]struct{}
 
 // type EpCover map[uint64]map[endpoint]struct{}
 // type EpCover map[uint64]map[uint64]int
-type EpPairCover map[epPair]struct{}
+type EpPairCover map[EpPair]struct{}
 
 const MAGIC_READ_ENTRY = 6
 const MAGIC_WRITE_ENTRY = 7
@@ -544,11 +544,11 @@ func (cov *EpCover) Merge(addrs []uint64, ips []uint64, types []uint32) {
 	// return newEPs
 
 	for i, ip := range ips {
-		var ep endpoint
+		var ep Endpoint
 		if types[i] == 0 {
-			ep = endpoint{ip, false}
+			ep = Endpoint{ip, false}
 		} else {
-			ep = endpoint{ip, true}
+			ep = Endpoint{ip, true}
 		}
 
 		if _, ok := c[ep]; ok {
@@ -675,16 +675,16 @@ func (cov *EpCover) ComputeEpPairs(cov2 EpCover) EpPairCover {
 	for ep2, addrMap2 := range cov2 {
 		for ep1, addrMap1 := range c {
 			// Check if same access type
-			if ep1.accessType == ep2.accessType {
+			if ep1.AccessType == ep2.AccessType {
 				continue
 			}
 
 			for addr := range addrMap2 {
 				if _, ok := addrMap1[addr]; ok {
-					if ep1.accessType == false {
-						epPairs[epPair{ep1, ep2}] = struct{}{}
+					if ep1.AccessType == false {
+						epPairs[EpPair{ep1, ep2}] = struct{}{}
 					} else {
-						epPairs[epPair{ep2, ep1}] = struct{}{}
+						epPairs[EpPair{ep2, ep1}] = struct{}{}
 					}
 					break
 				}
