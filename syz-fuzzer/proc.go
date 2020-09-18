@@ -110,6 +110,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 
 	// Pranav: compute mem cov or du pairs for this call
 	//evalDu := 0 // 0 - edge, 1 - memcover, 2 - du cover
+	newCriteria := 1 // 1 - use new criteria, 0 - regular criteria
 
 	var inputOgMemCover cover.MemCover
 	inputOgMemCover.Merge(item.info.MemCover)
@@ -147,31 +148,40 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	var inputComMemCover cover.ComMemCover
 	// inputComMemCover.Compute(item.info.MemCover, item.info.TypeCover)
 
-	var inputEpCover cover.EpCover
-	inputEpCover.Merge(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
-
 	var inputMemCover cover.MemCover
 	inputMemCover.ComputeHashCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
 	inputMemCoverSerialized := inputMemCover.Serialize()
 	mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
 
-	if mCovDiff == 0 {
-		log.Logf(3, "Khushboo : Call rejected due to no diff : len inp: %v\ninp: %v", len(inputMemCoverSerialized), inputMemCover)
-	}
-	log.Logf(3, "Jain : mCovDiff %v diff %v", mCovDiff, newSignal.Len())
-
 	covMetric := 0 // 0 - added by only edge, 1 - added by only mem, 2 - added by both
-	// If either coverage is increased, keep inspecting
-	if newSignal.Empty() && mCovDiff == 0 {
-		return
-	} else if newSignal.Empty() {
-		covMetric = 1
-	} else if mCovDiff == 0 {
-		covMetric = 0
-	} else {
-		covMetric = 2
+
+	if newCriteria == 0 { // Use regular sykaller criteria
+		if newSignal.Empty() {
+			return
+		}
+	} else { // Use new coverage criteria
+		if mCovDiff == 0 {
+			log.Logf(3, "Khushboo : Call rejected due to no diff : len inp: %v\ninp: %v", len(inputMemCoverSerialized), inputMemCover)
+		}
+		log.Logf(3, "Jain : mCovDiff %v diff %v", mCovDiff, newSignal.Len())
+
+		// If either coverage is increased, keep inspecting
+		if newSignal.Empty() && mCovDiff == 0 {
+			return
+		} else if newSignal.Empty() {
+			covMetric = 1
+		} else if mCovDiff == 0 {
+			covMetric = 0
+		} else {
+			covMetric = 2
+		}
 	}
+
 	log.Logf(3, "Jain : metric chosen %v", covMetric)
+
+	var inputEpCover cover.EpCover
+	inputEpCover.Merge(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
+
 	//}
 	// ip1, ip2, ip3 := cover.MaxIp(item.info.MemCover, item.info.IpCover)
 	// log.Logf(3, "Jain : max ips %v %v %v", ip1, ip2, ip3)
@@ -247,15 +257,21 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		}
 		// }
 
-		// Without !minimized check manager starts losing some considerable amount
-		// of coverage after each restart. Mechanics of this are not completely clear.
 		//if newSignal.Empty() && item.flags&ProgMinimized == 0 {
 		// Pranav: Check if ducov intersect is also empty (probably never the case)
 		// TODO: maybe less than a threshold?
-		//if (newSignal.Empty() && item.flags&ProgMinimized == 0) || intersectMemCover.Empty() {
-		if (newSignal.Empty() && item.flags&ProgMinimized == 0) || intersectMemCover.Empty() {
-			// 3141 - If no intersection in signal between calls, discard as it is flaky/no real coverage
-			return
+		if newCriteria == 0 {
+			// Without !minimized check manager starts losing some considerable amount
+			// of coverage after each restart. Mechanics of this are not completely clear.
+			if newSignal.Empty() && item.flags&ProgMinimized == 0 {
+				// 3141 - If no intersection in signal between calls, discard as it is flaky/no real coverage
+				return
+			}
+		} else { // Use new criteria
+			if (newSignal.Empty() && item.flags&ProgMinimized == 0) || intersectMemCover.Empty() {
+				// 3141 - If no intersection in signal between calls, discard as it is flaky/no real coverage
+				return
+			}
 		}
 
 		inputCover.Merge(thisCover)

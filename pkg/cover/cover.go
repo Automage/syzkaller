@@ -645,21 +645,21 @@ func DeserializeEpCov(covData []byte) EpCover {
 }
 
 // Get read and write endpoints
-func (cov *EpCover) GetEndpointCount() int {
-	c := *cov
-	if c == nil {
-		return 0
-	}
+// func (cov *EpCover) GetEndpointCount() int {
+// 	c := *cov
+// 	if c == nil {
+// 		return 0
+// 	}
 
-	// for _, epMap := range c {
-	// 	read += epMap[MAGIC_READ_ENTRY]
-	// 	write += epMap[MAGIC_WRITE_ENTRY]
-	// }
+// 	// for _, epMap := range c {
+// 	// 	read += epMap[MAGIC_READ_ENTRY]
+// 	// 	write += epMap[MAGIC_WRITE_ENTRY]
+// 	// }
 
-	// return
+// 	// return
 
-	return len(c)
-}
+// 	return len(c)
+// }
 
 func (cov *EpCover) ComputeEpPairs(cov2 EpCover) EpPairCover {
 	c := *cov

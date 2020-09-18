@@ -38,6 +38,7 @@ type RPCServer struct {
 	corpusDuCover     cover.DuCover
 	corpusComMemCover cover.ComMemCover
 	corpusEpCover     cover.EpCover
+	corpusEpPairCover cover.EpPairCover
 	rotator           *prog.Rotator
 	rnd               *rand.Rand
 }
@@ -229,8 +230,16 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	defer serv.mu.Unlock()
 
 	f := serv.fuzzers[a.Name]
+
 	// Pranav - edit genuine criteria to include memory cover
-	genuine := !serv.corpusSignal.Diff(inputSignal).Empty() || serv.corpusMemCover.Diff(a.MemCover) > 8
+	newCriteria := 1
+	genuine := 0
+	if newCriteria == 0 {
+		genuine = !serv.corpusSignal.Diff(inputSignal).Empty()
+	} else {
+		genuine = !serv.corpusSignal.Diff(inputSignal).Empty() || serv.corpusMemCover.Diff(a.MemCover) > 8
+	}
+
 	rotated := false
 	if !genuine && f.rotatedSignal != nil {
 		rotated = !f.rotatedSignal.Diff(inputSignal).Empty()
@@ -263,15 +272,17 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	serv.corpusOgMemCover.Merge(a.OgMemCover)
 	serv.corpusComMemCover.Merge(a.ComMemCover)
 	inputEpCover := cover.DeserializeEpCov(a.EpCover)
-	pairs := serv.corpusEpCover.MergeMap(inputEpCover)
+	inputEpPairCover := corpusEpCover.ComputeEpPairs(inputEpCover)
+	serv.corpusEpCover.MergeMap(inputEpCover)
+	serv.corpusEpPairCover.Merge(inputEpPairCover)
 
 	serv.stats.corpusMemCover.set(len(serv.corpusMemCover))
 	serv.stats.corpusDuCover.set(len(serv.corpusDuCover))
 	serv.stats.corpusOgMemCover.set(len(serv.corpusOgMemCover))
 	serv.stats.corpusComMemCover.set(serv.corpusComMemCover.GetCommunicatedAddrs())
-	serv.stats.corpusEpPairCover.add(pairs)
-	read, write := serv.corpusEpCover.GetEndpointCount()
-	serv.stats.corpusEpCover.set(read + write)
+	serv.stats.corpusEpPairCover.set(len(serv.corpusEpPairCover))
+	// read, write := serv.corpusEpCover.GetEndpointCount()
+	serv.stats.corpusEpCover.set(len(serv.corpusEpCover))
 	// log.GoLogf("bytes: %v map: %v eps: %v pairs: %v", len(a.EpCover), len(inputEpCover), pairs, read+write)
 
 	if a.Metric == 0 {
