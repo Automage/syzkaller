@@ -232,7 +232,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	f := serv.fuzzers[a.Name]
 
 	// Pranav - edit genuine criteria to include memory cover
-	newCriteria := 0
+	newCriteria := 1
 	genuine := false
 	if newCriteria == 0 {
 		genuine = !serv.corpusSignal.Diff(inputSignal).Empty()

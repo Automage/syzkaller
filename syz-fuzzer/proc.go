@@ -110,7 +110,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 
 	// Pranav: compute mem cov or du pairs for this call
 	//evalDu := 0 // 0 - edge, 1 - memcover, 2 - du cover
-	newCriteria := 0 // 1 - use new criteria, 0 - regular criteria
+	newCriteria := 1 // 1 - use new criteria, 0 - regular criteria
 
 	var inputOgMemCover cover.MemCover
 	inputOgMemCover.Merge(item.info.MemCover)
