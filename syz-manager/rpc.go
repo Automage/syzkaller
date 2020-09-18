@@ -275,7 +275,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	inputEpPairCover := serv.corpusEpCover.ComputeEpPairs(inputEpCover)
 	serv.corpusEpCover.MergeMap(inputEpCover)
 	serv.corpusEpPairCover.Merge(inputEpPairCover)
-	log.GoLogf("Jainu %v, pair %v", len(inputEpCover), len(inputEpPairCover))
+	log.GoLogf("Jainu a.Ep: %v epCov %v, pair %v", len(a.EpCover), len(inputEpCover), len(inputEpPairCover))
 
 	serv.stats.corpusMemCover.set(len(serv.corpusMemCover))
 	serv.stats.corpusDuCover.set(len(serv.corpusDuCover))

@@ -182,7 +182,6 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	var inputEpCover cover.EpCover
 	inputEpCover.Merge(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
 
-	log.Logf(3, "Jainu : %v", len(inputEpCover))
 	//}
 	// ip1, ip2, ip3 := cover.MaxIp(item.info.MemCover, item.info.IpCover)
 	// log.Logf(3, "Jain : max ips %v %v %v", ip1, ip2, ip3)
@@ -305,6 +304,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	sig := hash.Hash(data)
 
 	log.Logf(2, "added new input for %v to corpus:\n%s", logCallName, data)
+	log.Logf(3, "Jainu : %v %v", len(inputEpCover), len(inputEpCover.Serialize())
 	proc.fuzzer.sendInputToManager(rpctype.RPCInput{
 		Call:        callName,
 		Prog:        data,
