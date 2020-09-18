@@ -304,7 +304,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	sig := hash.Hash(data)
 
 	log.Logf(2, "added new input for %v to corpus:\n%s", logCallName, data)
-	log.Logf(3, "Jainu : %v %v", len(inputEpCover), len(inputEpCover.Serialize())
+	log.Logf(3, "Jainu : %v %v", len(inputEpCover), len(inputEpCover.Serialize()))
 	proc.fuzzer.sendInputToManager(rpctype.RPCInput{
 		Call:        callName,
 		Prog:        data,
