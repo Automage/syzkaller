@@ -233,7 +233,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 
 	// Pranav - edit genuine criteria to include memory cover
 	newCriteria := 1
-	genuine := 0
+	genuine := false
 	if newCriteria == 0 {
 		genuine = !serv.corpusSignal.Diff(inputSignal).Empty()
 	} else {
