@@ -182,6 +182,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	var inputEpCover cover.EpCover
 	inputEpCover.Merge(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
 
+	log.Logf(3, "Jainu : %v", len(inputEpCover))
 	//}
 	// ip1, ip2, ip3 := cover.MaxIp(item.info.MemCover, item.info.IpCover)
 	// log.Logf(3, "Jain : max ips %v %v %v", ip1, ip2, ip3)
