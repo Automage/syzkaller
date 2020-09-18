@@ -9,6 +9,8 @@ import (
 	"encoding/binary"
 	"encoding/gob"
 	"hash/crc64"
+
+	"github.com/google/syzkaller/pkg/log"
 )
 
 type Cover map[uint32]struct{}
@@ -626,7 +628,9 @@ func (cov *EpCover) Serialize() []byte {
 	var data bytes.Buffer
 	enc := gob.NewEncoder(&data)
 	err := enc.Encode(c)
+
 	if err != nil {
+		log.Logf(3, "Error serializing: %v", err)
 		return nil
 	}
 	return data.Bytes()
