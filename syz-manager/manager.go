@@ -1093,6 +1093,7 @@ func (mgr *Manager) newInput(inp rpctype.RPCInput, sign signal.Signal) bool {
 		memCov.Merge(inp.MemCover)
 		duCov.Merge(old.DuCover)
 		duCov.Merge(inp.DuCover)
+		//TODO: ADD COMMECOV AND EPCOVER
 
 		old.MemCover = memCov.Serialize()
 		old.DuCover = duCov.Serialize()

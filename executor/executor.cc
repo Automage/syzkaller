@@ -909,6 +909,9 @@ void write_coverage_signal(cover_t* cov, uint32* signal_count_pos, uint32* cover
 			//write_output(*(uint32*)kmcov_addr_buf[i]);
 			//uint64 addr = (uint64)kmcov_addr_buf[i];
 			//write_output(static_cast<uint32_t>(addr));
+			if (i < 10) {
+				debug("addr: %d", (uint64)kmcov_addr_buf[i]);
+			}
 			uint64 addr = (uint64)kmcov_addr_buf[i];
 			write_output_64(addr);
 		}
@@ -917,6 +920,9 @@ void write_coverage_signal(cover_t* cov, uint32* signal_count_pos, uint32* cover
 			//write_output(*(uint32*)kmcov_addr_buf[i]);
 			//uint64 addr = (uint64)kmcov_addr_buf[i];
 			//write_output(static_cast<uint32_t>(addr));
+			if (i < 10) {
+				debug("ip: %d", (uint64)kmcov_ip_buf[i]);
+			}
 			uint64 ip = (uint64)kmcov_ip_buf[i];
 			write_output_64(ip);
 		}
