@@ -397,13 +397,6 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 			}
 		}
 
-		// debug
-		if len(inf.MemCover) < 10 {
-			continue
-		}
-		for k := 0; k < 10; k++ {
-			fmt.Printf("JAINU: Addr %v, IP %v", inf.MemCover[k], inf.IpCover[k])
-		}
 	}
 
 	if len(extraParts) == 0 {
