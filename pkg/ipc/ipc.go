@@ -396,6 +396,11 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 					i, reply.index, reply.num, KmcovBufferSize, len(out))
 			}
 		}
+
+		// debug
+		for k := 0; k < 10; k++ {
+			fmt.Printf("JAINU: Addr %v, IP %v", inf.MemCover[k], inf.IpCover[k])
+		}
 	}
 
 	if len(extraParts) == 0 {
