@@ -1122,7 +1122,7 @@ func (mgr *Manager) newInput(inp rpctype.RPCInput, sign signal.Signal) bool {
 			log.Logf(0, "failed to save corpus database: %v", err)
 		}
 		// TODO: write epPairCov instead of epCov
-		mgr.testCoverageFile.WriteString("%v %v\n", sig, len(inp.EpCover))
+		mgr.testCoverageFile.WriteString(fmt.Sprintf("%v %v\n", sig, len(inp.EpCover)))
 	}
 	return true
 }
