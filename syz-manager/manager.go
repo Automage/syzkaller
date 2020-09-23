@@ -1125,6 +1125,10 @@ func (mgr *Manager) newInput(inp rpctype.RPCInput, sign signal.Signal) bool {
 	return true
 }
 
+func (mgr *Manager) writeTestLog(sig string, edge int, mem int, inpEpCov int, newEpCov int, newEpPairCov int) {
+	serv.mgr.testCoverageFile.WriteString(fmt.Sprintf("%v %v %v %v %v %v\n", hash.String(a.RPCInput.Prog), len(a.Cover), len(a.MemCover), len(a.EpCover), newEpCov-oldEpCov, newEpPairCov-oldEpPairCov))
+}
+
 func (mgr *Manager) candidateBatch(size int) []rpctype.RPCCandidate {
 	mgr.mu.Lock()
 	defer mgr.mu.Unlock()
