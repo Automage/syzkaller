@@ -167,7 +167,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 		log.Fatal(err)
 	}
 	defer testCoverageFile.Close()
-	testCoverageFile.WriteString("\n")
+	testCoverageFile.WriteString("id edgeCov memCov inp.EpCov newEpCov newEpPairCov\n")
 
 	mgr := &Manager{
 		cfg:                   cfg,
@@ -1121,8 +1121,6 @@ func (mgr *Manager) newInput(inp rpctype.RPCInput, sign signal.Signal) bool {
 		if err := mgr.corpusDB.Flush(); err != nil {
 			log.Logf(0, "failed to save corpus database: %v", err)
 		}
-		// TODO: write epPairCov instead of epCov
-		mgr.testCoverageFile.WriteString(fmt.Sprintf("%v %v\n", sig, len(inp.EpCover)))
 	}
 	return true
 }

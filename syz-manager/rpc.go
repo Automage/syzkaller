@@ -271,18 +271,23 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	serv.corpusDuCover.Merge(a.DuCover)
 	serv.corpusOgMemCover.Merge(a.OgMemCover)
 	serv.corpusComMemCover.Merge(a.ComMemCover)
+
+	oldEpCov := serv.stats.corpusEpCover.get()
+	oldEpPairCov := serv.stats.corpusEpPairCover.get()
 	inputEpCover := cover.DeserializeEpCov(a.EpCover)
 	inputEpPairCover := serv.corpusEpCover.ComputeEpPairs(inputEpCover)
 	serv.corpusEpCover.MergeMap(inputEpCover)
 	serv.corpusEpPairCover.Merge(inputEpPairCover)
+	newEpCov := len(serv.corpusEpCover)
+	newEpPairCov := len(serv.corpusEpPairCover)
 
 	serv.stats.corpusMemCover.set(len(serv.corpusMemCover))
 	serv.stats.corpusDuCover.set(len(serv.corpusDuCover))
 	serv.stats.corpusOgMemCover.set(len(serv.corpusOgMemCover))
 	serv.stats.corpusComMemCover.set(serv.corpusComMemCover.GetCommunicatedAddrs())
-	serv.stats.corpusEpPairCover.set(len(serv.corpusEpPairCover))
+	serv.stats.corpusEpCover.set(newEpCov)
+	serv.stats.corpusEpPairCover.set(newEpPairCov)
 	// read, write := serv.corpusEpCover.GetEndpointCount()
-	serv.stats.corpusEpCover.set(len(serv.corpusEpCover))
 	// log.GoLogf("bytes: %v map: %v eps: %v pairs: %v", len(a.EpCover), len(inputEpCover), pairs, read+write)
 
 	if a.Metric == 0 {
@@ -292,6 +297,8 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	} else if a.Metric == 2 {
 		serv.stats.bothMetric.inc()
 	}
+
+	serv.mgr.testCoverageFile.WriteString(fmt.Sprintf("%v %v %v %v %v\n", sig, len(a.Cover), len(a.MemCover), newEpCov-oldEpCov, newEpPairCov-oldEpPairCov))
 
 	if genuine {
 		serv.corpusSignal.Merge(inputSignal)
