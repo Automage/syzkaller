@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/syzkaller/pkg/cover"
+	"github.com/google/syzkaller/pkg/hash"
 	"github.com/google/syzkaller/pkg/log"
 	"github.com/google/syzkaller/pkg/rpctype"
 	"github.com/google/syzkaller/pkg/signal"
@@ -298,7 +299,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 		serv.stats.bothMetric.inc()
 	}
 
-	serv.mgr.testCoverageFile.WriteString(fmt.Sprintf("%v %v %v %v %v\n", sig, len(a.Cover), len(a.MemCover), newEpCov-oldEpCov, newEpPairCov-oldEpPairCov))
+	serv.mgr.testCoverageFile.WriteString(fmt.Sprintf("%v %v %v %v %v %v\n", hash.String(a.RPCInput.Prog), len(a.Cover), len(a.MemCover), len(a.EpCover), newEpCov-oldEpCov, newEpPairCov-oldEpPairCov))
 
 	if genuine {
 		serv.corpusSignal.Merge(inputSignal)
