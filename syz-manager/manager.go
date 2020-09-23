@@ -86,6 +86,9 @@ type Manager struct {
 	// For checking that files that we are using are not changing under us.
 	// Maps file name to modification time.
 	usedFiles map[string]time.Time
+
+	// Pranav: Added test-coverage log file
+	testCoverageFile *File
 }
 
 const (
@@ -157,6 +160,15 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 		log.Fatalf("%v", err)
 	}
 
+	// Pranav: added test-coverage logging file to mgr
+	logFilename := "/home/pranav/rssl/ice-skating-new/logs/testCoverage.log"
+	testCoverageFile, err := os.OpenFile(logFilename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer testCoverageFile.Close()
+	testCoverageFile.WriteString("\n")
+
 	mgr := &Manager{
 		cfg:                   cfg,
 		vmPool:                vmPool,
@@ -179,6 +191,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 		reproRequest:          make(chan chan map[string]bool),
 		usedFiles:             make(map[string]time.Time),
 		saturatedCalls:        make(map[string]bool),
+		testCoverageFile:      testCoverageFile,
 	}
 
 	log.Logf(0, "loading corpus...")
@@ -203,11 +216,11 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 
 	// Pranav: Added mem coverage logging
 	//t := time.Now()
-	filename := "/home/pranav/rssl/ice-skating-new/logs/syz-manager.log"
 	//filename := fmt.SPrintf("%d-%02d-%02dT%02d:%02d:%02d-00:00\n",
 	//    t.Year(), t.Month(), t.Day(),
 	//    t.Hour(), t.Minute(), t.Second())
-	coverLogFile, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+	logFilename := "/home/pranav/rssl/ice-skating-new/logs/syz-manager.log"
+	coverLogFile, err := os.OpenFile(logFilename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -1108,6 +1121,8 @@ func (mgr *Manager) newInput(inp rpctype.RPCInput, sign signal.Signal) bool {
 		if err := mgr.corpusDB.Flush(); err != nil {
 			log.Logf(0, "failed to save corpus database: %v", err)
 		}
+		// TODO: write epPairCov instead of epCov
+		mgr.testCoverageFile.WriteString("%v %v\n", sig, len(inp.EpCover))
 	}
 	return true
 }
