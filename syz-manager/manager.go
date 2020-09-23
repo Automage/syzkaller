@@ -88,7 +88,7 @@ type Manager struct {
 	usedFiles map[string]time.Time
 
 	// Pranav: Added test-coverage log file
-	testCoverageFile *File
+	testCoverageFile *os.File
 }
 
 const (
@@ -161,8 +161,8 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 	}
 
 	// Pranav: added test-coverage logging file to mgr
-	logFilename := "/home/pranav/rssl/ice-skating-new/logs/testCoverage.log"
-	testCoverageFile, err := os.OpenFile(logFilename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+	testCoverageFilename := "/home/pranav/rssl/ice-skating-new/logs/testCoverage.log"
+	testCoverageFile, err := os.OpenFile(testCoverageFilename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
