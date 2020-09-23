@@ -252,7 +252,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 			//CoverLogger.Println("$$$ %v", corpusMemCover)
 			//Test commit
 			elapsed := time.Since(mgr.startTime)
-			coverLogFile.WriteString(fmt.Sprintf("%.0f %d %v %v %v %v %v %v %v %v %v\n", elapsed.Seconds(), elapsed.Milliseconds(), executed, corpusCover, corpusMemCover, corpusOgMemCover, edgeMetric, memMetric, bothMetric, corpusComMemCover, corpusEpCover, corpusEpPairCover))
+			coverLogFile.WriteString(fmt.Sprintf("%.0f %d %v %v %v %v %v %v %v %v %v %v\n", elapsed.Seconds(), elapsed.Milliseconds(), executed, corpusCover, corpusMemCover, corpusOgMemCover, edgeMetric, memMetric, bothMetric, corpusComMemCover, corpusEpCover, corpusEpPairCover))
 		}
 	}()
 
