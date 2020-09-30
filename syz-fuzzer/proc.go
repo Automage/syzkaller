@@ -150,7 +150,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 
 	var inputMemCover cover.MemCover
 	//inputMemCover.ComputeHashCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
-	//inputMemCoverSerialized := inputMemCover.Serialize()
+	inputMemCoverSerialized := inputMemCover.Serialize()
 	//mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
 
 	covMetric := 0 // 0 - added by only edge, 1 - added by only mem, 2 - added by both
