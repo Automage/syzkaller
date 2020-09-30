@@ -113,7 +113,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	newCriteria := 1 // 1 - use new criteria, 0 - regular criteria
 
 	var inputOgMemCover cover.MemCover
-	inputOgMemCover.Merge(item.info.MemCover)
+	// inputOgMemCover.Merge(item.info.MemCover)
 	// mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
 
 	var inputDuCover cover.DuCover
@@ -232,8 +232,8 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		// 		log.Logf(3, "3141: Rejecting call due to empty du intersect...")
 		// 	}
 		// } else { // Mem cov
-		var currOgMemCover cover.MemCover
-		currOgMemCover.Merge(thisMemCover)
+		// var currOgMemCover cover.MemCover
+		// currOgMemCover.Merge(thisMemCover)
 
 		// var currComMemCover cover.ComMemCover
 		// currComMemCover.Compute(thisMemCover, thisTypeCover)
@@ -276,7 +276,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 
 		inputCover.Merge(thisCover)
 		inputMemCover.Merge(currMemCover.Serialize())
-		inputOgMemCover.Merge(currOgMemCover.Serialize())
+		// inputOgMemCover.Merge(currOgMemCover.Serialize())
 		// inputComMemCover.MergeMap(currComMemCover)
 		inputEpCover.MergeMap(currEpCover)
 
