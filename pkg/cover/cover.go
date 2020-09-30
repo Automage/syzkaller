@@ -676,25 +676,25 @@ func (cov *EpCover) ComputeEpPairs(cov2 EpCover) EpPairCover {
 	}
 
 	epPairs := make(EpPairCover)
-	for ep2, addrMap2 := range cov2 {
-		for ep1, addrMap1 := range c {
-			// Check if same access type
-			if ep1.AccessType == ep2.AccessType {
-				continue
-			}
+	// for ep2, addrMap2 := range cov2 {
+	// 	for ep1, addrMap1 := range c {
+	// 		// Check if same access type
+	// 		if ep1.AccessType == ep2.AccessType {
+	// 			continue
+	// 		}
 
-			for addr := range addrMap2 {
-				if _, ok := addrMap1[addr]; ok {
-					if ep1.AccessType == false {
-						epPairs[EpPair{ep1, ep2}] = struct{}{}
-					} else {
-						epPairs[EpPair{ep2, ep1}] = struct{}{}
-					}
-					break
-				}
-			}
-		}
-	}
+	// 		for addr := range addrMap2 {
+	// 			if _, ok := addrMap1[addr]; ok {
+	// 				if ep1.AccessType == false {
+	// 					epPairs[EpPair{ep1, ep2}] = struct{}{}
+	// 				} else {
+	// 					epPairs[EpPair{ep2, ep1}] = struct{}{}
+	// 				}
+	// 				break
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	return epPairs
 }
@@ -706,7 +706,7 @@ func (cov *EpPairCover) Merge(cov2 EpPairCover) {
 		*cov = c
 	}
 
-	for epPair := range cov2 {
-		c[epPair] = struct{}{}
-	}
+	// for epPair := range cov2 {
+	// 	c[epPair] = struct{}{}
+	// }
 }
