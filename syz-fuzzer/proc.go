@@ -110,10 +110,10 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 
 	// Pranav: compute mem cov or du pairs for this call
 	//evalDu := 0 // 0 - edge, 1 - memcover, 2 - du cover
-	newCriteria := 0 // 1 - use new criteria, 0 - regular criteria
+	newCriteria := 1 // 1 - use new criteria, 0 - regular criteria
 
 	var inputOgMemCover cover.MemCover
-	//inputOgMemCover.Merge(item.info.MemCover)
+	inputOgMemCover.Merge(item.info.MemCover)
 	// mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
 
 	var inputDuCover cover.DuCover
@@ -149,9 +149,9 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	// inputComMemCover.Compute(item.info.MemCover, item.info.TypeCover)
 
 	var inputMemCover cover.MemCover
-	//inputMemCover.ComputeHashCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
+	inputMemCover.ComputeHashCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
 	inputMemCoverSerialized := inputMemCover.Serialize()
-	//mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
+	mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
 
 	covMetric := 0 // 0 - added by only edge, 1 - added by only mem, 2 - added by both
 
@@ -160,27 +160,27 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 			return
 		}
 	} else { // Use new coverage criteria
-		// if mCovDiff == 0 {
-		// 	log.Logf(3, "Khushboo : Call rejected due to no diff : len inp: %v\ninp: %v", len(inputMemCoverSerialized), inputMemCover)
-		// }
-		// log.Logf(3, "Jain : mCovDiff %v diff %v", mCovDiff, newSignal.Len())
+		if mCovDiff == 0 {
+			log.Logf(3, "Khushboo : Call rejected due to no diff : len inp: %v\ninp: %v", len(inputMemCoverSerialized), inputMemCover)
+		}
+		log.Logf(3, "Jain : mCovDiff %v diff %v", mCovDiff, newSignal.Len())
 
-		// // If either coverage is increased, keep inspecting
-		// if newSignal.Empty() && mCovDiff == 0 {
-		// 	return
-		// } else if newSignal.Empty() {
-		// 	covMetric = 1
-		// } else if mCovDiff == 0 {
-		covMetric = 0
-		// } else {
-		// 	covMetric = 2
-		// }
+		// If either coverage is increased, keep inspecting
+		if newSignal.Empty() && mCovDiff == 0 {
+			return
+		} else if newSignal.Empty() {
+			covMetric = 1
+		} else if mCovDiff == 0 {
+			covMetric = 0
+		} else {
+			covMetric = 2
+		}
 	}
 
 	log.Logf(3, "Jain : metric chosen %v", covMetric)
 
 	var inputEpCover cover.EpCover
-	//inputEpCover.Merge(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
+	inputEpCover.Merge(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
 
 	//}
 	// ip1, ip2, ip3 := cover.MaxIp(item.info.MemCover, item.info.IpCover)
@@ -233,28 +233,28 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		// 	}
 		// } else { // Mem cov
 		var currOgMemCover cover.MemCover
-		// currOgMemCover.Merge(thisMemCover)
+		currOgMemCover.Merge(thisMemCover)
 
 		// var currComMemCover cover.ComMemCover
 		// currComMemCover.Compute(thisMemCover, thisTypeCover)
 
 		var currEpCover cover.EpCover
-		// currEpCover.Merge(thisMemCover, thisIpCover, thisTypeCover)
+		currEpCover.Merge(thisMemCover, thisIpCover, thisTypeCover)
 
 		var currMemCover cover.MemCover
-		// total := currMemCover.ComputeHashCov(thisMemCover, thisIpCover, thisTypeCover)
-		// if i == 0 {
-		// 	//intersectMemCover.Merge(thisMemCover)
-		// 	intersectMemCover.Merge(currMemCover.Serialize())
-		// 	log.Logf(3, "====== Mem Cov: total %v intersect %v (first compute)", total, len(intersectMemCover))
-		// } else {
-		// 	intersectMemCover = intersectMemCover.Intersection(currMemCover.Serialize())
-		// 	log.Logf(3, "====== Mem Cov: total %v intersect %v", total, len(intersectMemCover))
-		// }
+		total := currMemCover.ComputeHashCov(thisMemCover, thisIpCover, thisTypeCover)
+		if i == 0 {
+			//intersectMemCover.Merge(thisMemCover)
+			intersectMemCover.Merge(currMemCover.Serialize())
+			log.Logf(3, "====== Mem Cov: total %v intersect %v (first compute)", total, len(intersectMemCover))
+		} else {
+			intersectMemCover = intersectMemCover.Intersection(currMemCover.Serialize())
+			log.Logf(3, "====== Mem Cov: total %v intersect %v", total, len(intersectMemCover))
+		}
 
-		// if intersectMemCover.Empty() {
-		// 	log.Logf(3, "3141: Rejecting call due to empty mem intersect...")
-		// }
+		if intersectMemCover.Empty() {
+			log.Logf(3, "3141: Rejecting call due to empty mem intersect...")
+		}
 		// }
 
 		//if newSignal.Empty() && item.flags&ProgMinimized == 0 {
@@ -268,17 +268,17 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 				return
 			}
 		} else { // Use new criteria
-			// if (newSignal.Empty() && item.flags&ProgMinimized == 0) || intersectMemCover.Empty() {
-			// 3141 - If no intersection in signal between calls, discard as it is flaky/no real coverage
-			return
-			// }
+			if (newSignal.Empty() && item.flags&ProgMinimized == 0) || intersectMemCover.Empty() {
+				// 3141 - If no intersection in signal between calls, discard as it is flaky/no real coverage
+				return
+			}
 		}
 
 		inputCover.Merge(thisCover)
-		// inputMemCover.Merge(currMemCover.Serialize())
-		// inputOgMemCover.Merge(currOgMemCover.Serialize())
+		inputMemCover.Merge(currMemCover.Serialize())
+		inputOgMemCover.Merge(currOgMemCover.Serialize())
 		// inputComMemCover.MergeMap(currComMemCover)
-		// inputEpCover.MergeMap(currEpCover)
+		inputEpCover.MergeMap(currEpCover)
 
 	}
 	if item.flags&ProgMinimized == 0 {

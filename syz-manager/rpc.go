@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/syzkaller/pkg/cover"
+	"github.com/google/syzkaller/pkg/hash"
 	"github.com/google/syzkaller/pkg/log"
 	"github.com/google/syzkaller/pkg/rpctype"
 	"github.com/google/syzkaller/pkg/signal"
@@ -267,27 +268,27 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	}
 
 	//Pranav: merge and update mem cover stat
-	// log.GoLogf("metric added %v", a.Metric)
-	// serv.corpusMemCover.Merge(a.MemCover)
-	// serv.corpusDuCover.Merge(a.DuCover)
-	// serv.corpusOgMemCover.Merge(a.OgMemCover)
-	// serv.corpusComMemCover.Merge(a.ComMemCover)
+	log.GoLogf("metric added %v", a.Metric)
+	serv.corpusMemCover.Merge(a.MemCover)
+	serv.corpusDuCover.Merge(a.DuCover)
+	serv.corpusOgMemCover.Merge(a.OgMemCover)
+	serv.corpusComMemCover.Merge(a.ComMemCover)
 
-	// oldEpCov := serv.stats.corpusEpCover.get()
-	// oldEpPairCov := serv.stats.corpusEpPairCover.get()
-	// inputEpCover := cover.DeserializeEpCov(a.EpCover)
-	// inputEpPairCover := serv.corpusEpCover.ComputeEpPairs(inputEpCover)
-	// serv.corpusEpCover.MergeMap(inputEpCover)
-	// serv.corpusEpPairCover.Merge(inputEpPairCover)
-	// newEpCov := len(serv.corpusEpCover)
-	// newEpPairCov := len(serv.corpusEpPairCover)
+	oldEpCov := serv.stats.corpusEpCover.get()
+	oldEpPairCov := serv.stats.corpusEpPairCover.get()
+	inputEpCover := cover.DeserializeEpCov(a.EpCover)
+	inputEpPairCover := serv.corpusEpCover.ComputeEpPairs(inputEpCover)
+	serv.corpusEpCover.MergeMap(inputEpCover)
+	serv.corpusEpPairCover.Merge(inputEpPairCover)
+	newEpCov := len(serv.corpusEpCover)
+	newEpPairCov := len(serv.corpusEpPairCover)
 
-	// serv.stats.corpusMemCover.set(len(serv.corpusMemCover))
-	// serv.stats.corpusDuCover.set(len(serv.corpusDuCover))
-	// serv.stats.corpusOgMemCover.set(len(serv.corpusOgMemCover))
-	// serv.stats.corpusComMemCover.set(serv.corpusComMemCover.GetCommunicatedAddrs())
-	// serv.stats.corpusEpCover.set(newEpCov)
-	// serv.stats.corpusEpPairCover.set(newEpPairCov)
+	serv.stats.corpusMemCover.set(len(serv.corpusMemCover))
+	serv.stats.corpusDuCover.set(len(serv.corpusDuCover))
+	serv.stats.corpusOgMemCover.set(len(serv.corpusOgMemCover))
+	serv.stats.corpusComMemCover.set(serv.corpusComMemCover.GetCommunicatedAddrs())
+	serv.stats.corpusEpCover.set(newEpCov)
+	serv.stats.corpusEpPairCover.set(newEpPairCov)
 	// read, write := serv.corpusEpCover.GetEndpointCount()
 	// log.GoLogf("bytes: %v map: %v eps: %v pairs: %v", len(a.EpCover), len(inputEpCover), pairs, read+write)
 
@@ -299,7 +300,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 		serv.stats.bothMetric.inc()
 	}
 
-	// serv.mgr.writeTestLog(hash.String(a.RPCInput.Prog), len(a.Cover), len(a.MemCover), len(a.EpCover), newEpCov-int(oldEpCov), newEpPairCov-int(oldEpPairCov))
+	serv.mgr.writeTestLog(hash.String(a.RPCInput.Prog), len(a.Cover), len(a.MemCover), len(a.EpCover), newEpCov-int(oldEpCov), newEpPairCov-int(oldEpPairCov))
 
 	if genuine {
 		serv.corpusSignal.Merge(inputSignal)
