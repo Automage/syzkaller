@@ -277,9 +277,9 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	oldEpCov := serv.stats.corpusEpCover.get()
 	oldEpPairCov := serv.stats.corpusEpPairCover.get()
 	inputEpCover := cover.DeserializeEpCov(a.EpCover)
-	inputEpPairCover := serv.corpusEpCover.ComputeEpPairs(inputEpCover)
+	// inputEpPairCover := serv.corpusEpCover.ComputeEpPairs(inputEpCover)
 	serv.corpusEpCover.MergeMap(inputEpCover)
-	serv.corpusEpPairCover.Merge(inputEpPairCover)
+	// serv.corpusEpPairCover.Merge(inputEpPairCover)
 	newEpCov := len(serv.corpusEpCover)
 	newEpPairCov := len(serv.corpusEpPairCover)
 
@@ -288,7 +288,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	serv.stats.corpusOgMemCover.set(len(serv.corpusOgMemCover))
 	serv.stats.corpusComMemCover.set(serv.corpusComMemCover.GetCommunicatedAddrs())
 	serv.stats.corpusEpCover.set(newEpCov)
-	serv.stats.corpusEpPairCover.set(newEpPairCov)
+	// serv.stats.corpusEpPairCover.set(newEpPairCov)
 	// read, write := serv.corpusEpCover.GetEndpointCount()
 	// log.GoLogf("bytes: %v map: %v eps: %v pairs: %v", len(a.EpCover), len(inputEpCover), pairs, read+write)
 
