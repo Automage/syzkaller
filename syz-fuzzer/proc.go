@@ -100,6 +100,7 @@ func (proc *Proc) loop() {
 	}
 }
 
+// Perf - test commit
 // Pranav: sending memory coverage back to manager
 func (proc *Proc) triageInput(item *WorkTriage) {
 	log.Logf(1, "#%v: triaging type=%x", proc.pid, item.flags)
