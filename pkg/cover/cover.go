@@ -516,7 +516,8 @@ type EpPair struct {
 	WriteEp Endpoint
 }
 
-type EpCover map[Endpoint]map[uint64]struct{}
+// type EpCover map[Endpoint]map[uint64]struct{}
+type EpCover map[Endpoint]struct{}
 
 // type EpCover map[uint64]map[endpoint]struct{}
 // type EpCover map[uint64]map[uint64]int
@@ -551,11 +552,8 @@ func (cov *EpCover) Merge(addrs []uint64, ips []uint64, types []uint32) {
 			ep = Endpoint{ip, true}
 		}
 
-		if _, ok := c[ep]; ok {
-			c[ep][addrs[i]] = struct{}{}
-		} else {
-			c[ep] = make(map[uint64]struct{})
-			c[ep][addrs[i]] = struct{}{}
+		if _, ok := c[ep]; !ok {
+			c[ep] = struct{}{}
 		}
 	}
 }
@@ -579,14 +577,20 @@ func (cov *EpCover) MergeMap(cov2 EpCover) {
 
 	// return newEPs
 
-	for ep, addrMap := range cov2 {
-		for addr := range addrMap {
-			if _, ok := c[ep]; ok {
-				c[ep][addr] = struct{}{}
-			} else {
-				c[ep] = make(map[uint64]struct{})
-				c[ep][addr] = struct{}{}
-			}
+	// for ep, addrMap := range cov2 {
+	// 	for addr := range addrMap {
+	// 		if _, ok := c[ep]; ok {
+	// 			c[ep][addr] = struct{}{}
+	// 		} else {
+	// 			c[ep] = make(map[uint64]struct{})
+	// 			c[ep][addr] = struct{}{}
+	// 		}
+	// 	}
+	// }
+
+	for ep := range cov2 {
+		if _, ok := c[ep]; !ok {
+			c[ep] = struct{}{}
 		}
 	}
 }
