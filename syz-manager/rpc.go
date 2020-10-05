@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/syzkaller/pkg/cover"
+	"github.com/google/syzkaller/pkg/hash"
 	"github.com/google/syzkaller/pkg/log"
 	"github.com/google/syzkaller/pkg/rpctype"
 	"github.com/google/syzkaller/pkg/signal"
@@ -59,6 +60,7 @@ type RPCManagerView interface {
 	newInput(inp rpctype.RPCInput, sign signal.Signal) bool
 	candidateBatch(size int) []rpctype.RPCCandidate
 	rotateCorpus() bool
+	writeTestLog(sig string, edge int, mem int, metric int)
 }
 
 func startRPCServer(mgr *Manager) (int, error) {
@@ -270,6 +272,8 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	} else if a.Metric == 2 {
 		serv.stats.bothMetric.inc()
 	}
+
+	serv.mgr.writeTestLog(hash.String(a.RPCInput.Prog), len(a.Cover), len(a.MemCover), a.Metric)
 
 	if genuine {
 		serv.corpusSignal.Merge(inputSignal)

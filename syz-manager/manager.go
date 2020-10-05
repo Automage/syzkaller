@@ -86,6 +86,9 @@ type Manager struct {
 	// For checking that files that we are using are not changing under us.
 	// Maps file name to modification time.
 	usedFiles map[string]time.Time
+
+	// Pranav: Added test-coverage log file
+	testCoverageFile *os.File
 }
 
 const (
@@ -157,6 +160,15 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 		log.Fatalf("%v", err)
 	}
 
+	// Pranav: added test-coverage logging file to mgr
+	testCoverageFilename := "/home/pranav/rssl/ice-skating-new/logs/testCoverage.log"
+	testCoverageFile, err := os.OpenFile(testCoverageFilename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer testCoverageFile.Close()
+	testCoverageFile.WriteString("id edgeCov memCov metric\n")
+
 	mgr := &Manager{
 		cfg:                   cfg,
 		vmPool:                vmPool,
@@ -179,6 +191,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 		reproRequest:          make(chan chan map[string]bool),
 		usedFiles:             make(map[string]time.Time),
 		saturatedCalls:        make(map[string]bool),
+		testCoverageFile:      testCoverageFile,
 	}
 
 	log.Logf(0, "loading corpus...")
@@ -1106,6 +1119,10 @@ func (mgr *Manager) newInput(inp rpctype.RPCInput, sign signal.Signal) bool {
 		}
 	}
 	return true
+}
+
+func (mgr *Manager) writeTestLog(sig string, edge int, mem int, metric int) {
+	mgr.testCoverageFile.WriteString(fmt.Sprintf("%v %v %v %v\n", sig, edge, mem, metric))
 }
 
 func (mgr *Manager) candidateBatch(size int) []rpctype.RPCCandidate {
