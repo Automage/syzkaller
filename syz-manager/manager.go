@@ -161,7 +161,8 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 	}
 
 	// Pranav: added test-coverage logging file to mgr
-	testCoverageFilename := "/home/pranav/rssl/ice-skating-new/logs/testCoverage.log"
+	//testCoverageFilename := "/home/pranav/rssl/ice-skating-new/logs/testCoverage.log"
+	testCoverageFilename := "/home/pranav/workspace/testCoverage.log"
 	testCoverageFile, err := os.OpenFile(testCoverageFilename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
 		log.Fatal(err)
@@ -216,7 +217,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 
 	// Pranav: Added mem coverage logging
 	//t := time.Now()
-	filename := "/home/pranav/rssl/ice-skating-new/logs/syz-manager.log"
+	filename := "/home/pranav/workspace/syz-manager.log"
 	//filename := fmt.SPrintf("%d-%02d-%02dT%02d:%02d:%02d-00:00\n",
 	//    t.Year(), t.Month(), t.Day(),
 	//    t.Hour(), t.Minute(), t.Second())
