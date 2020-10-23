@@ -87,7 +87,7 @@ func (cov *MemCover) Serialize() []uint64 {
 	return res
 }
 
-// Computes the number of elements in addrs but not cov
+// Computes the number of elements in addrs but not in cov
 func (cov *MemCover) Diff(addrs []uint64) int {
 	c := *cov
 	if c == nil {

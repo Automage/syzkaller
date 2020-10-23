@@ -456,17 +456,17 @@ func (fuzzer *Fuzzer) addInputToCorpus(p *prog.Prog, sign signal.Signal, sig has
 	}
 	fuzzer.corpusMu.Unlock()
 
-	//fuzzer.signalMu.Lock()
-	//if !sign.Empty() && len(){
-	if !sign.Empty() {
-		fuzzer.signalMu.Lock()
+	fuzzer.signalMu.Lock()
+	if !sign.Empty() && fuzzer.corpusMemCover.Diff(inputMemCover) != 0 {
+		// if !sign.Empty() {
+		// fuzzer.signalMu.Lock()
 		fuzzer.corpusSignal.Merge(sign)
 		fuzzer.maxSignal.Merge(sign)
 		fuzzer.corpusMemCover.Merge(inputMemCover)
 		fuzzer.corpusDuCover.MergeMap(inputDuCover)
-		fuzzer.signalMu.Unlock()
+		// fuzzer.signalMu.Unlock()
 	}
-	//fuzzer.signalMu.Unlock()
+	fuzzer.signalMu.Unlock()
 }
 
 func (fuzzer *Fuzzer) snapshot() FuzzerSnapshot {
