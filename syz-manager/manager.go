@@ -1124,8 +1124,8 @@ func (mgr *Manager) newInput(inp rpctype.RPCInput, sign signal.Signal) bool {
 	return true
 }
 
-func (mgr *Manager) writeTestLog(sig string, edge int, mem int, metric int) {
-	mgr.testCoverageFile.WriteString(fmt.Sprintf("%v %v %v %v\n", sig, edge, mem, metric))
+func (mgr *Manager) writeTestLog(str string) {
+	mgr.testCoverageFile.WriteString(str)
 }
 
 func (mgr *Manager) candidateBatch(size int) []rpctype.RPCCandidate {

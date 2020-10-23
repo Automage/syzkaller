@@ -61,6 +61,7 @@ func (db *DB) Save(key string, val []byte, seq uint64) {
 		panic("reserved seq")
 	}
 	if rec, ok := db.Records[key]; ok && seq == rec.Seq && bytes.Equal(val, rec.Val) {
+		log.Logf(0, "DB already contains prog (%v)", key)
 		return
 	}
 	db.Records[key] = Record{val, seq}

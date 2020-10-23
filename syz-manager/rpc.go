@@ -60,7 +60,7 @@ type RPCManagerView interface {
 	newInput(inp rpctype.RPCInput, sign signal.Signal) bool
 	candidateBatch(size int) []rpctype.RPCCandidate
 	rotateCorpus() bool
-	writeTestLog(sig string, edge int, mem int, metric int)
+	writeTestLog(str string)
 }
 
 func startRPCServer(mgr *Manager) (int, error) {
@@ -273,7 +273,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 		serv.stats.bothMetric.inc()
 	}
 
-	serv.mgr.writeTestLog(hash.String(a.RPCInput.Prog), len(a.Cover), len(a.MemCover), a.Metric)
+	serv.mgr.writeTestLog(fmt.Sprintf("%v %v %v %v\n", hash.String(a.RPCInput.Prog), len(a.Cover), len(a.MemCover), a.Metric))
 
 	if genuine {
 		serv.corpusSignal.Merge(inputSignal)
