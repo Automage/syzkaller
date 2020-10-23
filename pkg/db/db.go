@@ -64,6 +64,7 @@ func (db *DB) Save(key string, val []byte, seq uint64) {
 		log.Logf(0, "DB already contains prog (%v)", key)
 		return
 	}
+	log.Logf(0, "DB inserting new prog (%v)", key)
 	db.Records[key] = Record{val, seq}
 	db.serialize(key, val, seq)
 	db.uncompacted++
