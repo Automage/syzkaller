@@ -58,19 +58,20 @@ func Open(filename string) (*DB, error) {
 	return db, nil
 }
 
-func (db *DB) Save(key string, val []byte, seq uint64) {
+func (db *DB) Save(key string, val []byte, seq uint64) bool {
 	if seq == seqDeleted {
 		panic("reserved seq")
 	}
 	if rec, ok := db.Records[key]; ok && seq == rec.Seq && bytes.Equal(val, rec.Val) {
 		log.Logf(0, "DB already contains prog (%v) | total new progs: %v", key, db.totalNew)
-		return
+		return false
 	}
 	db.totalNew++
 	log.Logf(0, "DB inserting new prog (%v) | total new progs: %v", key, db.totalNew)
 	db.Records[key] = Record{val, seq}
 	db.serialize(key, val, seq)
 	db.uncompacted++
+	return true
 }
 
 func (db *DB) Delete(key string) {
