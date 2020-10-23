@@ -1040,6 +1040,7 @@ func (mgr *Manager) fuzzerConnect() ([]rpctype.RPCInput, BugFrames) {
 	for _, inp := range mgr.corpus {
 		corpus = append(corpus, inp)
 	}
+	log.Logf(0, "fuzzerConnect: corpus len: %v", len(corpus))
 	memoryLeakFrames := make([]string, 0, len(mgr.memoryLeakFrames))
 	for frame := range mgr.memoryLeakFrames {
 		memoryLeakFrames = append(memoryLeakFrames, frame)
