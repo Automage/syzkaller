@@ -1138,6 +1138,7 @@ func (mgr *Manager) candidateBatch(size int) []rpctype.RPCCandidate {
 		mgr.candidates[last] = rpctype.RPCCandidate{}
 		mgr.candidates = mgr.candidates[:last]
 	}
+	log.Logf(0, "candidateBatch: candidates left: %v", len(mgr.candidates))
 	if len(mgr.candidates) == 0 {
 		mgr.candidates = nil
 		if mgr.phase == phaseLoadedCorpus {
