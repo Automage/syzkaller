@@ -216,7 +216,7 @@ func (serv *RPCServer) Check(a *rpctype.CheckArgs, r *int) error {
 // Pranav: Added memcover stats
 func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	inputSignal := a.Signal.Deserialize()
-	log.GoLogf("hi %v", a.Metric)
+	log.GoLogf("Trying to add input with metric %v", a.Metric)
 	log.Logf(4, "new input from %v for syscall %v (signal=%v, cover=%v, memCover=%v, duCover=%v)",
 		a.Name, a.Call, inputSignal.Len(), len(a.Cover), len(a.MemCover), len(a.DuCover))
 	bad, disabled := checkProgram(serv.target, serv.targetEnabledSyscalls, a.RPCInput.Prog)
@@ -224,7 +224,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 		log.Logf(0, "rejecting program from fuzzer (bad=%v, disabled=%v):\n%s", bad, disabled, a.RPCInput.Prog)
 		return nil
 	}
-	log.GoLogf("hi2 %v", a.Metric)
+	// log.GoLogf("hi2 %v", a.Metric)
 	serv.mu.Lock()
 	defer serv.mu.Unlock()
 
@@ -234,11 +234,10 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	if !genuine && f.rotatedSignal != nil {
 		rotated = !f.rotatedSignal.Diff(inputSignal).Empty()
 	}
-	log.GoLogf("hi3 metric: %v,  g: %v, r: %v", a.Metric, genuine, rotated)
+	// log.GoLogf("hi3 metric: %v,  g: %v, r: %v", a.Metric, genuine, rotated)
 	if !genuine && !rotated {
 		return nil
 	}
-	log.GoLogf("hi4 %v", a.Metric)
 	if !serv.mgr.newInput(a.RPCInput, inputSignal) {
 		// Potential throw-away of call
 		log.Logf(0, "Throwing away input with metric %v", a.Metric)
@@ -256,7 +255,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 	}
 
 	//Pranav: merge and update mem cover stat
-	log.GoLogf("hello %v", a.Metric)
+	log.GoLogf("Adding input with metric %v", a.Metric)
 	serv.corpusMemCover.Merge(a.MemCover)
 	serv.corpusDuCover.Merge(a.DuCover)
 	serv.corpusOgMemCover.Merge(a.OgMemCover)
