@@ -31,6 +31,8 @@ type DB struct {
 	filename    string
 	uncompacted int           // number of records in the file
 	pending     *bytes.Buffer // pending writes to the file
+
+	totalNew int // Keeps track of how many new progs in this session
 }
 
 type Record struct {
@@ -64,7 +66,8 @@ func (db *DB) Save(key string, val []byte, seq uint64) {
 		log.Logf(0, "DB already contains prog (%v)", key)
 		return
 	}
-	log.Logf(0, "DB inserting new prog (%v)", key)
+	db.totalNew++
+	log.Logf(0, "DB inserting new prog (%v) | total new progs: %v", key, db.totalNew)
 	db.Records[key] = Record{val, seq}
 	db.serialize(key, val, seq)
 	db.uncompacted++
