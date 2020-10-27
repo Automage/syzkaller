@@ -196,6 +196,13 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 			}
 			continue
 		}
+
+		// Pranav: Add to executed hashes
+		if i == 0 {
+			data := item.p.Serialize()
+			proc.fuzzer.addToExecutedProgs(hash.Hash(data))
+		}
+
 		// Pranav: return memCover too
 		thisSignal, thisCover, thisMemCover, thisIpCover, thisTypeCover := getSignalAndCover(item.p, info, item.call)
 		newSignal = newSignal.Intersection(thisSignal)

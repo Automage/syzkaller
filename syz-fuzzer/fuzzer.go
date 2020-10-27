@@ -60,8 +60,10 @@ type Fuzzer struct {
 	maxSignal    signal.Signal // max signal ever observed including flakes
 	newSignal    signal.Signal // diff of maxSignal since last sync with master
 
-	corpusMemCover cover.MemCover // Pranav: Corpus mem address cover
-	corpusDuCover  cover.DuCover  // Pranav: Corpus DuCover to test for new coverage
+	corpusMemCover  cover.MemCover        // Pranav: Corpus mem address cover
+	corpusDuCover   cover.DuCover         // Pranav: Corpus DuCover to test for new coverage
+	corpusNewHashes map[hash.Sig]struct{} // Pranav: New progs executed during inbetween polls
+	corpusNewHashMu sync.RWMutex          // Pranav: Mutex for updating new hashes
 
 	logMu sync.Mutex
 }
@@ -513,6 +515,13 @@ func (fuzzer *Fuzzer) corpusDuCoverDiff(cov cover.DuCover) int {
 	fuzzer.signalMu.RLock()
 	defer fuzzer.signalMu.RUnlock()
 	return fuzzer.corpusDuCover.Diff(cov)
+}
+
+// Pranav: Update new executed hashes
+func (fuzzer *Fuzzer) addToExecutedProgs(sig hash.Sig) {
+	fuzzer.corpusNewHashMu.Lock()
+	defer fuzzer.corpusNewHashMu.Unlock()
+	corpusNewHashMu[sig] = struct{}{}
 }
 
 func (fuzzer *Fuzzer) checkNewSignal(p *prog.Prog, info *ipc.ProgInfo) (calls []int, extra bool) {
