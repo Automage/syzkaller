@@ -1146,7 +1146,7 @@ func (mgr *Manager) writeTestLog(str string) {
 // Pranav: Update executed hashes and return diff from loaded corpus hashes
 func (mgr *Manager) updateExecutedHashes(newExec []string) {
 	for _, hash := range newExec {
-		mgr.executedHashes[hash] = struct{}
+		mgr.executedHashes[hash] = struct{}{}
 	}
 
 	diff := 0
