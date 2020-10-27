@@ -354,7 +354,7 @@ func (fuzzer *Fuzzer) pollLoop() {
 			executedHashes := []string{}
 			fuzzer.corpusNewHashMu.Lock()
 			for hash := range fuzzer.corpusNewHashes {
-				executedHashes = append(executedHashes, hash)
+				executedHashes = append(executedHashes, hash.String())
 			}
 			fuzzer.corpusNewHashes = make(map[hash.Sig]struct{})
 			fuzzer.corpusNewHashMu.Unlock()
