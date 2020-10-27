@@ -165,6 +165,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		covMetric = 2
 	}
 	log.Logf(3, "Jain : metric chosen %v", covMetric)
+	log.Logf(0, "test log")
 	//}
 	// ip1, ip2, ip3 := cover.MaxIp(item.info.MemCover, item.info.IpCover)
 	// log.Logf(3, "Jain : max ips %v %v %v", ip1, ip2, ip3)
