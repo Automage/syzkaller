@@ -315,7 +315,9 @@ func (serv *RPCServer) Poll(a *rpctype.PollArgs, r *rpctype.PollRes) error {
 	r.MaxSignal = f.newMaxSignal.Split(500).Serialize()
 
 	// Pranav: Update candidate execution progress
-	serv.mgr.updateExecutedHashes(a.Executed)
+	if a.Executed != nil {
+		serv.mgr.updateExecutedHashes(a.Executed)
+	}
 
 	if a.NeedCandidates {
 		r.Candidates = serv.mgr.candidateBatch(serv.batchSize)

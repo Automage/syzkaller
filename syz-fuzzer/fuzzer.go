@@ -250,7 +250,7 @@ func main() {
 	gateCallback := fuzzer.useBugFrames(r, *flagProcs)
 	fuzzer.gate = ipc.NewGate(2**flagProcs, gateCallback)
 
-	for i := 0; fuzzer.poll(i == 0, nil); i++ {
+	for i := 0; fuzzer.poll(i == 0, nil, nil); i++ {
 	}
 	calls := make(map[*prog.Syscall]bool)
 	for _, id := range r.CheckResult.EnabledCalls[sandbox] {
@@ -351,12 +351,12 @@ func (fuzzer *Fuzzer) pollLoop() {
 				execTotal += v
 			}
 			// Pranav: Clear executed hashes and send already executed
-			executedHashes := make([]string)
+			executedHashes := []string{}
 			fuzzer.corpusNewHashMu.Lock()
 			for hash := range fuzzer.corpusNewHashes {
 				executedHashes = append(executedHashes, hash)
 			}
-			fuzzer.corpusNewHashes = make(map[Sig]struct{})
+			fuzzer.corpusNewHashes = make(map[hash.Sig]struct{})
 			fuzzer.corpusNewHashMu.Unlock()
 
 			if !fuzzer.poll(needCandidates, stats, executedHashes) {
@@ -533,7 +533,7 @@ func (fuzzer *Fuzzer) corpusDuCoverDiff(cov cover.DuCover) int {
 func (fuzzer *Fuzzer) addToExecutedProgs(sig hash.Sig) {
 	fuzzer.corpusNewHashMu.Lock()
 	defer fuzzer.corpusNewHashMu.Unlock()
-	corpusNewHashMu[sig] = struct{}{}
+	fuzzer.corpusNewHashes[sig] = struct{}{}
 }
 
 func (fuzzer *Fuzzer) checkNewSignal(p *prog.Prog, info *ipc.ProgInfo) (calls []int, extra bool) {
