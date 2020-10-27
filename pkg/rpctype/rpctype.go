@@ -67,6 +67,7 @@ type PollArgs struct {
 	NeedCandidates bool
 	MaxSignal      signal.Serial
 	Stats          map[string]uint64
+	Executed       []string
 }
 
 type PollRes struct {

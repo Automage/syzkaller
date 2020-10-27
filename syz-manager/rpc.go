@@ -60,7 +60,9 @@ type RPCManagerView interface {
 	newInput(inp rpctype.RPCInput, sign signal.Signal) bool
 	candidateBatch(size int) []rpctype.RPCCandidate
 	rotateCorpus() bool
+	// Pranav: new interface additions
 	writeTestLog(str string)
+	updateExecutedHashes(newExec []string)
 }
 
 func startRPCServer(mgr *Manager) (int, error) {
@@ -311,6 +313,10 @@ func (serv *RPCServer) Poll(a *rpctype.PollArgs, r *rpctype.PollRes) error {
 		}
 	}
 	r.MaxSignal = f.newMaxSignal.Split(500).Serialize()
+
+	// Pranav: Update candidate execution progress
+	serv.mgr.updateExecutedHashes(a.Executed)
+
 	if a.NeedCandidates {
 		r.Candidates = serv.mgr.candidateBatch(serv.batchSize)
 	}

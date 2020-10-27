@@ -89,6 +89,11 @@ type Manager struct {
 
 	// Pranav: Added test-coverage log file
 	testCoverageFile *os.File
+
+	// Pranav: Hashes of all the original candidates
+	candidateHashes map[string]struct{}
+	// Pranav: Hashes of all executed programs
+	executedHashes map[string]struct{}
 }
 
 const (
@@ -192,7 +197,10 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 		reproRequest:          make(chan chan map[string]bool),
 		usedFiles:             make(map[string]time.Time),
 		saturatedCalls:        make(map[string]bool),
-		testCoverageFile:      testCoverageFile,
+		// Pranav: Added below
+		testCoverageFile: testCoverageFile,
+		candidateHashes:  make(map[string]struct{}),
+		executedHashes:   make(map[string]struct{}),
 	}
 
 	log.Logf(0, "loading corpus...")
@@ -534,6 +542,10 @@ func (mgr *Manager) loadCorpus() {
 			Minimized: minimized,
 			Smashed:   smashed,
 		})
+
+		// Pranav: Add candidate hash
+		// hash.String(rec.Val) should be == key
+		mgr.candidateHashes[hash.String(rec.Val)] = struct{}{}
 	}
 	mgr.fresh = len(mgr.corpusDB.Records) == 0
 	log.Logf(0, "%-24v: %v (deleted %v broken)",
@@ -1126,8 +1138,25 @@ func (mgr *Manager) newInput(inp rpctype.RPCInput, sign signal.Signal) bool {
 	return true
 }
 
+// Pranav: Write to test log
 func (mgr *Manager) writeTestLog(str string) {
 	mgr.testCoverageFile.WriteString(str)
+}
+
+// Pranav: Update executed hashes and return diff from loaded corpus hashes
+func (mgr *Manager) updateExecutedHashes(newExec []string) {
+	for _, hash := range newExec {
+		mgr.executedHashes[hash] = struct{}
+	}
+
+	diff := 0
+	for hash := range mgr.executedHashes {
+		if _, ok := mgr.candidateHashes[hash]; ok {
+			diff++
+		}
+	}
+
+	log.Logf(0, "### OG corpus progress: %v/%v", diff, len(mgr.candidateHashes))
 }
 
 func (mgr *Manager) candidateBatch(size int) []rpctype.RPCCandidate {

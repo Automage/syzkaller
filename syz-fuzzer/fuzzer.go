@@ -245,6 +245,7 @@ func main() {
 		faultInjectionEnabled:    r.CheckResult.Features[host.FeatureFault].Enabled,
 		comparisonTracingEnabled: r.CheckResult.Features[host.FeatureComparisons].Enabled,
 		corpusHashes:             make(map[hash.Sig]struct{}),
+		corpusNewHashes:          make(map[hash.Sig]struct{}),
 	}
 	gateCallback := fuzzer.useBugFrames(r, *flagProcs)
 	fuzzer.gate = ipc.NewGate(2**flagProcs, gateCallback)
@@ -349,19 +350,30 @@ func (fuzzer *Fuzzer) pollLoop() {
 				stats[statNames[stat]] = v
 				execTotal += v
 			}
-			if !fuzzer.poll(needCandidates, stats) {
+			// Pranav: Clear executed hashes and send already executed
+			executedHashes := make([]string)
+			fuzzer.corpusNewHashMu.Lock()
+			for hash := range fuzzer.corpusNewHashes {
+				executedHashes = append(executedHashes, hash)
+			}
+			fuzzer.corpusNewHashes = make(map[Sig]struct{})
+			fuzzer.corpusNewHashMu.Unlock()
+
+			if !fuzzer.poll(needCandidates, stats, executedHashes) {
 				lastPoll = time.Now()
 			}
 		}
 	}
 }
 
-func (fuzzer *Fuzzer) poll(needCandidates bool, stats map[string]uint64) bool {
+// Pranav: Send executed hashes too
+func (fuzzer *Fuzzer) poll(needCandidates bool, stats map[string]uint64, executed []string) bool {
 	a := &rpctype.PollArgs{
 		Name:           fuzzer.name,
 		NeedCandidates: needCandidates,
 		MaxSignal:      fuzzer.grabNewSignal().Serialize(),
 		Stats:          stats,
+		Executed:       executed,
 	}
 	r := &rpctype.PollRes{}
 	if err := fuzzer.manager.Call("Manager.Poll", a, r); err != nil {
