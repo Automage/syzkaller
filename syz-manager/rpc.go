@@ -258,6 +258,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 
 	//Pranav: merge and update mem cover stat
 	log.GoLogf("Adding input with metric %v", a.Metric)
+	memDiff := serv.corpusMemCover.Diff(a.MemCover)
 	serv.corpusMemCover.Merge(a.MemCover)
 	serv.corpusDuCover.Merge(a.DuCover)
 	serv.corpusOgMemCover.Merge(a.OgMemCover)
@@ -274,7 +275,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 		serv.stats.bothMetric.inc()
 	}
 
-	serv.mgr.writeTestLog(fmt.Sprintf("%v %v %v(%v)(%v) %v\n", hash.String(a.RPCInput.Prog), len(a.Cover), len(a.MemCover), serv.corpusMemCover.Diff(a.MemCover), len(serv.corpusMemCover), a.Metric))
+	serv.mgr.writeTestLog(fmt.Sprintf("%v %v %v(%v) %v\n", hash.String(a.RPCInput.Prog), len(a.Cover), len(a.MemCover), memDiff, a.Metric))
 
 	if genuine {
 		serv.corpusSignal.Merge(inputSignal)
