@@ -525,6 +525,7 @@ func (mgr *Manager) loadCorpus() {
 		// without complete coverage. 11k corpus is version 0, so by default
 		// syzkaller will resmash
 		smashed = true
+		minimized = true
 	}
 	broken := 0
 	for key, rec := range mgr.corpusDB.Records {
@@ -1161,7 +1162,7 @@ func (mgr *Manager) updateExecutedHashes(newExec []string) {
 	}
 
 	log.Logf(0, "### OG corpus progress: %v/%v", diff, len(mgr.candidateHashes))
-	mgr.writeTestLog(fmt.Sprintf("### OG corpus progress: %v/%v", diff, len(mgr.candidateHashes)))
+	mgr.writeTestLog(fmt.Sprintf("### OG corpus progress: %v/%v\n", diff, len(mgr.candidateHashes)))
 }
 
 func (mgr *Manager) candidateBatch(size int) []rpctype.RPCCandidate {
