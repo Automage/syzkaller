@@ -173,7 +173,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 		log.Fatal(err)
 	}
 	defer testCoverageFile.Close()
-	testCoverageFile.WriteString("id edgeCov memCov metric\n")
+	testCoverageFile.WriteString("id edgeCov memCov(diff) metric\n")
 
 	mgr := &Manager{
 		cfg:                   cfg,
@@ -1134,7 +1134,7 @@ func (mgr *Manager) newInput(inp rpctype.RPCInput, sign signal.Signal) bool {
 	} else {
 		mgr.corpus[sig] = inp
 		if mgr.corpusDB.Save(sig, inp.Prog, 0) {
-			mgr.writeTestLog(fmt.Sprintf("new %v", sig))
+			mgr.writeTestLog(fmt.Sprintf("new %v\n", sig))
 		}
 		if err := mgr.corpusDB.Flush(); err != nil {
 			log.Logf(0, "failed to save corpus database: %v", err)
