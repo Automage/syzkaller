@@ -1134,7 +1134,7 @@ func (mgr *Manager) newInput(inp rpctype.RPCInput, sign signal.Signal) bool {
 	} else {
 		mgr.corpus[sig] = inp
 		if mgr.corpusDB.Save(sig, inp.Prog, 0) {
-			mgr.writeTestLog(fmt.Sprintf("new %v\n", sig))
+			mgr.writeTestLog(fmt.Sprintf("(new) %v\n", sig))
 		}
 		if err := mgr.corpusDB.Flush(); err != nil {
 			log.Logf(0, "failed to save corpus database: %v", err)
