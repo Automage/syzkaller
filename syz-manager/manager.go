@@ -1161,6 +1161,7 @@ func (mgr *Manager) updateExecutedHashes(newExec []string) {
 	}
 
 	log.Logf(0, "### OG corpus progress: %v/%v", diff, len(mgr.candidateHashes))
+	mgr.writeTestLog(fmt.Sprintf("### OG corpus progress: %v/%v", diff, len(mgr.candidateHashes)))
 }
 
 func (mgr *Manager) candidateBatch(size int) []rpctype.RPCCandidate {
