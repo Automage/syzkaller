@@ -351,6 +351,7 @@ func (fuzzer *Fuzzer) pollLoop() {
 				execTotal += v
 			}
 			// Pranav: Clear executed hashes and send already executed
+			log.Logf(0, "Poll: candidates %v triageCand %v triage %v smash %v", len(fuzzer.workQueue.candidate), len(fuzzer.workQueue.triageCandidate), len(fuzzer.workQueue.triage), len(fuzzer.workQueue.smash))
 			executedHashes := []string{}
 			fuzzer.corpusNewHashMu.Lock()
 			for hash := range fuzzer.corpusNewHashes {
