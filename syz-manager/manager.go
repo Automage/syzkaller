@@ -521,6 +521,10 @@ func (mgr *Manager) loadCorpus() {
 		minimized = false
 		fallthrough
 	case currentDBVersion:
+		// Pranav: Dont resmash programs from corpus as new progs will generate
+		// without complete coverage. 11k corpus is version 0, so by default
+		// syzkaller will resmash
+		smashed = true
 	}
 	broken := 0
 	for key, rec := range mgr.corpusDB.Records {
