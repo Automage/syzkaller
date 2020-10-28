@@ -274,7 +274,7 @@ func (serv *RPCServer) NewInput(a *rpctype.NewInputArgs, r *int) error {
 		serv.stats.bothMetric.inc()
 	}
 
-	serv.mgr.writeTestLog(fmt.Sprintf("%v %v %v(%v) %v\n", hash.String(a.RPCInput.Prog), len(a.Cover), len(a.MemCover), serv.corpusMemCover.Diff(a.MemCover), a.Metric))
+	serv.mgr.writeTestLog(fmt.Sprintf("%v %v %v(%v)(%v) %v\n", hash.String(a.RPCInput.Prog), len(a.Cover), len(a.MemCover), serv.corpusMemCover.Diff(a.MemCover), len(serv.corpusMemCover) a.Metric))
 
 	if genuine {
 		serv.corpusSignal.Merge(inputSignal)
