@@ -50,6 +50,7 @@ func Open(filename string) (*DB, error) {
 	}
 	db.Version, db.Records, db.uncompacted = deserializeDB(bufio.NewReader(f))
 	f.Close()
+	log.Logf(0, "DB version %v", db.Version)
 	if len(db.Records) == 0 || db.uncompacted/10*9 > len(db.Records) {
 		if err := db.compact(); err != nil {
 			return nil, err
@@ -66,8 +67,10 @@ func (db *DB) Save(key string, val []byte, seq uint64) bool {
 		log.Logf(0, "DB already contains prog (%v) | total new progs: %v", key, db.totalNew)
 		return false
 	}
+
 	db.totalNew++
 	log.Logf(0, "DB inserting new prog (%v) | total new progs: %v", key, db.totalNew)
+
 	db.Records[key] = Record{val, seq}
 	db.serialize(key, val, seq)
 	db.uncompacted++
