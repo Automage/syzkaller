@@ -234,7 +234,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 	// Pranav: Added mem coverage logging
 	//t := time.Now()
 	// filename := "/home/pranav/workspace/syz-manager.log"
-	filename := "/home/pranav/rssl/ice-skating-new/logs/syz-manager.log"
+	filename := filepath.Join(logDir, "syz-manager.log")
 	//filename := fmt.SPrintf("%d-%02d-%02dT%02d:%02d:%02d-00:00\n",
 	//    t.Year(), t.Month(), t.Day(),
 	//    t.Hour(), t.Minute(), t.Second())
