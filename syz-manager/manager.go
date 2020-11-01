@@ -243,7 +243,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 		log.Fatal(err)
 	}
 	defer coverLogFile.Close()
-	coverLogFile.WriteString("Seconds,Milliseconds,Tests,Cover,MemCover,OgMemCover,EdgeMetric,MemMetric,BothMetric\n")
+	coverLogFile.WriteString("Seconds,Milliseconds,Tests,Cover,Signal,MemCover,OgMemCover,EdgeMetric,MemMetric,BothMetric\n")
 	//CoverLogger * golog.Logger
 	//CoverLogger = golog.New(coverLogFile, "COVER: ", golog.Ldate|golog.Ltime|golog.Lshortfile)
 
@@ -278,7 +278,7 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 				numFuzzing, executed, corpusCover, corpusMemCover, corpusDuCover, corpusOgMemCover, corpusSignal, maxSignal, crashes, numReproducing)
 
 			elapsed := time.Since(mgr.startTime)
-			coverLogFile.WriteString(fmt.Sprintf("[%v] %.0f %d %v %v %v %v %v %v %v\n", now.Format("2006/01/02 15:04:05 "), elapsed.Seconds(), elapsed.Milliseconds(), executed, corpusCover, corpusMemCover, corpusOgMemCover, edgeMetric, memMetric, bothMetric))
+			coverLogFile.WriteString(fmt.Sprintf("[%v] %.0f %d %v %v %v %v %v %v %v %v\n", now.Format("2006/01/02 15:04:05 "), elapsed.Seconds(), elapsed.Milliseconds(), executed, corpusCover, corpusSignal, corpusMemCover, corpusOgMemCover, edgeMetric, memMetric, bothMetric))
 		}
 	}()
 
