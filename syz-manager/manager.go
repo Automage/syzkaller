@@ -1177,7 +1177,7 @@ func (mgr *Manager) updateExecutedHashes(newExec []string) {
 	}
 
 	currTime := time.Now().Format("2006/01/02 15:04:05 ")
-	if diff != 0 {
+	if diff < len(mgr.candidateHashes) {
 		log.Logf(0, "### OG corpus progress: %v/%v", diff, len(mgr.candidateHashes))
 		mgr.writeTestLog(fmt.Sprintf("[%v] OG corpus progress: %v/%v\n", currTime, diff, len(mgr.candidateHashes)))
 	} else {
