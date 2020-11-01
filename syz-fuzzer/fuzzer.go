@@ -10,6 +10,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"path/filepath"
 	"runtime"
 	"runtime/debug"
 	"sort"
@@ -66,6 +67,8 @@ type Fuzzer struct {
 	corpusNewHashMu sync.RWMutex          // Pranav: Mutex for updating new hashes
 
 	logMu sync.Mutex
+
+	logFile *os.File // Write logs here
 }
 
 type FuzzerSnapshot struct {
@@ -111,7 +114,6 @@ const (
 // nolint: funlen
 func main() {
 	debug.SetGCPercent(50)
-	log.Logf(0, "TEXSTTTTTTTTTTTTTTTTTTTT")
 	var (
 		flagName    = flag.String("name", "test", "unique name for manager")
 		flagOS      = flag.String("os", runtime.GOOS, "target OS")
@@ -231,6 +233,20 @@ func main() {
 		return
 	}
 
+	// Pranav: setup log file
+	logDir, logEnvSet := os.LookupEnv("IS_LOG_DIR")
+	if !logEnvSet {
+		log.Fatalf("IS_LOG_DIR not set")
+	}
+	logFilename := filepath.Join(logDir, fmt.Sprintf("fuzzer-%v.log", *flagName))
+	logFile, err := os.OpenFile(logFilename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer logFile.Close()
+	logFile.WriteString(fmt.Sprintf("\n### New fuzzer instance: fuzzer-%v\n", *flagName))
+	logFile.WriteString("corpus signal memCover | cand triageCand triage smash | stats")
+
 	needPoll := make(chan struct{}, 1)
 	needPoll <- struct{}{}
 	fuzzer := &Fuzzer{
@@ -246,6 +262,7 @@ func main() {
 		comparisonTracingEnabled: r.CheckResult.Features[host.FeatureComparisons].Enabled,
 		corpusHashes:             make(map[hash.Sig]struct{}),
 		corpusNewHashes:          make(map[hash.Sig]struct{}),
+		logFile:                  logFile,
 	}
 	gateCallback := fuzzer.useBugFrames(r, *flagProcs)
 	fuzzer.gate = ipc.NewGate(2**flagProcs, gateCallback)
@@ -359,6 +376,10 @@ func (fuzzer *Fuzzer) pollLoop() {
 			}
 			fuzzer.corpusNewHashes = make(map[hash.Sig]struct{})
 			fuzzer.corpusNewHashMu.Unlock()
+
+			// Pranav: write to log file
+			currTime := time.Now().Format("2006/01/02 15:04:05 ")
+			fuzzer.logFile.WriteString(fmt.Sprintf("[%v] %v %v %v %v | %v %v %v %v | %v", currTime, len(fuzzer.corpus), len(fuzzer.corpusSignal), len(corpus.MemCover), len(fuzzer.workQueue.candidate), len(fuzzer.workQueue.triageCandidate), len(fuzzer.workQueue.triage), len(fuzzer.workQueue.smash), fuzzer.stats)
 
 			if !fuzzer.poll(needCandidates, stats, executedHashes) {
 				lastPoll = time.Now()

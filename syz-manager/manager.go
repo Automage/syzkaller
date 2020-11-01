@@ -94,6 +94,8 @@ type Manager struct {
 	candidateHashes map[string]struct{}
 	// Pranav: Hashes of all executed programs
 	executedHashes map[string]struct{}
+	// Pranav: flip if all candidates executed
+	candidatesExecuted bool
 }
 
 const (
@@ -166,7 +168,12 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 	}
 
 	// Pranav: added test-coverage logging file to mgr
-	testCoverageFilename := "/home/pranav/rssl/ice-skating-new/logs/testCoverage.log"
+	// Read IS_LOG env variable
+	logDir, logEnvSet := os.LookupEnv("IS_LOG_DIR")
+	if !logEnvSet {
+		log.Fatalf("IS_LOG_DIR not set")
+	}
+	testCoverageFilename := filepath.Join(logDir, "testCoverage.log")
 	// testCoverageFilename := "/home/pranav/workspace/testCoverage.log"
 	testCoverageFile, err := os.OpenFile(testCoverageFilename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
@@ -198,9 +205,10 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 		usedFiles:             make(map[string]time.Time),
 		saturatedCalls:        make(map[string]bool),
 		// Pranav: Added below
-		testCoverageFile: testCoverageFile,
-		candidateHashes:  make(map[string]struct{}),
-		executedHashes:   make(map[string]struct{}),
+		testCoverageFile:   testCoverageFile,
+		candidateHashes:    make(map[string]struct{}),
+		executedHashes:     make(map[string]struct{}),
+		candidatesExecuted: false,
 	}
 
 	log.Logf(0, "loading corpus...")
@@ -269,10 +277,8 @@ func RunManager(cfg *mgrconfig.Config, target *prog.Target, sysTarget *targets.T
 			log.Logf(0, "VMs %v, executed %v, corpus cover %v, corpus memory cover %v, corpus du cover %v, corpus og mem cover %v, corpus signal %v, max signal %v, crashes %v, repro %v",
 				numFuzzing, executed, corpusCover, corpusMemCover, corpusDuCover, corpusOgMemCover, corpusSignal, maxSignal, crashes, numReproducing)
 
-			//CoverLogger.Println("$$$ %v", corpusMemCover)
-			//Test commit
 			elapsed := time.Since(mgr.startTime)
-			coverLogFile.WriteString(fmt.Sprintf("%.0f %d %v %v %v %v %v %v %v\n", elapsed.Seconds(), elapsed.Milliseconds(), executed, corpusCover, corpusMemCover, corpusOgMemCover, edgeMetric, memMetric, bothMetric))
+			coverLogFile.WriteString(fmt.Sprintf("[%v] %.0f %d %v %v %v %v %v %v %v\n", now.Format("2006/01/02 15:04:05 "), elapsed.Seconds(), elapsed.Milliseconds(), executed, corpusCover, corpusMemCover, corpusOgMemCover, edgeMetric, memMetric, bothMetric))
 		}
 	}()
 
@@ -571,6 +577,11 @@ func (mgr *Manager) loadCorpus() {
 		panic(fmt.Sprintf("loadCorpus: bad phase %v", mgr.phase))
 	}
 	mgr.phase = phaseLoadedCorpus
+
+	// Pranav: if corpus empty, flip switch
+	if len(mgr.candidates) == 0 {
+		mgr.candidatesExecuted = true
+	}
 }
 
 func checkProgram(target *prog.Target, enabled map[*prog.Syscall]bool, data []byte) (bad, disabled bool) {
@@ -1150,6 +1161,10 @@ func (mgr *Manager) writeTestLog(str string) {
 
 // Pranav: Update executed hashes and return diff from loaded corpus hashes
 func (mgr *Manager) updateExecutedHashes(newExec []string) {
+	if mgr.candidatesExecuted {
+		return
+	}
+
 	for _, hash := range newExec {
 		mgr.executedHashes[hash] = struct{}{}
 	}
@@ -1161,8 +1176,17 @@ func (mgr *Manager) updateExecutedHashes(newExec []string) {
 		}
 	}
 
-	log.Logf(0, "### OG corpus progress: %v/%v", diff, len(mgr.candidateHashes))
-	mgr.writeTestLog(fmt.Sprintf("### OG corpus progress: %v/%v\n", diff, len(mgr.candidateHashes)))
+	currTime := time.Now().Format("2006/01/02 15:04:05 ")
+	if diff != 0 {
+		log.Logf(0, "### OG corpus progress: %v/%v", diff, len(mgr.candidateHashes))
+		mgr.writeTestLog(fmt.Sprintf("[%v] OG corpus progress: %v/%v\n", currTime, diff, len(mgr.candidateHashes)))
+	} else {
+		// All candidates have executed
+		log.Logf(0, "### OG corpus progress: %v/%v (complete)", diff, len(mgr.candidateHashes))
+		mgr.writeTestLog(fmt.Sprintf("[%v] OG corpus progress: %v/%v (complete)\n", currTime, diff, len(mgr.candidateHashes)))
+		mgr.candidatesExecuted = true
+	}
+
 }
 
 func (mgr *Manager) candidateBatch(size int) []rpctype.RPCCandidate {
