@@ -379,7 +379,9 @@ func (fuzzer *Fuzzer) pollLoop() {
 
 			// Pranav: write to log file
 			currTime := time.Now().Format("2006/01/02 15:04:05 ")
-			fuzzer.logFile.WriteString(fmt.Sprintf("[%v] %v %v %v %v | %v %v %v %v | %v", currTime, len(fuzzer.corpus), len(fuzzer.corpusSignal), len(corpus.MemCover), len(fuzzer.workQueue.candidate), len(fuzzer.workQueue.triageCandidate), len(fuzzer.workQueue.triage), len(fuzzer.workQueue.smash), fuzzer.stats))
+			fuzzer.logFile.WriteString(fmt.Sprintf("[%v] %v %v %v %v | %v %v %v %v | %v", currTime, len(fuzzer.corpus), len(fuzzer.corpusSignal),
+				len(fuzzer.corpusMemCover), len(fuzzer.workQueue.candidate), len(fuzzer.workQueue.triageCandidate),
+				len(fuzzer.workQueue.triage), len(fuzzer.workQueue.smash), fuzzer.stats))
 
 			if !fuzzer.poll(needCandidates, stats, executedHashes) {
 				lastPoll = time.Now()
