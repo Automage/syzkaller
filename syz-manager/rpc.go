@@ -63,6 +63,7 @@ type RPCManagerView interface {
 	// Pranav: new interface additions
 	writeTestLog(str string)
 	updateExecutedHashes(newExec []string)
+	getCandidateLen() int
 }
 
 func startRPCServer(mgr *Manager) (int, error) {
@@ -344,7 +345,7 @@ func (serv *RPCServer) Poll(a *rpctype.PollArgs, r *rpctype.PollRes) error {
 			f.inputs = nil
 		}
 	}
-	log.Logf(0, "poll from %v: candidates=%v inputs=%v maxsignal=%v needCand=%v f.inputs=%v",
-		a.Name, len(r.Candidates), len(r.NewInputs), len(r.MaxSignal.Elems), a.NeedCandidates, len(f.inputs))
+	log.Logf(0, "poll from %v: candidates=%v inputs=%v maxsignal=%v needCand=%v f.inputs=%v mgr.cand=%v",
+		a.Name, len(r.Candidates), len(r.NewInputs), len(r.MaxSignal.Elems), a.NeedCandidates, len(f.inputs), serv.mgr.getCandidateLen())
 	return nil
 }

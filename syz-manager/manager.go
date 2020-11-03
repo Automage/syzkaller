@@ -1189,6 +1189,10 @@ func (mgr *Manager) updateExecutedHashes(newExec []string) {
 
 }
 
+func (mgr *Manager) getCandidateLen() int {
+	return len(mgr.candidates)
+}
+
 func (mgr *Manager) candidateBatch(size int) []rpctype.RPCCandidate {
 	mgr.mu.Lock()
 	defer mgr.mu.Unlock()
