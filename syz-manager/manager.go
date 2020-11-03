@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"math/rand"
 	"net"
 	"os"
 	"os/exec"
@@ -568,11 +567,15 @@ func (mgr *Manager) loadCorpus() {
 	// in such case it will also lost all cached candidates. Or, the input can be somewhat flaky
 	// and doesn't give the coverage on first try. So we give each input the second chance.
 	// Shuffling should alleviate deterministically losing the same inputs on fuzzer crashing.
-	mgr.candidates = append(mgr.candidates, mgr.candidates...)
-	shuffle := mgr.candidates[len(mgr.candidates)/2:]
-	rand.Shuffle(len(shuffle), func(i, j int) {
-		shuffle[i], shuffle[j] = shuffle[j], shuffle[i]
-	})
+
+	// Pranav: disable this feature in preference of time
+
+	// mgr.candidates = append(mgr.candidates, mgr.candidates...)
+	// shuffle := mgr.candidates[len(mgr.candidates)/2:]
+	// rand.Shuffle(len(shuffle), func(i, j int) {
+	// 	shuffle[i], shuffle[j] = shuffle[j], shuffle[i]
+	// })
+
 	if mgr.phase != phaseInit {
 		panic(fmt.Sprintf("loadCorpus: bad phase %v", mgr.phase))
 	}
