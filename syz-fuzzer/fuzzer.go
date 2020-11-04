@@ -395,12 +395,14 @@ func (fuzzer *Fuzzer) pollLoop() {
 
 // Pranav: Send executed hashes too
 func (fuzzer *Fuzzer) poll(needCandidates bool, stats map[string]uint64, executed []string) bool {
+	q := []int{fuzzer.workQueue.candidate, fuzzer.workQueue.triageCandidate, fuzzer.workQueue.triage, fuzzer.workQueue.smash}
 	a := &rpctype.PollArgs{
 		Name:           fuzzer.name,
 		NeedCandidates: needCandidates,
 		MaxSignal:      fuzzer.grabNewSignal().Serialize(),
 		Stats:          stats,
 		Executed:       executed,
+		WorkQueue:      q,
 	}
 	r := &rpctype.PollRes{}
 	if err := fuzzer.manager.Call("Manager.Poll", a, r); err != nil {

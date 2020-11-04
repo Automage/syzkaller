@@ -68,6 +68,7 @@ type PollArgs struct {
 	MaxSignal      signal.Serial
 	Stats          map[string]uint64
 	Executed       []string
+	WorkQueue      []int
 }
 
 type PollRes struct {
