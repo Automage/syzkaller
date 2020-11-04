@@ -60,7 +60,7 @@ func newProc(fuzzer *Fuzzer, pid int) (*Proc, error) {
 }
 
 func (proc *Proc) loop() {
-	generatePeriod := 100
+	generatePeriod := 30
 	if proc.fuzzer.config.Flags&ipc.FlagSignal == 0 {
 		// If we don't have real coverage signal, generate programs more frequently
 		// because fallback signal is weak.
@@ -89,12 +89,14 @@ func (proc *Proc) loop() {
 			// Generate a new prog.
 			p := proc.fuzzer.target.Generate(proc.rnd, prog.RecommendedCalls, ct)
 			log.Logf(1, "#%v: generated", proc.pid)
+			proc.fuzzer.newGen++
 			proc.execute(proc.execOptsCover, p, ProgNormal, StatGenerate)
 		} else {
 			// Mutate an existing prog.
 			p := fuzzerSnapshot.chooseProgram(proc.rnd).Clone()
 			p.Mutate(proc.rnd, prog.RecommendedCalls, ct, fuzzerSnapshot.corpus)
 			log.Logf(1, "#%v: mutated", proc.pid)
+			proc.fuzzer.newMutate++
 			proc.execute(proc.execOptsCover, p, ProgNormal, StatFuzz)
 		}
 	}

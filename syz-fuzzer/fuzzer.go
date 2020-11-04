@@ -68,6 +68,9 @@ type Fuzzer struct {
 	logMu sync.Mutex
 
 	logFile *os.File // Write logs here
+
+	newGen    int
+	newMutate int
 }
 
 type FuzzerSnapshot struct {
@@ -395,7 +398,9 @@ func (fuzzer *Fuzzer) pollLoop() {
 
 // Pranav: Send executed hashes too
 func (fuzzer *Fuzzer) poll(needCandidates bool, stats map[string]uint64, executed []string) bool {
-	q := []int{len(fuzzer.workQueue.candidate), len(fuzzer.workQueue.triageCandidate), len(fuzzer.workQueue.triage), len(fuzzer.workQueue.smash)}
+	q := []int{len(fuzzer.workQueue.candidate), len(fuzzer.workQueue.triageCandidate), len(fuzzer.workQueue.triage), len(fuzzer.workQueue.smash), fuzzer.newGen, fuzzer.newMutate}
+	fuzzer.newMutate = 0
+	fuzzer.newGen = 0
 	a := &rpctype.PollArgs{
 		Name:           fuzzer.name,
 		NeedCandidates: needCandidates,
