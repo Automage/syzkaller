@@ -395,7 +395,7 @@ func (fuzzer *Fuzzer) pollLoop() {
 
 // Pranav: Send executed hashes too
 func (fuzzer *Fuzzer) poll(needCandidates bool, stats map[string]uint64, executed []string) bool {
-	q := []int{fuzzer.workQueue.candidate, fuzzer.workQueue.triageCandidate, fuzzer.workQueue.triage, fuzzer.workQueue.smash}
+	q := []int{len(fuzzer.workQueue.candidate), len(fuzzer.workQueue.triageCandidate), len(fuzzer.workQueue.triage), len(fuzzer.workQueue.smash)}
 	a := &rpctype.PollArgs{
 		Name:           fuzzer.name,
 		NeedCandidates: needCandidates,
