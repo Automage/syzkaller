@@ -633,7 +633,7 @@ func (mgr *Manager) runInstance(index int) (*Crash, error) {
 
 	fuzzerV := 0
 	procs := mgr.cfg.Procs
-	if *flagDebug {
+	if *flagDebug || index == 0 {
 		fuzzerV = 100
 		procs = 1
 	}
