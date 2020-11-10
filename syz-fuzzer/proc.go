@@ -246,14 +246,14 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 
 		// Without !minimized check manager starts losing some considerable amount
 		// of coverage after each restart. Mechanics of this are not completely clear.
-		//if newSignal.Empty() && item.flags&ProgMinimized == 0 {
-		// Pranav: Check if ducov intersect is also empty (probably never the case)
-		// TODO: maybe less than a threshold?
-		//if (newSignal.Empty() && item.flags&ProgMinimized == 0) || intersectMemCover.Empty() {
-		// if (newSignal.Empty() && item.flags&ProgMinimized == 0) || intersectMemCover.Empty() {
-		// 	// 3141 - If no intersection in signal between calls, discard as it is flaky/no real coverage
-		// 	return
-		// }
+		if newSignal.Empty() && item.flags&ProgMinimized == 0 {
+			// Pranav: Check if ducov intersect is also empty (probably never the case)
+			// TODO: maybe less than a threshold?
+			//if (newSignal.Empty() && item.flags&ProgMinimized == 0) || intersectMemCover.Empty() {
+			// if (newSignal.Empty() && item.flags&ProgMinimized == 0) || intersectMemCover.Empty() {
+			// 	// 3141 - If no intersection in signal between calls, discard as it is flaky/no real coverage
+			return
+		}
 
 		inputCover.Merge(thisCover)
 		inputMemCover.Merge(currMemCover.Serialize())
