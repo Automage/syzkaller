@@ -516,8 +516,8 @@ func readUint64Array(outp *[]byte, size uint64) ([]uint64, bool) {
 	}
 	hdr := reflect.SliceHeader{
 		Data: uintptr(unsafe.Pointer(&out[0])),
-		Len:  int(size),
-		Cap:  int(size),
+		Len:  int(size) * 2,
+		Cap:  int(size) * 2,
 	}
 	res := *(*[]uint64)(unsafe.Pointer(&hdr))
 	*outp = out[size*8:]
