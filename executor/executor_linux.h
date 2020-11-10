@@ -145,14 +145,14 @@ static void kmcov_disable(int fd) {
 }
 
 // // Zero out kmcov buffer
-static void kmcov_reset(void *addr_buf[], void *ip_buf[], int *type_buf) {
-	// Shouldn't call many (if any?) syscalls to further
-	// litter mem coverage buffer
-	//debug("++++++ Reseting kmcov buffers...\n");
-	memset(addr_buf, 0, KMCOV_COVER_SIZE);
-	memset(ip_buf, 0, KMCOV_COVER_SIZE);
-	memset(type_buf, 0, KMCOV_COVER_SIZE);
-}
+// static void kmcov_reset(void *addr_buf[], void *ip_buf[], int *type_buf) {
+// 	// Shouldn't call many (if any?) syscalls to further
+// 	// litter mem coverage buffer
+// 	//debug("++++++ Reseting kmcov buffers...\n");
+// 	memset(addr_buf, 0, KMCOV_COVER_SIZE);
+// 	memset(ip_buf, 0, KMCOV_COVER_SIZE);
+// 	memset(type_buf, 0, KMCOV_COVER_SIZE);
+// }
 
 // // Read from kmcov buffer
 // // HACK: 0 - addr, 1 - ips, 2 - type
