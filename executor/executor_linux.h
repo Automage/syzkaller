@@ -156,23 +156,23 @@ static void kmcov_disable(int fd) {
 
 // // Read from kmcov buffer
 // // HACK: 0 - addr, 1 - ips, 2 - type
-// static void kmcov_read(int fd, void *addr_buf[], void *ip_buf[], int *type_buf) {
-// 	int ret1 = read(fd, addr_buf, 0);
-// 	if (ret1 != KMCOV_COVER_SIZE) {
-// 		fail("kmcov addr read failed. ret %d", ret1);
-// 	}
+static void kmcov_read(int fd, void *addr_buf[], void *ip_buf[], int *type_buf) {
+	int ret1 = read(fd, addr_buf, 0);
+	if (ret1 != KMCOV_COVER_SIZE) {
+		fail("kmcov addr read failed. ret %d", ret1);
+	}
 	
-// 	int ret2 = read(fd, ip_buf, 1);
-// 	if (ret2 != KMCOV_COVER_SIZE) {
-// 		fail("kmcov ip read failed. ret %d", ret1);
-// 	}
+	int ret2 = read(fd, ip_buf, 1);
+	if (ret2 != KMCOV_COVER_SIZE) {
+		fail("kmcov ip read failed. ret %d", ret1);
+	}
 
-// 	int ret3 = read(fd, type_buf, 2);
-// 	if (ret3 != KMCOV_COVER_SIZE) {
-// 		fail("kmcov type read failed. ret %d", ret1);
-// 	}
-// 	//ebug("++++++ Read kmcov buffers successfully \n");
-// }
+	int ret3 = read(fd, type_buf, 2);
+	if (ret3 != KMCOV_COVER_SIZE) {
+		fail("kmcov type read failed. ret %d", ret1);
+	}
+	//ebug("++++++ Read kmcov buffers successfully \n");
+}
 
 static void cover_open(cover_t* cov, bool extra)
 {
@@ -254,7 +254,7 @@ static void cover_collect(cover_t* cov, int kmcov_fd, void *kmcov_addr_buf[], vo
 		cov->size = *(uint64*)cov->data;
 		// Pranav
 		// Kmcov piggybacking buffer read
-		// kmcov_read(kmcov_fd, kmcov_addr_buf, kmcov_ip_buf, kmcov_type_buf);
+		kmcov_read(kmcov_fd, kmcov_addr_buf, kmcov_ip_buf, kmcov_type_buf);
 	} else {
 		cov->size = *(uint32*)cov->data;
 	}
