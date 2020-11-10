@@ -930,7 +930,7 @@ void write_coverage_signal(cover_t* cov, uint32* signal_count_pos, uint32* cover
 	// 	}
 
 	// 	debug("++++++ Wrote kmcov buffer successfully ...\n");
-	}
+	// }
 }
 #endif
 
