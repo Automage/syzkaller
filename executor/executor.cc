@@ -904,33 +904,33 @@ void write_coverage_signal(cover_t* cov, uint32* signal_count_pos, uint32* cover
 	// Pranav
 	// KMCOV buffers write
 	// TODO: 32 -> 64 implmentation use write_output_64
-	// if (cover_size != 0) {
-	// 	for (uint32 i = 0; i < KMCOV_COVER_SIZE; i++) {
-	// 		//write_output(*(uint32*)kmcov_addr_buf[i]);
-	// 		//uint64 addr = (uint64)kmcov_addr_buf[i];
-	// 		//write_output(static_cast<uint32_t>(addr));
-	// 		uint64 addr = (uint64)kmcov_addr_buf[i];
-	// 		write_output_64(addr);
-	// 	}
+	if (cover_size != 0) {
+		for (uint32 i = 0; i < KMCOV_COVER_SIZE; i++) {
+			//write_output(*(uint32*)kmcov_addr_buf[i]);
+			//uint64 addr = (uint64)kmcov_addr_buf[i];
+			//write_output(static_cast<uint32_t>(addr));
+			uint64 addr = (uint64)kmcov_addr_buf[i];
+			write_output_64(addr);
+		}
 
-	// 	for (uint32 i = 0; i < KMCOV_COVER_SIZE; i++) {
-	// 		//write_output(*(uint32*)kmcov_addr_buf[i]);
-	// 		//uint64 addr = (uint64)kmcov_addr_buf[i];
-	// 		//write_output(static_cast<uint32_t>(addr));
-	// 		uint64 ip = (uint64)kmcov_ip_buf[i];
-	// 		write_output_64(ip);
-	// 	}
+		for (uint32 i = 0; i < KMCOV_COVER_SIZE; i++) {
+			//write_output(*(uint32*)kmcov_addr_buf[i]);
+			//uint64 addr = (uint64)kmcov_addr_buf[i];
+			//write_output(static_cast<uint32_t>(addr));
+			uint64 ip = (uint64)kmcov_ip_buf[i];
+			write_output_64(ip);
+		}
 
-	// 	for (uint32 i = 0; i < KMCOV_COVER_SIZE; i++) {
-	// 		//write_output(*(uint32*)kmcov_addr_buf[i]);
-	// 		//uint64 addr = (uint64)kmcov_addr_buf[i];
-	// 		//write_output(static_cast<uint32_t>(addr));
-	// 		uint32 type = (uint32)kmcov_type_buf[i];
-	// 		write_output(type);
-	// 	}
+		for (uint32 i = 0; i < KMCOV_COVER_SIZE; i++) {
+			//write_output(*(uint32*)kmcov_addr_buf[i]);
+			//uint64 addr = (uint64)kmcov_addr_buf[i];
+			//write_output(static_cast<uint32_t>(addr));
+			uint32 type = (uint32)kmcov_type_buf[i];
+			write_output(type);
+		}
 
-	// 	debug("++++++ Wrote kmcov buffer successfully ...\n");
-	// }
+		debug("++++++ Wrote kmcov buffer successfully ...\n");
+	}
 }
 #endif
 
