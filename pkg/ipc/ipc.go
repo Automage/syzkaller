@@ -378,24 +378,24 @@ func (env *Env) parseOutput(p *prog.Prog) (*ProgInfo, error) {
 
 		// Pranav
 		// KMCOV buffer read
-		if reply.coverSize != 0 {
-			fmt.Printf("======= FUZZER: READING KMCOV BUFFERS... ======\n")
-			if inf.MemCover, ok = readUint64Array(&out, KmcovBufferSize); !ok {
-				//if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
-				return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
-					i, reply.index, reply.num, KmcovBufferSize, len(out))
-			}
-			if inf.IpCover, ok = readUint64Array(&out, KmcovBufferSize); !ok {
-				//if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
-				return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
-					i, reply.index, reply.num, KmcovBufferSize, len(out))
-			}
-			if inf.TypeCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
-				//if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
-				return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
-					i, reply.index, reply.num, KmcovBufferSize, len(out))
-			}
-		}
+		// if reply.coverSize != 0 {
+		// 	fmt.Printf("======= FUZZER: READING KMCOV BUFFERS... ======\n")
+		// 	if inf.MemCover, ok = readUint64Array(&out, KmcovBufferSize); !ok {
+		// 		//if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
+		// 		return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
+		// 			i, reply.index, reply.num, KmcovBufferSize, len(out))
+		// 	}
+		// 	if inf.IpCover, ok = readUint64Array(&out, KmcovBufferSize); !ok {
+		// 		//if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
+		// 		return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
+		// 			i, reply.index, reply.num, KmcovBufferSize, len(out))
+		// 	}
+		// 	if inf.TypeCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
+		// 		//if inf.MemCover, ok = readUint32Array(&out, KmcovBufferSize); !ok {
+		// 		return nil, fmt.Errorf("call %v/%v/%v: kmcov buffer overflow: %v/%v",
+		// 			i, reply.index, reply.num, KmcovBufferSize, len(out))
+		// 	}
+		// }
 	}
 
 	if len(extraParts) == 0 {

@@ -254,7 +254,7 @@ static void cover_collect(cover_t* cov, int kmcov_fd, void *kmcov_addr_buf[], vo
 		cov->size = *(uint64*)cov->data;
 		// Pranav
 		// Kmcov piggybacking buffer read
-		kmcov_read(kmcov_fd, kmcov_addr_buf, kmcov_ip_buf, kmcov_type_buf);
+		// kmcov_read(kmcov_fd, kmcov_addr_buf, kmcov_ip_buf, kmcov_type_buf);
 	} else {
 		cov->size = *(uint32*)cov->data;
 	}
