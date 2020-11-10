@@ -429,7 +429,7 @@ int main(int argc, char** argv)
 		}
 
 		// Open debugfs kmcov file + allocate buffer
-		// kmcov_open(kmcov_fd);
+		kmcov_open(kmcov_fd);
 	}
 
 	int status = 0;
@@ -452,7 +452,7 @@ int main(int argc, char** argv)
 	
 	// Pranav
 	// KMCOV close debugfs
-	// kmcov_close(kmcov_fd);
+	kmcov_close(kmcov_fd);
 
 #if SYZ_EXECUTOR_USES_FORK_SERVER
 	fprintf(stderr, "loop exited with status %d\n", status);
@@ -1143,7 +1143,7 @@ void execute_call(thread_t* th)
 		// Pranav
 		debug("++++++ Calling kmcov enable ...\n");
 		// Enable kmcov tracing
-		// kmcov_enable(kmcov_fd);
+		kmcov_enable(kmcov_fd);
 		// debug("++++++ Executing syscall soon...\n");
 		// kmcov_reset(kmcov_addr_buf, kmcov_ip_buf, kmcov_type_buf);
 	}
@@ -1165,8 +1165,8 @@ void execute_call(thread_t* th)
 		
 		// Pranav
 		// Disable kmcov tracing and read
-		// debug("++++++ Calling kmcov disable ...\n");
-		// kmcov_disable(kmcov_fd);
+		debug("++++++ Calling kmcov disable ...\n");
+		kmcov_disable(kmcov_fd);
 		//TODO: kmcov_read
 	}
 	th->fault_injected = false;
