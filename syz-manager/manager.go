@@ -1121,6 +1121,7 @@ func (mgr *Manager) newInput(inp rpctype.RPCInput, sign signal.Signal) bool {
 		return false
 	}
 	sig := hash.String(inp.Prog)
+	log.Logf(0, "here ")
 	if old, ok := mgr.corpus[sig]; ok {
 		// The input is already present, but possibly with diffent signal/coverage/call.
 		sign.Merge(old.Signal.Deserialize())
@@ -1146,6 +1147,7 @@ func (mgr *Manager) newInput(inp rpctype.RPCInput, sign signal.Signal) bool {
 		old.Metric = inp.Metric
 
 		mgr.corpus[sig] = old
+		log.Logf(0, "already contained %v", sig)
 	} else {
 		mgr.corpus[sig] = inp
 		if mgr.corpusDB.Save(sig, inp.Prog, 0) {
