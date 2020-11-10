@@ -146,7 +146,7 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 	// 	}
 	// } else { // OG Syzkaller
 	var inputMemCover cover.MemCover
-	inputMemCover.ComputeHashCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
+	// inputMemCover.ComputeHashCov(item.info.MemCover, item.info.IpCover, item.info.TypeCover)
 	inputMemCoverSerialized := inputMemCover.Serialize()
 	mCovDiff := proc.fuzzer.corpusMemCoverDiff(inputMemCoverSerialized)
 
@@ -229,14 +229,14 @@ func (proc *Proc) triageInput(item *WorkTriage) {
 		currOgMemCover.Merge(thisMemCover)
 
 		var currMemCover cover.MemCover
-		total := currMemCover.ComputeHashCov(thisMemCover, thisIpCover, thisTypeCover)
+		// total := currMemCover.ComputeHashCov(thisMemCover, thisIpCover, thisTypeCover)
 		if i == 0 {
 			//intersectMemCover.Merge(thisMemCover)
 			intersectMemCover.Merge(currMemCover.Serialize())
-			log.Logf(3, "====== Mem Cov: total %v intersect %v (first compute)", total, len(intersectMemCover))
+			// log.Logf(3, "====== Mem Cov: total %v intersect %v (first compute)", total, len(intersectMemCover))
 		} else {
 			intersectMemCover = intersectMemCover.Intersection(currMemCover.Serialize())
-			log.Logf(3, "====== Mem Cov: total %v intersect %v", total, len(intersectMemCover))
+			// log.Logf(3, "====== Mem Cov: total %v intersect %v", total, len(intersectMemCover))
 		}
 
 		if intersectMemCover.Empty() {

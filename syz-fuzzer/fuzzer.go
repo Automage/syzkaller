@@ -587,7 +587,7 @@ func (fuzzer *Fuzzer) checkNewSignal(p *prog.Prog, info *ipc.ProgInfo) (calls []
 func (fuzzer *Fuzzer) checkNewCallSignal(p *prog.Prog, info *ipc.CallInfo, call int) bool {
 	diff := fuzzer.maxSignal.DiffRaw(info.Signal, signalPrio(p, info, call))
 	var hashCov cover.MemCover
-	hashCov.ComputeHashCov(info.MemCover, info.IpCover, info.TypeCover)
+	// hashCov.ComputeHashCov(info.MemCover, info.IpCover, info.TypeCover)
 	memDiff := fuzzer.corpusMemCoverDiff(hashCov.Serialize())
 	//memDiff := fuzzer.corpusMemCoverDiff(info.MemCover)
 	log.Logf(1, "$$$ diff=%v memdiff=%v, memcover=%v", len(diff), memDiff, len(info.MemCover))
