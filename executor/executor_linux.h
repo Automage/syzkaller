@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <pthread.h>
+
 
 const unsigned long KCOV_TRACE_PC = 0;
 const unsigned long KCOV_TRACE_CMP = 1;
@@ -44,6 +46,9 @@ typedef char kcov_remote_arg64_size[sizeof(kcov_remote_arg64) == 24 ? 1 : -1];
 #define KMCOV_ENABLE    _IO('t', 2)
 #define KMCOV_DISABLE   _IO('t', 3)
 #define KMCOV_COVER_SIZE 30000
+
+// Pranav: add mutex
+pthread_mutex_t kmcov_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #define KCOV_INIT_TRACE32 _IOR('c', 1, uint32)
 #define KCOV_INIT_TRACE64 _IOR('c', 1, uint64)
@@ -104,6 +109,10 @@ static intptr_t execute_syscall(const call_t* c, intptr_t a[kMaxArgs])
 // Handles both open and setup. Returns fd.
 static void kmcov_open(const int kmcov_fd) {
 	//debug("++++++ Opening kmcov...\n");
+
+	// Setup mutex
+	pthread_mutex_init(&kmcov_mutex, NULL);
+
 	int fd = open("/sys/kernel/debug/kmcov", O_RDWR);
 	if (fd == -1)
 		fail("open of /sys/kernel/debug/kmcov failed");
@@ -157,6 +166,7 @@ static void kmcov_reset(void *addr_buf[], void *ip_buf[], int *type_buf) {
 // Read from kmcov buffer
 // HACK: 0 - addr, 1 - ips, 2 - type
 static void kmcov_read(int fd, void *addr_buf[], void *ip_buf[], int *type_buf) {
+	pthread_mutex_lock(&kmcov_mutex);
 	int ret1 = read(fd, addr_buf, 0);
 	if (ret1 != KMCOV_COVER_SIZE) {
 		fail("kmcov addr read failed. ret %d", ret1);
@@ -171,6 +181,7 @@ static void kmcov_read(int fd, void *addr_buf[], void *ip_buf[], int *type_buf) 
 	if (ret3 != KMCOV_COVER_SIZE) {
 		fail("kmcov type read failed. ret %d", ret1);
 	}
+	pthread_mutex_unlock(&kmcov_mutex);
 	//ebug("++++++ Read kmcov buffers successfully \n");
 }
 
