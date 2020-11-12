@@ -167,18 +167,19 @@ static void kmcov_reset(void *addr_buf[], void *ip_buf[], int *type_buf) {
 // HACK: 0 - addr, 1 - ips, 2 - type
 static void kmcov_read(int fd, void *addr_buf[], void *ip_buf[], int *type_buf) {
 	pthread_mutex_lock(&kmcov_mutex);
+	// || ret != 0 in the case kmcov_close() is called anotehr proc (?) 
 	int ret1 = read(fd, addr_buf, 0);
-	if (ret1 != KMCOV_COVER_SIZE) {
+	if (ret1 != KMCOV_COVER_SIZE || ret1 != 0) {
 		fail("kmcov addr read failed. ret %d", ret1);
 	}
 	
 	int ret2 = read(fd, ip_buf, 1);
-	if (ret2 != KMCOV_COVER_SIZE) {
+	if (ret2 != KMCOV_COVER_SIZE || ret2 != 0) {
 		fail("kmcov ip read failed. ret %d", ret1);
 	}
 
 	int ret3 = read(fd, type_buf, 2);
-	if (ret3 != KMCOV_COVER_SIZE) {
+	if (ret3 != KMCOV_COVER_SIZE || ret3 != 0) {
 		fail("kmcov type read failed. ret %d", ret1);
 	}
 	pthread_mutex_unlock(&kmcov_mutex);
