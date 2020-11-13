@@ -392,7 +392,18 @@ func (fuzzer *Fuzzer) pollLoop() {
 			if !fuzzer.poll(needCandidates, stats, executedHashes) {
 				lastPoll = time.Now()
 			}
+
+			// Create new proc if old one crashed (?)
+			if fuzzer.procs < 1 {
+				proc, err := newProc(fuzzer, 0)
+				if err != nil {
+					log.Fatalf("failed to create proc: %v", err)
+				}
+				fuzzer.procs = append(fuzzer.procs, proc)
+				go proc.loop()
+			}
 		}
+
 	}
 }
 
