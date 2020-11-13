@@ -369,7 +369,8 @@ var (
 	beforeContext = 1024 << 10
 	afterContext  = 128 << 10
 
-	NoOutputTimeout      = 5 * time.Minute
+	// Pranav: 5 -> 2
+	NoOutputTimeout      = 2 * time.Minute
 	tickerPeriod         = 10 * time.Second
 	waitForOutputTimeout = 10 * time.Second
 )

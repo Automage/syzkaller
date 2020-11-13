@@ -69,6 +69,7 @@ type PollArgs struct {
 	Stats          map[string]uint64
 	Executed       []string
 	WorkQueue      []int
+	Procs          []int
 }
 
 type PollRes struct {

@@ -408,6 +408,7 @@ func (fuzzer *Fuzzer) poll(needCandidates bool, stats map[string]uint64, execute
 		Stats:          stats,
 		Executed:       executed,
 		WorkQueue:      q,
+		Procs:          []int{len(fuzzer.procs), fuzzer.workQueue.procs},
 	}
 	r := &rpctype.PollRes{}
 	if err := fuzzer.manager.Call("Manager.Poll", a, r); err != nil {
