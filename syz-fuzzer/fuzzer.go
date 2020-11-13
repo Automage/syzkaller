@@ -394,7 +394,7 @@ func (fuzzer *Fuzzer) pollLoop() {
 			}
 
 			// Create new proc if old one crashed (?)
-			if fuzzer.procs < 1 {
+			if len(fuzzer.procs) < 1 {
 				proc, err := newProc(fuzzer, 0)
 				if err != nil {
 					log.Fatalf("failed to create proc: %v", err)
