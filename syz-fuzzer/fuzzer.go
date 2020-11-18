@@ -272,7 +272,7 @@ func main() {
 	gateCallback := fuzzer.useBugFrames(r, *flagProcs)
 	fuzzer.gate = ipc.NewGate(2**flagProcs, gateCallback)
 
-	for i := 0; fuzzer.poll(i == 0, nil, nil); i++ {
+	for i := 0; fuzzer.poll(i == 0, nil, nil, ""); i++ {
 	}
 	calls := make(map[*prog.Syscall]bool)
 	for _, id := range r.CheckResult.EnabledCalls[sandbox] {
