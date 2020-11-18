@@ -285,6 +285,7 @@ func main() {
 		if err != nil {
 			fuzzer.poll(false, nil, nil, "proc creation failed")
 			log.Fatalf("failed to create proc: %v", err)
+			panic(err)
 		}
 		fuzzer.procs = append(fuzzer.procs, proc)
 		go proc.loop()
@@ -400,7 +401,9 @@ func (fuzzer *Fuzzer) pollLoop() {
 		if len(fuzzer.procs) < 1 {
 			proc, err := newProc(fuzzer, 0)
 			if err != nil {
+				fuzzer.poll(false, nil, nil, "proc creation failed")
 				log.Fatalf("failed to create proc: %v", err)
+				panic(err)
 			}
 			fuzzer.procs = append(fuzzer.procs, proc)
 			go proc.loop()
