@@ -86,7 +86,7 @@ const (
 
 // KMCOV consts
 const (
-	KmcovBufferSize = 30000
+	KmcovBufferSize = 10000
 )
 
 type CallInfo struct {

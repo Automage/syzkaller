@@ -45,7 +45,7 @@ typedef char kcov_remote_arg64_size[sizeof(kcov_remote_arg64) == 24 ? 1 : -1];
 #define KMCOV_SETUP     _IOR('t', 1, unsigned long)
 #define KMCOV_ENABLE    _IO('t', 2)
 #define KMCOV_DISABLE   _IO('t', 3)
-#define KMCOV_COVER_SIZE 30000
+#define KMCOV_COVER_SIZE 10000
 
 // Pranav: add mutex
 pthread_mutex_t kmcov_mutex = PTHREAD_MUTEX_INITIALIZER;
