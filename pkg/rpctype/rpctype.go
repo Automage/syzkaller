@@ -70,6 +70,7 @@ type PollArgs struct {
 	Executed       []string
 	WorkQueue      []int
 	Procs          []int
+	Msg            string
 }
 
 type PollRes struct {

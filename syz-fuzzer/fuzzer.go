@@ -283,6 +283,7 @@ func main() {
 	for pid := 0; pid < *flagProcs; pid++ {
 		proc, err := newProc(fuzzer, pid)
 		if err != nil {
+			fuzzer.poll(false, nil, nil, "proc creation failed")
 			log.Fatalf("failed to create proc: %v", err)
 		}
 		fuzzer.procs = append(fuzzer.procs, proc)
@@ -389,7 +390,7 @@ func (fuzzer *Fuzzer) pollLoop() {
 			// 	len(fuzzer.corpusMemCover), len(fuzzer.workQueue.candidate), len(fuzzer.workQueue.triageCandidate),
 			// 	len(fuzzer.workQueue.triage), len(fuzzer.workQueue.smash), fuzzer.stats))
 
-			if !fuzzer.poll(needCandidates, stats, executedHashes) {
+			if !fuzzer.poll(needCandidates, stats, executedHashes, "") {
 				lastPoll = time.Now()
 			}
 
@@ -409,7 +410,7 @@ func (fuzzer *Fuzzer) pollLoop() {
 }
 
 // Pranav: Send executed hashes too
-func (fuzzer *Fuzzer) poll(needCandidates bool, stats map[string]uint64, executed []string) bool {
+func (fuzzer *Fuzzer) poll(needCandidates bool, stats map[string]uint64, executed []string, msg string) bool {
 	q := []int{len(fuzzer.workQueue.candidate), len(fuzzer.workQueue.triageCandidate), len(fuzzer.workQueue.triage), len(fuzzer.workQueue.smash), fuzzer.newGen, fuzzer.newMutate}
 	fuzzer.newMutate = 0
 	fuzzer.newGen = 0
@@ -421,6 +422,7 @@ func (fuzzer *Fuzzer) poll(needCandidates bool, stats map[string]uint64, execute
 		Executed:       executed,
 		WorkQueue:      q,
 		Procs:          []int{len(fuzzer.procs), fuzzer.workQueue.procs},
+		Msg:            msg,
 	}
 	r := &rpctype.PollRes{}
 	if err := fuzzer.manager.Call("Manager.Poll", a, r); err != nil {
